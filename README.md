@@ -1,3 +1,5 @@
-# S101-P0x-TBD
+# S101-P08-ConstructorComparadorPiezasComputador
 
-Rrepositorio para proyecto semestral.
+### Descripción
+
+&emsp; Esta aplicación busca ser una herramienta donde los usuarios puedan armar un computador, previsualizando las piezas que desean comprar, para luego entregarles una vista de comparación de precios disponibles para las piezas que busca, así el usuario puede encontrar los mejores precios para el computador que quiere armar.

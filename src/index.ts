@@ -1,39 +1,72 @@
 import { serve } from "bun";
 import index from "./index.html";
+import { components, brands, componentTypes } from "./data/mock";
 
 const server = serve({
   routes: {
-    // Serve index.html for all unmatched routes.
+    // Serve index.html for all unmatched routes
     "/*": index,
 
-    "/api/hello": {
+    // GET /api/components?search=&type_id=&brand_id=
+    "/api/components": {
       async GET(req) {
-        return Response.json({
-          message: "Hello, world!",
-          method: "GET",
-        });
-      },
-      async PUT(req) {
-        return Response.json({
-          message: "Hello, world!",
-          method: "PUT",
-        });
+        const url = new URL(req.url);
+        const search = url.searchParams.get("search")?.toLowerCase() ?? "";
+        const typeId = url.searchParams.get("type_id");
+        const brandId = url.searchParams.get("brand_id");
+
+        let result = components;
+
+        if (search) {
+          result = result.filter(
+            (c) =>
+              c.name.toLowerCase().includes(search) ||
+              c.model.toLowerCase().includes(search) ||
+              c.brand_name.toLowerCase().includes(search)
+          );
+        }
+
+        if (typeId) {
+          result = result.filter((c) => c.type_id === parseInt(typeId));
+        }
+
+        if (brandId) {
+          result = result.filter((c) => c.brand_id === parseInt(brandId));
+        }
+
+        return Response.json(result);
       },
     },
 
-    "/api/hello/:name": async req => {
-      const name = req.params.name;
-      return Response.json({
-        message: `Hello, ${name}!`,
-      });
+    // GET /api/components/:id
+    "/api/components/:id": async (req) => {
+      const id = parseInt(req.params.id);
+      const component = components.find((c) => c.id === id);
+
+      if (!component) {
+        return Response.json({ error: "Component not found" }, { status: 404 });
+      }
+
+      return Response.json(component);
+    },
+
+    // GET /api/component-types
+    "/api/component-types": {
+      async GET() {
+        return Response.json(componentTypes);
+      },
+    },
+
+    // GET /api/brands
+    "/api/brands": {
+      async GET() {
+        return Response.json(brands);
+      },
     },
   },
 
   development: process.env.NODE_ENV !== "production" && {
-    // Enable browser hot reloading in development
     hmr: true,
-
-    // Echo console logs from the browser to the server
     console: true,
   },
 });

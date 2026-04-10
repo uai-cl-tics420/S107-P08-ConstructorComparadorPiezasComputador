@@ -15,16 +15,18 @@ const TYPE_CONFIG: Record<string, { badge: string; glow: string; dot: string }> 
 interface Props {
   component: Component;
   onAdd: (component: Component) => void;
+  onCompare?: (component: Component) => void;
+  isSelectedForCompare?: boolean;
 }
 
-export function ComponentCard({ component, onAdd }: Props) {
+export function ComponentCard({ component, onAdd, onCompare, isSelectedForCompare }: Props) {
   const minPrice = Math.min(...component.prices.map((p) => p.price));
   const maxPrice = Math.max(...component.prices.map((p) => p.price));
   const savings = maxPrice - minPrice;
   const config = TYPE_CONFIG[component.type_name] ?? { badge: "bg-gray-500/15 text-gray-300 border-gray-400/25", glow: "hover:shadow-gray-500/10", dot: "bg-gray-400" };
 
   return (
-    <div className={`group relative bg-neutral-900/60 backdrop-blur-sm border border-white/5 rounded-2xl p-5 flex flex-col gap-4 hover:border-white/10 hover:shadow-xl ${config.glow} transition-all duration-300 transform hover:-translate-y-0.5`}>
+    <div className={`group relative bg-neutral-900/60 backdrop-blur-sm border rounded-2xl p-5 flex flex-col gap-4 hover:shadow-xl ${config.glow} transition-all duration-300 transform hover:-translate-y-0.5 ${isSelectedForCompare ? "border-violet-500/50 shadow-violet-500/10" : "border-white/5 hover:border-white/10"}`}>
 
       {/* Badge tipo + nombre */}
       <div>
@@ -72,13 +74,28 @@ export function ComponentCard({ component, onAdd }: Props) {
         )}
       </div>
 
-      {/* Botón */}
-      <button
-        onClick={() => onAdd(component)}
-        className="w-full bg-white/10 hover:bg-white/15 border border-white/10 hover:border-white/20 active:scale-[0.98] text-white text-sm font-semibold py-2.5 rounded-xl transition-all duration-150 cursor-pointer"
-      >
-        + Agregar al build
-      </button>
+      {/* Botones */}
+      <div className="flex gap-2">
+        <button
+          onClick={() => onAdd(component)}
+          className="flex-1 bg-white/10 hover:bg-white/15 border border-white/10 hover:border-white/20 active:scale-[0.98] text-white text-sm font-semibold py-2.5 rounded-xl transition-all duration-150 cursor-pointer"
+        >
+          + Agregar
+        </button>
+        {onCompare && (
+          <button
+            onClick={() => onCompare(component)}
+            title={isSelectedForCompare ? "Quitar de comparación" : "Comparar"}
+            className={`px-3 py-2.5 border rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer ${
+              isSelectedForCompare
+                ? "bg-violet-500/20 border-violet-500/40 text-violet-300"
+                : "bg-white/5 border-white/10 hover:bg-white/10 hover:border-white/20 text-neutral-400 hover:text-white"
+            }`}
+          >
+            ⇄
+          </button>
+        )}
+      </div>
     </div>
   );
 }

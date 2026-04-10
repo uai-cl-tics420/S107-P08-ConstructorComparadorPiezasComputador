@@ -58,68 +58,89 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="min-h-screen bg-[#0f1117] text-white">
+
       {/* Header */}
-      <header className="bg-gray-950 border-b border-gray-800 px-6 py-4">
+      <header className="sticky top-0 z-10 bg-[#0f1117]/80 backdrop-blur-md border-b border-white/5 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-bold text-white">PC Builder</h1>
-            <p className="text-gray-400 text-xs">Compare prices & build your PC</p>
+          <div className="flex items-center gap-3">
+            {/* Logo */}
+            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
+              PC
+            </div>
+            <div>
+              <h1 className="text-base font-bold text-white leading-none">PC Builder</h1>
+              <p className="text-gray-500 text-xs mt-0.5">Compara precios y arma tu PC</p>
+            </div>
           </div>
+
           {buildComponents.length > 0 && (
             <button
               onClick={() => setActiveTab("build")}
-              className="bg-blue-600 hover:bg-blue-500 text-white text-sm font-bold px-4 py-2 rounded-lg transition-colors cursor-pointer"
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors cursor-pointer"
             >
-              My Build ({buildComponents.length})
+              <span className="inline-flex items-center justify-center w-5 h-5 bg-white/20 rounded-full text-xs font-bold">
+                {buildComponents.length}
+              </span>
+              Mi Build
             </button>
           )}
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-6 py-6">
+
         {/* Tabs */}
-        <div className="flex gap-1 mb-6 bg-gray-800 p-1 rounded-lg w-fit">
+        <div className="flex gap-1 mb-6 bg-gray-900 border border-gray-800 p-1 rounded-xl w-fit">
           <button
             onClick={() => setActiveTab("search")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
               activeTab === "search"
-                ? "bg-blue-600 text-white"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
                 : "text-gray-400 hover:text-white"
             }`}
           >
-            Search Components
+            Buscar componentes
           </button>
           <button
             onClick={() => setActiveTab("build")}
-            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
               activeTab === "build"
-                ? "bg-blue-600 text-white"
+                ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
                 : "text-gray-400 hover:text-white"
             }`}
           >
-            My Build {buildComponents.length > 0 && `(${buildComponents.length})`}
+            Mi Build {buildComponents.length > 0 && (
+              <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 bg-blue-400/30 rounded-full text-xs">
+                {buildComponents.length}
+              </span>
+            )}
           </button>
         </div>
 
-        {/* Search Tab */}
+        {/* Tab: Buscar */}
         {activeTab === "search" && (
           <div>
-            {/* Filters */}
+            {/* Filtros */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
-              <input
-                type="text"
-                placeholder="Search components..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="flex-1 bg-gray-800 border border-gray-700 text-white placeholder-gray-500 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 transition-colors"
-              />
+              <div className="relative flex-1">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <input
+                  type="text"
+                  placeholder="Buscar componentes..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-gray-900 border border-gray-800 text-white placeholder-gray-600 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all"
+                />
+              </div>
               <select
                 value={selectedType}
                 onChange={(e) => setSelectedType(e.target.value)}
-                className="bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 cursor-pointer"
+                className="bg-gray-900 border border-gray-800 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/60 cursor-pointer appearance-none"
               >
-                <option value="">All Types</option>
+                <option value="">Todos los tipos</option>
                 {componentTypes.map((t) => (
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}
@@ -127,23 +148,27 @@ export function App() {
               <select
                 value={selectedBrand}
                 onChange={(e) => setSelectedBrand(e.target.value)}
-                className="bg-gray-800 border border-gray-700 text-white rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500 cursor-pointer"
+                className="bg-gray-900 border border-gray-800 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/60 cursor-pointer appearance-none"
               >
-                <option value="">All Brands</option>
+                <option value="">Todas las marcas</option>
                 {brands.map((b) => (
                   <option key={b.id} value={b.id}>{b.name}</option>
                 ))}
               </select>
             </div>
 
-            {/* Results */}
+            {/* Resultados */}
             {loading ? (
-              <div className="text-center py-12 text-gray-400">Loading...</div>
+              <div className="flex items-center justify-center py-16">
+                <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              </div>
             ) : components.length === 0 ? (
-              <div className="text-center py-12 text-gray-400">No components found.</div>
+              <div className="text-center py-16">
+                <p className="text-gray-500 text-sm">No se encontraron componentes.</p>
+              </div>
             ) : (
               <>
-                <p className="text-gray-400 text-xs mb-4">{components.length} components found</p>
+                <p className="text-gray-600 text-xs mb-4">{components.length} componentes encontrados</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                   {components.map((c) => (
                     <ComponentCard key={c.id} component={c} onAdd={handleAdd} />
@@ -154,17 +179,24 @@ export function App() {
           </div>
         )}
 
-        {/* Build Tab */}
+        {/* Tab: Mi Build */}
         {activeTab === "build" && (
           <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold">My Build</h2>
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-lg font-bold">Mi Build</h2>
+                <p className="text-gray-500 text-xs mt-0.5">
+                  {buildComponents.length === 0
+                    ? "Agrega componentes desde la búsqueda"
+                    : `${buildComponents.length} componente${buildComponents.length > 1 ? "s" : ""} agregado${buildComponents.length > 1 ? "s" : ""}`}
+                </p>
+              </div>
               {buildComponents.length > 0 && (
                 <button
                   onClick={() => setBuildComponents([])}
-                  className="text-red-400 hover:text-red-300 text-sm cursor-pointer"
+                  className="text-xs text-red-400 hover:text-red-300 border border-red-400/20 hover:border-red-400/40 px-3 py-1.5 rounded-lg transition-all cursor-pointer"
                 >
-                  Clear all
+                  Limpiar todo
                 </button>
               )}
             </div>

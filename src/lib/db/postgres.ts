@@ -17,8 +17,8 @@ export async function getPricesByComponentId(componentId: string) {
       `SELECT id, vendor_id, price, recorded_at
        FROM public.prices
        WHERE component_id = $1
-       ORDER BY recorded_at DESC
-       LIMIT 10`,
+       ORDER BY price ASC, recorded_at DESC
+       LIMIT 1`,
       [componentId]
     );
 

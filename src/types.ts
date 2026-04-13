@@ -23,6 +23,16 @@ export interface Price {
   recorded_at: string;
 }
 
+// Specs para verificación de compatibilidad
+export interface ComponentSpecs {
+  socket?: string;         // CPU/Motherboard: AM5, LGA1700
+  ram_type?: string;       // CPU/Motherboard/RAM: DDR4, DDR5
+  tdp?: number;            // CPU/GPU: consumo en watts
+  form_factor?: string;    // Motherboard/Case: ATX, mATX, ITX
+  storage_type?: string;   // Storage: NVMe, SATA
+  wattage?: number;        // PSU: potencia
+}
+
 export interface Component {
   id: number;
   type_id: number;
@@ -32,9 +42,28 @@ export interface Component {
   name: string;
   model: string;
   prices: Price[];
+  specs?: ComponentSpecs;
 }
 
 export interface BuildComponent {
   component: Component;
   quantity: number;
+}
+
+export interface SavedBuild {
+  id: string;
+  name: string;
+  components: BuildComponent[];
+  created_at: string;
+}
+
+export interface CompatibilityIssue {
+  type: "error" | "warning";
+  message: string;
+}
+
+export interface Toast {
+  id: string;
+  message: string;
+  type: "success" | "error" | "warning";
 }

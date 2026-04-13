@@ -1,7 +1,7 @@
 import '@/lib/config'; // Validates env variables on app start
 import { serve } from 'bun';
 import { auth } from '@/lib/db/auth';
-import { getComponents, getComponentById, getBrands, getComponentTypes } from '@/lib/db/mongo';
+import { components, brands, componentTypes } from './data/mock';
 import index from './index.html';
 
 const server = serve({
@@ -16,18 +16,37 @@ const server = serve({
     '/api/components': {
       async GET(req) {
         const url = new URL(req.url);
-        const search = url.searchParams.get('search') ?? '';
+        const search = url.searchParams.get('search')?.toLowerCase() ?? '';
         const typeId = url.searchParams.get('type_id');
         const brandId = url.searchParams.get('brand_id');
 
-        const result = await getComponents(search || undefined, typeId || undefined, brandId || undefined);
+        let result = components;
+
+        if (search) {
+          result = result.filter(
+            (c) =>
+              c.name.toLowerCase().includes(search) ||
+              c.model.toLowerCase().includes(search) ||
+              c.brand_name.toLowerCase().includes(search),
+          );
+        }
+
+        if (typeId) {
+          result = result.filter((c) => c.type_id === parseInt(typeId));
+        }
+
+        if (brandId) {
+          result = result.filter((c) => c.brand_id === parseInt(brandId));
+        }
+
         return Response.json(result);
       },
     },
 
     // GET /api/components/:id
     '/api/components/:id': async (req) => {
-      const component = await getComponentById(req.params.id);
+      const id = parseInt(req.params.id);
+      const component = components.find((c) => c.id === id);
 
       if (!component) {
         return Response.json({ error: 'Component not found' }, { status: 404 });
@@ -39,15 +58,13 @@ const server = serve({
     // GET /api/component-types
     '/api/component-types': {
       async GET() {
-        const types = await getComponentTypes();
-        return Response.json(types);
+        return Response.json(componentTypes);
       },
     },
 
     // GET /api/brands
     '/api/brands': {
       async GET() {
-        const brands = await getBrands();
         return Response.json(brands);
       },
     },

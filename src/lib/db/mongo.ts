@@ -35,7 +35,10 @@ export async function getComponents(search?: string, typeId?: string, brandId?: 
   if (brandId) query.brand_id = brandId;
 
   const docs = await db.collection('components').find(query).toArray();
-  return Promise.all(docs.map(transformComponent));
+  const transformed = await Promise.all(docs.map(transformComponent));
+
+  // Filter to only show components with prices
+  return transformed.filter(comp => comp.prices.length > 0);
 }
 
 export async function getComponentById(id: string) {

@@ -163,26 +163,35 @@ def insert_prices_batch(cursor, product_data: dict) -> int:
 
 def fetch_and_insert_category(cursor, browse_func, category_name: str) -> int:
     """
-    Fetch products from a category and insert prices.
+    Fetch products from multiple pages of a category and insert prices.
     Returns count of prices inserted.
     """
     print(f"\n{category_name}:")
 
-    try:
-        # Fetch first page with reasonable page size
-        response = browse_func(page=1, page_size=20)
+    total_inserted = 0
+    all_product_data = {}
 
-        # Process the JSON response
-        product_data = process_json_response(response)
+    # Fetch multiple pages
+    for page in range(1, 4):  # Fetch pages 1-3
+        try:
+            response = browse_func(page=page, page_size=20)
+            product_data = process_json_response(response)
+            all_product_data.update(product_data)
+            print(f"  Page {page}: {len(product_data)} products")
+        except Exception as e:
+            print(f"  Error fetching page {page}: {e}")
+            break
 
-        # Insert into database
-        inserted = insert_prices_batch(cursor, product_data)
+        if not product_data:
+            break  # No more products
 
-        return inserted
+    # Insert all products from all pages
+    product_data = all_product_data
 
-    except Exception as e:
-        print(f"  Error: {e}", file=sys.stderr)
-        return 0
+    # Insert into database
+    inserted = insert_prices_batch(cursor, product_data)
+
+    return inserted
 
 
 def main():

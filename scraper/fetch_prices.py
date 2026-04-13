@@ -92,7 +92,7 @@ def find_matching_component(product_name: str) -> str | None:
     base_name = product_name.split('[')[0].strip()
 
     best_match = None
-    best_ratio = 0.6  # Require at least 60% similarity
+    best_ratio = 0.5  # Require at least 50% similarity
 
     for component_id, component in components.items():
         component_name = component.get('name_model', '')

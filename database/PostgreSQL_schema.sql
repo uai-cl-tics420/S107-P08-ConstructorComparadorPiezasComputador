@@ -12,6 +12,7 @@ CREATE TABLE public.prices ( -- table to store price history of components
   component_id UUID NOT NULL,
   vendor_id UUID NOT NULL, -- mirrored UUID from Mongo
   price NUMERIC(12,2) NOT NULL CHECK (price > 0),
+  discount_price NUMERIC(12,2) CHECK (discount_price > 0),
   recorded_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (component_id, vendor_id, recorded_at),
   FOREIGN KEY (component_id) REFERENCES public.components_mirror(component_id)

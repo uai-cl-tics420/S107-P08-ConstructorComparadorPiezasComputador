@@ -1,0 +1,55 @@
+import { MongoClient } from 'mongodb';
+import { getPricesByComponentId } from './postgres';
+
+const mongoUrl = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@localhost:${process.env.MONGO_PORT}/${process.env.MONGO_DB}?authSource=admin`;
+
+const client = new MongoClient(mongoUrl);
+await client.connect();
+const db = client.db(process.env.MONGO_DB);
+
+// Transform MongoDB document to the format the frontend expects
+async function transformComponent(doc: any) {
+  const type = await db.collection('component_types').findOne({ _id: doc.type_id });
+  const brand = doc.brand_id ? await db.collection('brands').findOne({ _id: doc.brand_id }) : null;
+
+  // Fetch real prices from PostgreSQL
+  const prices = await getPricesByComponentId(doc._id);
+
+  return {
+    id: doc._id,
+    type_id: doc.type_id,
+    brand_id: doc.brand_id,
+    type_name: type?.name ?? 'Unknown',
+    brand_name: brand?.name ?? 'Unknown',
+    name: doc.name_model,
+    model: doc.name_model.split(' ').pop() ?? '',
+    specs: doc.specs ?? {},
+    prices,
+  };
+}
+
+export async function getComponents(search?: string, typeId?: string, brandId?: string) {
+  const query: Record<string, unknown> = {};
+  if (search) query.name_model = { $regex: search, $options: 'i' };
+  if (typeId) query.type_id = typeId;
+  if (brandId) query.brand_id = brandId;
+
+  const docs = await db.collection('components').find(query).toArray();
+  return Promise.all(docs.map(transformComponent));
+}
+
+export async function getComponentById(id: string) {
+  const doc = await db.collection('components').findOne({ _id: id });
+  if (!doc) return null;
+  return transformComponent(doc);
+}
+
+export async function getBrands() {
+  const docs = await db.collection('brands').find({}).toArray();
+  return docs.map(b => ({ id: b._id, name: b.name }));
+}
+
+export async function getComponentTypes() {
+  const docs = await db.collection('component_types').find({}).toArray();
+  return docs.map(t => ({ id: t._id, name: t.name, max_quantity: 10 }));
+}

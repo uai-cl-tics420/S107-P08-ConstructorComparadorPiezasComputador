@@ -45,6 +45,7 @@ export const components: Component[] = [
       { id: 2, component_id: 1, vendor_id: 2, vendor_name: "PC Factory", price: 239990, recorded_at: "2026-04-10" },
       { id: 3, component_id: 1, vendor_id: 3, vendor_name: "Webbstore", price: 224990, recorded_at: "2026-04-10" },
     ],
+    specs: { socket: "AM5", ram_type: "DDR5", tdp: 105 },
   },
   {
     id: 2,
@@ -58,6 +59,7 @@ export const components: Component[] = [
       { id: 4, component_id: 2, vendor_id: 1, vendor_name: "SoloTodo", price: 319990, recorded_at: "2026-04-10" },
       { id: 5, component_id: 2, vendor_id: 2, vendor_name: "PC Factory", price: 329990, recorded_at: "2026-04-10" },
     ],
+    specs: { socket: "AM5", ram_type: "DDR5", tdp: 120 },
   },
   {
     id: 3,
@@ -71,6 +73,7 @@ export const components: Component[] = [
       { id: 6, component_id: 3, vendor_id: 1, vendor_name: "SoloTodo", price: 259990, recorded_at: "2026-04-10" },
       { id: 7, component_id: 3, vendor_id: 3, vendor_name: "Webbstore", price: 249990, recorded_at: "2026-04-10" },
     ],
+    specs: { socket: "LGA1700", ram_type: "DDR5", tdp: 125 },
   },
   {
     id: 4,
@@ -84,6 +87,7 @@ export const components: Component[] = [
       { id: 8, component_id: 4, vendor_id: 1, vendor_name: "SoloTodo", price: 399990, recorded_at: "2026-04-10" },
       { id: 9, component_id: 4, vendor_id: 2, vendor_name: "PC Factory", price: 409990, recorded_at: "2026-04-10" },
     ],
+    specs: { socket: "LGA1700", ram_type: "DDR5", tdp: 125 },
   },
   // GPUs
   {
@@ -98,6 +102,7 @@ export const components: Component[] = [
       { id: 10, component_id: 5, vendor_id: 1, vendor_name: "SoloTodo", price: 649990, recorded_at: "2026-04-10" },
       { id: 11, component_id: 5, vendor_id: 2, vendor_name: "PC Factory", price: 659990, recorded_at: "2026-04-10" },
     ],
+    specs: { tdp: 200 },
   },
   {
     id: 6,
@@ -111,6 +116,7 @@ export const components: Component[] = [
       { id: 12, component_id: 6, vendor_id: 1, vendor_name: "SoloTodo", price: 399990, recorded_at: "2026-04-10" },
       { id: 13, component_id: 6, vendor_id: 3, vendor_name: "Webbstore", price: 389990, recorded_at: "2026-04-10" },
     ],
+    specs: { tdp: 115 },
   },
   {
     id: 7,
@@ -124,6 +130,7 @@ export const components: Component[] = [
       { id: 14, component_id: 7, vendor_id: 1, vendor_name: "SoloTodo", price: 449990, recorded_at: "2026-04-10" },
       { id: 15, component_id: 7, vendor_id: 2, vendor_name: "PC Factory", price: 459990, recorded_at: "2026-04-10" },
     ],
+    specs: { tdp: 165 },
   },
   // RAM
   {
@@ -138,6 +145,7 @@ export const components: Component[] = [
       { id: 16, component_id: 8, vendor_id: 1, vendor_name: "SoloTodo", price: 89990, recorded_at: "2026-04-10" },
       { id: 17, component_id: 8, vendor_id: 2, vendor_name: "PC Factory", price: 94990, recorded_at: "2026-04-10" },
     ],
+    specs: { ram_type: "DDR5" },
   },
   {
     id: 9,
@@ -151,6 +159,7 @@ export const components: Component[] = [
       { id: 18, component_id: 9, vendor_id: 1, vendor_name: "SoloTodo", price: 159990, recorded_at: "2026-04-10" },
       { id: 19, component_id: 9, vendor_id: 3, vendor_name: "Webbstore", price: 149990, recorded_at: "2026-04-10" },
     ],
+    specs: { ram_type: "DDR5" },
   },
   // Motherboards
   {
@@ -165,6 +174,7 @@ export const components: Component[] = [
       { id: 20, component_id: 10, vendor_id: 1, vendor_name: "SoloTodo", price: 329990, recorded_at: "2026-04-10" },
       { id: 21, component_id: 10, vendor_id: 2, vendor_name: "PC Factory", price: 339990, recorded_at: "2026-04-10" },
     ],
+    specs: { socket: "AM5", ram_type: "DDR5", form_factor: "ATX" },
   },
   {
     id: 11,
@@ -178,6 +188,7 @@ export const components: Component[] = [
       { id: 22, component_id: 11, vendor_id: 1, vendor_name: "SoloTodo", price: 269990, recorded_at: "2026-04-10" },
       { id: 23, component_id: 11, vendor_id: 3, vendor_name: "Webbstore", price: 259990, recorded_at: "2026-04-10" },
     ],
+    specs: { socket: "AM5", ram_type: "DDR5", form_factor: "ATX" },
   },
   // Storage
   {
@@ -192,6 +203,7 @@ export const components: Component[] = [
       { id: 24, component_id: 12, vendor_id: 1, vendor_name: "SoloTodo", price: 119990, recorded_at: "2026-04-10" },
       { id: 25, component_id: 12, vendor_id: 2, vendor_name: "PC Factory", price: 124990, recorded_at: "2026-04-10" },
     ],
+    specs: { storage_type: "NVMe" },
   },
   {
     id: 13,
@@ -205,6 +217,7 @@ export const components: Component[] = [
       { id: 26, component_id: 13, vendor_id: 1, vendor_name: "SoloTodo", price: 54990, recorded_at: "2026-04-10" },
       { id: 27, component_id: 13, vendor_id: 3, vendor_name: "Webbstore", price: 49990, recorded_at: "2026-04-10" },
     ],
+    specs: { storage_type: "SATA" },
   },
   // PSU
   {
@@ -219,5 +232,6 @@ export const components: Component[] = [
       { id: 28, component_id: 14, vendor_id: 1, vendor_name: "SoloTodo", price: 129990, recorded_at: "2026-04-10" },
       { id: 29, component_id: 14, vendor_id: 2, vendor_name: "PC Factory", price: 134990, recorded_at: "2026-04-10" },
     ],
+    specs: { wattage: 850 },
   },
 ];

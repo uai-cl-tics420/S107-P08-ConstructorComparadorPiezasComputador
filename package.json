@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "bun --hot src/index.ts",
     "start": "NODE_ENV=production bun src/index.ts",
-    "build": "bun run build.ts"
+    "build": "bun run build.ts",
+    "populate": "bun run src/lib/db/DBS_populator.ts"
   },
   "dependencies": {
     "better-auth": "^1.6.2",
@@ -16,12 +17,14 @@
     "pg": "^8.20.0",
     "react": "^19",
     "react-dom": "^19",
-    "tailwindcss": "^4.1.11"
+    "tailwindcss": "^4.1.11",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "@types/bun": "latest",
     "@types/pg": "^8.20.0",
     "@types/react": "^19",
-    "@types/react-dom": "^19"
+    "@types/react-dom": "^19",
+    "@types/uuid": "^11.0.0"
   }
 }

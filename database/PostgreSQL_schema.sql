@@ -8,7 +8,7 @@ CREATE TABLE public.components_mirror ( -- mirror of the components collection i
 );
 
 CREATE TABLE public.prices ( -- table to store price history of components
-  id BIGINT PRIMARY KEY,
+  id BIGSERIAL PRIMARY KEY,
   component_id UUID NOT NULL,
   vendor_id UUID NOT NULL, -- mirrored UUID from Mongo
   price NUMERIC(12,2) NOT NULL CHECK (price > 0),

@@ -1,6 +1,7 @@
 import { MongoClient } from 'mongodb';
 import { betterAuth } from 'better-auth';
 import { mongodbAdapter } from 'better-auth/adapters/mongodb';
+import { bearer } from 'better-auth/plugins';
 
 const mongoUrl = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@localhost:${process.env.MONGO_PORT}/${process.env.MONGO_DB}?authSource=admin`;
 
@@ -17,6 +18,9 @@ export const auth = betterAuth({
       enabled: true,
     },
   },
+  plugins: [
+    bearer(), // <--- Debes activarlo aquí
+  ],
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_BASE_URL,
   basePath: process.env.BETTER_AUTH_BASE_PATH,

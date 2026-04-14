@@ -68,7 +68,7 @@ db.createCollection('components', {
   validator: {
     $jsonSchema: {
       bsonType: 'object',
-      required: ['_id', 'type_id', 'name_model', 'model', 'specs', 'requirements', 'created_at', 'updated_at'],
+      required: ['_id', 'type_id', 'name_model', 'specs', 'requirements', 'created_at', 'updated_at'],
       properties: {
         _id: {
           // id with fixed pattern for value integrity
@@ -120,8 +120,8 @@ db.createCollection('builds', {
         },
         user_id: {
           // id correspondig to the better auth users collection
-          bsonType: 'string',
-          pattern: UUID_PATTERN,
+          bsonType: 'objectId',
+          description: 'ObjectId from better-auth users collection',
         },
         components: {
           bsonType: 'array',

@@ -1,28 +1,25 @@
-#!/usr/bin/env python3
-"""
-Sync MongoDB components to PostgreSQL components_mirror table.
-This populates the components_mirror table with data from MongoDB components.
-"""
-
-import os
-import sys
 from pymongo import MongoClient
 import psycopg2
 from psycopg2.extras import execute_values
+from dotenv import load_dotenv
+import os
+import sys
 
-# MongoDB connection params
-MONGO_USER = os.getenv('MONGO_USER', 'admin')
-MONGO_PASSWORD = os.getenv('MONGO_PASSWORD', 'mongo123')
-MONGO_HOST = os.getenv('MONGO_HOST', 'localhost')
-MONGO_PORT = int(os.getenv('MONGO_PORT', 27017))
-MONGO_DB = os.getenv('MONGO_DB', 'pc_builder')
+load_dotenv()
 
-# PostgreSQL connection params
-POSTGRES_HOST = os.getenv('POSTGRES_HOST', 'localhost')
-POSTGRES_PORT = int(os.getenv('POSTGRES_PORT', 5432))
-POSTGRES_DB = os.getenv('POSTGRES_DB', 'pc_builder')
-POSTGRES_USER = os.getenv('POSTGRES_USER', 'postgres')
-POSTGRES_PASSWORD = os.getenv('POSTGRES_PASSWORD', 'postgres123')
+# MongoDB
+MONGO_USER = os.getenv('MONGO_USER')
+MONGO_PASSWORD = os.getenv('MONGO_PASSWORD')
+MONGO_HOST = os.getenv('MONGO_HOST')
+MONGO_PORT = int(os.getenv('MONGO_PORT'))
+MONGO_DB = os.getenv('MONGO_DB')
+
+# PostgreSQL
+PG_HOST = os.getenv('POSTGRES_HOST')
+PG_PORT = int(os.getenv('POSTGRES_PORT'))
+PG_DB = os.getenv('POSTGRES_DB')
+PG_USER = os.getenv('POSTGRES_USER')
+PG_PASSWORD = os.getenv('POSTGRES_PASSWORD')
 
 
 def get_mongodb_connection():
@@ -35,11 +32,11 @@ def get_mongodb_connection():
 def get_postgres_connection():
     """Create PostgreSQL connection."""
     return psycopg2.connect(
-        host=POSTGRES_HOST,
-        port=POSTGRES_PORT,
-        database=POSTGRES_DB,
-        user=POSTGRES_USER,
-        password=POSTGRES_PASSWORD
+        host=PG_HOST,
+        port=PG_PORT,
+        database=PG_DB,
+        user=PG_USER,
+        password=PG_PASSWORD
     )
 
 

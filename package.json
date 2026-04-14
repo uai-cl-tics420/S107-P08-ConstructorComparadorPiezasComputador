@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "bun --hot src/index.ts",
     "start": "NODE_ENV=production bun src/index.ts",
-    "build": "bun run build.ts"
+    "build": "bun run build.ts",
+    "populate": "bun run src/lib/db/DBS_populator.ts"
   },
   "dependencies": {
     "better-auth": "^1.6.2",

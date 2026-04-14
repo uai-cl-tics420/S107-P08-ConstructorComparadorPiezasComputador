@@ -22,6 +22,12 @@ De esta manera BetterAuth no arrojará un aviso al iniciar la app debido a las c
 docker-compose up -d
 ```
 
+&emsp;Para insertar datos de demostración al sistema de base de datos ejecutar en terminal:
+
+```bash
+bun run populate
+```
+
 &emsp;Para iniciar la aplicación web ejecutar en terminal:
 
 ```bash

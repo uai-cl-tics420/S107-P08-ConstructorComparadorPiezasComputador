@@ -94,10 +94,3 @@ const server = serve({
 });
 
 console.log(`🚀 Server running at ${server.url}`);
-
-import { runDBSTests } from '@/lib/db/DBS_tester';
-
-// Al final del archivo, después de que inicia el servidor
-if (process.env.NODE_ENV !== 'production') {
-  await runDBSTests(db, pgPool);
-}

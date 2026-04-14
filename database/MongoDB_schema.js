@@ -104,6 +104,7 @@ db.createCollection('components', {
 });
 db.components.createIndex({ type_id: 1 });
 db.components.createIndex({ brand_id: 1 });
+db.components.createIndex({ name_model: 1 }, { unique: true });
 
 db.createCollection('builds', {
   // collection for user builds

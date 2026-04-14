@@ -1,7 +1,7 @@
 import { email, type User } from 'better-auth';
 import { auth } from './auth';
 
-// Type interfaces for user registration
+// Type interfaces for user operations
 interface UserRegistrationData {
   email: string;
   password: string;
@@ -20,7 +20,6 @@ interface RegistrationResponse {
   error?: string;
 }
 
-// Type interfaces for user login
 interface LoginData {
   email: string;
   password: string;
@@ -38,7 +37,22 @@ interface LoginResponse {
   error?: string;
 }
 
-// Type interface for session token validation
+interface UpdateUserData {
+  token: string;
+  name?: string;
+  email?: string;
+}
+
+interface UpdateUserResponse {
+  success: boolean;
+  user?: {
+    id: string;
+    email: string;
+    name?: string;
+  };
+  error?: string;
+}
+
 interface ValidateTokenResponse {
   success: boolean;
   user?: {

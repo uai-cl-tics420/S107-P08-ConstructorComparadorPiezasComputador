@@ -17,6 +17,9 @@ export const auth = betterAuth({
     deleteUser: {
       enabled: true,
     },
+    changeEmail: {
+      enabled: true,
+    },
   },
   plugins: [
     bearer(), // <--- Debes activarlo aquí

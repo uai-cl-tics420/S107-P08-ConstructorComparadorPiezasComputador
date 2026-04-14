@@ -1,4 +1,5 @@
 import requests
+from functools import lru_cache
 
 CATEGORY_CPU        = 3
 CATEGORY_GPU        = 2
@@ -23,154 +24,176 @@ STORES = [
     6, 280, 2174, 789, 2141, 359, 14, 45, 85, 8411, 7619,
 ]
 
+_STORES_PARAMS = "&".join(f"stores={s}" for s in STORES)
 
-def browse_category(category_id=CATEGORY_CPU, page=1, page_size=10, exclude_refurbished=False, stores=STORES):
-    url = f"https://publicapi.solotodo.com/categories/{category_id}/browse/"
-    params = [
-        ("exclude_refurbished", str(exclude_refurbished).lower()),
-        ("page", page),
-        ("page_size", page_size),
-        *[("stores", store_id) for store_id in stores],
-    ]
-    response = requests.get(url, params=params)
-    response.raise_for_status()
-    return response.json()
-
-
-def browse_cpus(page=1, page_size=10, **kwargs):
-    return browse_category(category_id=CATEGORY_CPU, page=page, page_size=page_size, **kwargs)
-
-def browse_ram(page=1, page_size=20, **kwargs):
-    return browse_category(category_id=CATEGORY_RAM, page=page, page_size=page_size, **kwargs)
-
-def browse_motherboards(page=1, page_size=20, **kwargs):
-    return browse_category(category_id=CATEGORY_MB, page=page, page_size=page_size, **kwargs)
-
-def browse_gpus(page=1, page_size=20, **kwargs):
-    return browse_category(category_id=CATEGORY_GPU, page=page, page_size=page_size, **kwargs)
-
-def browse_psus(page=1, page_size=20, **kwargs):
-    return browse_category(category_id=CATEGORY_PSU, page=page, page_size=page_size, **kwargs)
-
-def browse_cpu_coolers(page=1, page_size=20, **kwargs):
-    return browse_category(category_id=CATEGORY_CPU_COOLER, page=page, page_size=page_size, **kwargs)
-
-def browse_fans(page=1, page_size=20, **kwargs):
-    return browse_category(category_id=CATEGORY_FANS, page=page, page_size=page_size, **kwargs)
-
-def browse_pc_cases(page=1, page_size=20, **kwargs):
-    return browse_category(category_id=CATEGORY_PC_CASE, page=page, page_size=page_size, **kwargs)
-
-
-# Spec keys that are internal IDs or exact duplicates of product-level fields
 _SKIP_SPEC_KEYS = frozenset({"id", "unicode", "default_bucket", "total_core_count"})
+_NULL_STRINGS   = frozenset({"No posee", "no posee", "N/A", ""})
 
-# String values that represent "no value" in the API
-_NULL_STRINGS = frozenset({"No posee", "no posee", "N/A", ""})
+_BASE    = "https://publicapi.solotodo.com"
+_SESSION = requests.Session()
 
 
-def _is_traversal(base):
+@lru_cache(maxsize=512)
+def _is_traversal(base: str) -> bool:
     parts = base.split("_")
-
-    # Pattern 1: consecutive duplicate (e.g. socket_socket, brand_brand)
     for i in range(len(parts) - 1):
         if parts[i] == parts[i + 1]:
             return True
-
-    # Pattern 2: intermediate 'family' table (line_family_*)
     if len(parts) >= 2 and parts[1] == "family":
         return True
-
-    # Pattern 3: brand or step sub-traversal beyond the first hop
     if len(parts) >= 3 and parts[-1] in ("brand", "step"):
         return True
-
     return False
 
 
-def _clean_specs(raw_specs):
-    # Bucket each key into its base name and suffix type
-    groups = {}
-    plain = {}
+def _clean_specs(raw_specs: dict) -> dict:
+    groups: dict[str, dict] = {}
+    plain:  dict[str, object] = {}
 
     for k, v in raw_specs.items():
         if k in _SKIP_SPEC_KEYS:
             continue
-        for suffix in ("_value", "_name", "_unicode"):
-            if k.endswith(suffix):
-                base = k[: -len(suffix)]
-                groups.setdefault(base, {})[suffix.lstrip("_")] = v
-                break
+        if k.endswith("_value"):
+            groups.setdefault(k[:-6], {})["value"] = v
+        elif k.endswith("_name"):
+            groups.setdefault(k[:-5], {})["name"] = v
+        elif k.endswith("_unicode"):
+            groups.setdefault(k[:-8], {})["unicode"] = v
         else:
-            plain[k] = v  # boolean / int / float with no suffix
+            plain[k] = v
 
-    # Unicode-only string summaries that have a numeric quantity breakdown
     redundant_summaries = {
         base
         for base, variants in groups.items()
-        if variants.keys() == {"unicode"} and (base + "_quantity") in groups
+        if tuple(variants) == ("unicode",) and (base + "_quantity") in groups
     }
 
-    result = {}
+    result: dict[str, object] = {}
 
-    # Plain fields first (direct numeric/bool attributes)
     for k, v in plain.items():
         if not _is_traversal(k):
             result[k] = v
 
-    # Grouped fields: value > name > unicode
     for base, variants in groups.items():
-        if _is_traversal(base) or base in redundant_summaries:
+        if _is_traversal(base) or base in redundant_summaries or base in result:
             continue
-        if base in result:  # already set by a plain field
-            continue
-        v = variants.get("value", variants.get("name", variants.get("unicode")))
+        v = variants.get("value") or variants.get("name") or variants.get("unicode")
         result[base] = None if v in _NULL_STRINGS else v
 
     return result
 
 
-def _to_float(value):
+def _to_float(value) -> float | None:
     try:
         return float(value)
     except (TypeError, ValueError):
         return None
 
 
-def _clp_prices(product_entry):
-    prices = product_entry.get("metadata", {}).get("prices_per_currency", [])
+def _clp_prices(product_entry: dict) -> tuple[float | None, float | None]:
+    prices = product_entry.get("metadata", {}).get("prices_per_currency")
     if not prices:
         return None, None
-    return (
-        _to_float(prices[0].get("offer_price")),
-        _to_float(prices[0].get("normal_price")),
+    first = prices[0]
+    return _to_float(first.get("offer_price")), _to_float(first.get("normal_price"))
+
+
+def _get(url: str, **params) -> dict:
+    resp = _SESSION.get(url, params=params)
+    resp.raise_for_status()
+    return resp.json()
+
+
+def browse_category(
+    category_id = CATEGORY_CPU,
+    page: int    = 1,
+    page_size: int = 10,
+    exclude_refurbished: bool = False,
+) -> dict:
+    url = f"{_BASE}/categories/{category_id}/browse/"
+    resp = _SESSION.get(
+        url,
+        params={
+            "exclude_refurbished": str(exclude_refurbished).lower(),
+            "page": page,
+            "page_size": page_size,
+        },
     )
+    full_url = resp.request.url + "&" + _STORES_PARAMS
+    resp = _SESSION.get(full_url)
+    resp.raise_for_status()
+    return resp.json()
 
-def process_json_response(json_response):
+
+def browse_cpus        (page=1, page_size=10, **kw): return browse_category(CATEGORY_CPU,        page, page_size, **kw)
+def browse_ram         (page=1, page_size=20, **kw): return browse_category(CATEGORY_RAM,        page, page_size, **kw)
+def browse_motherboards(page=1, page_size=20, **kw): return browse_category(CATEGORY_MB,         page, page_size, **kw)
+def browse_gpus        (page=1, page_size=20, **kw): return browse_category(CATEGORY_GPU,        page, page_size, **kw)
+def browse_psus        (page=1, page_size=20, **kw): return browse_category(CATEGORY_PSU,        page, page_size, **kw)
+def browse_cpu_coolers (page=1, page_size=20, **kw): return browse_category(CATEGORY_CPU_COOLER, page, page_size, **kw)
+def browse_fans        (page=1, page_size=20, **kw): return browse_category(CATEGORY_FANS,       page, page_size, **kw)
+def browse_pc_cases    (page=1, page_size=20, **kw): return browse_category(CATEGORY_PC_CASE,    page, page_size, **kw)
+
+
+def process_json_response(json_response: dict) -> dict:
     results = {}
-
     for entry in json_response.get("results", []):
         for product_entry in entry.get("product_entries", []):
             product = product_entry.get("product", {})
             product_id = product.get("id")
-
             if product_id is None:
                 continue
-
             offer_price, normal_price = _clp_prices(product_entry)
-
             results[product_id] = {
-                # Core identity fields
                 "id":           product_id,
                 "name":         product.get("name"),
                 "slug":         product.get("slug"),
                 "picture_url":  product.get("picture_url"),
                 "last_updated": product.get("last_updated"),
-                # Prices as floats
                 "normal_price": normal_price,
                 "offer_price":  offer_price,
-                # All cleaned specs merged at top level
-                **_clean_specs(product.get("specs", {})),
+                **_clean_specs(product.get("specs") or {}),
             }
-
     return results
+
+
+def get_store_info  (store_id):   return _get(f"{_BASE}/stores/{store_id}/")
+def get_product_info(product_id): return _get(f"{_BASE}/products/{product_id}/")
+
+def process_product_prices(entities: list) -> list[dict]:
+    results = []
+    for entity in entities:
+        registry = entity.get("active_registry", {})
+        store_url = entity.get("store", "")
+        store_id = int(store_url.rstrip("/").rsplit("/", 1)[-1]) if store_url else None
+
+        results.append({
+            "entity_id":    entity.get("id"),
+            "store_id":     store_id,
+            "store_url":    store_url,
+            "name":         entity.get("name"),
+            "sku":          entity.get("sku"),
+            "external_url": entity.get("external_url"),
+            "condition":    entity.get("condition"),
+            "is_visible":   entity.get("is_visible"),
+            "normal_price": _to_float(registry.get("normal_price")),
+            "offer_price":  _to_float(registry.get("offer_price")),
+            "is_available": registry.get("is_available"),
+            "last_updated": registry.get("timestamp"),
+            "picture_urls": entity.get("picture_urls", []),
+            "best_coupon":  entity.get("best_coupon"),
+        })
+
+    results.sort(key=lambda x: x["offer_price"] or float("inf"))
+    return results
+
+
+def get_product_prices(product_id: int) -> list[dict]:
+    data = _get(
+        f"{_BASE}/products/available_entities/",
+        ids=product_id,
+        exclude_with_monthly_payment=1,
+    )
+    results = data.get("results", [])
+    entities = results[0].get("entities", []) if results else []
+    return process_product_prices(entities)

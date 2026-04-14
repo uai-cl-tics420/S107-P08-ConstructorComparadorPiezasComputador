@@ -1,5 +1,4 @@
 import requests
-from typing import Any
 
 CATEGORY_CPU        = 3
 CATEGORY_GPU        = 2
@@ -70,7 +69,7 @@ _SKIP_SPEC_KEYS = frozenset({"id", "unicode", "default_bucket", "total_core_coun
 _NULL_STRINGS = frozenset({"No posee", "no posee", "N/A", ""})
 
 
-def _is_traversal(base: str) -> bool:
+def _is_traversal(base):
     parts = base.split("_")
 
     # Pattern 1: consecutive duplicate (e.g. socket_socket, brand_brand)
@@ -89,10 +88,10 @@ def _is_traversal(base: str) -> bool:
     return False
 
 
-def _clean_specs(raw_specs: dict) -> dict:
+def _clean_specs(raw_specs):
     # Bucket each key into its base name and suffix type
-    groups: dict[str, dict[str, Any]] = {}
-    plain:  dict[str, Any] = {}
+    groups = {}
+    plain = {}
 
     for k, v in raw_specs.items():
         if k in _SKIP_SPEC_KEYS:
@@ -112,7 +111,7 @@ def _clean_specs(raw_specs: dict) -> dict:
         if variants.keys() == {"unicode"} and (base + "_quantity") in groups
     }
 
-    result: dict[str, Any] = {}
+    result = {}
 
     # Plain fields first (direct numeric/bool attributes)
     for k, v in plain.items():
@@ -131,15 +130,14 @@ def _clean_specs(raw_specs: dict) -> dict:
     return result
 
 
-def _to_float(value: Any) -> float | None:
+def _to_float(value):
     try:
         return float(value)
     except (TypeError, ValueError):
         return None
 
 
-def _clp_prices(product_entry: dict) -> tuple[float | None, float | None]:
-    """Returns (offer_price, normal_price) in CLP as floats."""
+def _clp_prices(product_entry):
     prices = product_entry.get("metadata", {}).get("prices_per_currency", [])
     if not prices:
         return None, None
@@ -148,8 +146,8 @@ def _clp_prices(product_entry: dict) -> tuple[float | None, float | None]:
         _to_float(prices[0].get("normal_price")),
     )
 
-def process_json_response(json_response: dict) -> dict[int, dict]:
-    results: dict[int, dict] = {}
+def process_json_response(json_response):
+    results = {}
 
     for entry in json_response.get("results", []):
         for product_entry in entry.get("product_entries", []):

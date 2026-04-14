@@ -26,7 +26,7 @@ STORES = [
 
 _STORES_PARAMS = "&".join(f"stores={s}" for s in STORES)
 
-_SKIP_SPEC_KEYS = frozenset({"id", "unicode", "default_bucket", "total_core_count"})
+_SKIP_SPEC_KEYS = frozenset({"id", "unicode", "default_bucket", "total_core_count", "picture"})
 _NULL_STRINGS   = frozenset({"No posee", "no posee", "N/A", ""})
 
 _BASE    = "https://publicapi.solotodo.com"
@@ -51,7 +51,7 @@ def _clean_specs(raw_specs: dict) -> dict:
     plain:  dict[str, object] = {}
 
     for k, v in raw_specs.items():
-        if k in _SKIP_SPEC_KEYS:
+        if k in _SKIP_SPEC_KEYS or k.endswith("_id"):
             continue
         if k.endswith("_value"):
             groups.setdefault(k[:-6], {})["value"] = v

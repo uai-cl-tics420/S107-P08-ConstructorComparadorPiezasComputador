@@ -4,8 +4,7 @@ from datetime import datetime
 from dotenv import load_dotenv
 from pymongo import MongoClient
 import psycopg2
-import requests
-from solotodo import STORES, process_json_response
+from solotodo import browse_category, STORES, process_json_response
 
 load_dotenv()
 
@@ -60,18 +59,6 @@ def extract_brand(product_name: str) -> str:
     # Fallback: first word
     return product_name.split()[0]
 
-
-def browse_category(category_id: int, page_size: int = 10):
-    """Browse a SoloTodo category and return processed products."""
-    url = f"https://publicapi.solotodo.com/categories/{category_id}/browse/"
-    params = [
-        ("page_size", page_size),
-        ("page", 1),
-        *[("stores", s) for s in STORES],
-    ]
-    resp = requests.get(url, params=params)
-    resp.raise_for_status()
-    return process_json_response(resp.json())
 
 
 def main():
@@ -138,7 +125,7 @@ def main():
             clean_name = name.split('[')[0].split('(')[0].strip()
 
             # Extract and ensure brand exists
-            brand_name = extract_brand(name)
+            brand_name = product.get('brand') or extract_brand(name)
             if brand_name not in brands_cache:
                 brand_id = deterministic_uuid('brand', brand_name)
                 brands_cache[brand_name] = brand_id

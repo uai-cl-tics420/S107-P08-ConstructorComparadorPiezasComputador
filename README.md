@@ -16,10 +16,10 @@ npx auth secret
 
 De esta manera BetterAuth no arrojará un aviso al iniciar la app debido a las características de BETTER_AUTH_SECRET.
 
-&emsp;Para montar el sistema de base de datos ejecutar en terminal:
+&emsp;Para montar el sistema de base de datos y la aplicación web ejecutar en terminal:
 
 ```bash
-docker-compose up -d
+docker-compose up -d --build
 ```
 
 &emsp;Para insertar datos de demostración al sistema de base de datos ejecutar en terminal:
@@ -28,8 +28,6 @@ docker-compose up -d
 bun run populate
 ```
 
-&emsp;Para iniciar la aplicación web ejecutar en terminal:
+&emsp;Para visualizar la app web visitar la dirección:
 
-```bash
-bun run start
-```
+http://localhost:3000

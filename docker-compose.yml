@@ -16,6 +16,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+      start_interval: 1s
 
   mongo:
     image: mongo:7.0
@@ -34,9 +36,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+      start_interval: 1s
 
   bun:
-    #image: oven/bun:latest
     build:
       context: .
       dockerfile: Dockerfile
@@ -46,9 +49,9 @@ services:
       - '3000:3000'
     env_file:
       - ./.env
-    #environment:
-    #  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    # command: ["bun", "--watch", "./src/index.ts"]
+    environment:
+      - POSTGRES_HOST=postgres
+      - MONGO_HOST=mongo
     depends_on:
       postgres:
         condition: service_healthy

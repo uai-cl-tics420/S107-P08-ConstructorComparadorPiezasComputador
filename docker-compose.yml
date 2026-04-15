@@ -1,7 +1,7 @@
 services:
   postgres:
     image: postgres:15-alpine
-    container_name: pc_builder_postgres
+    container_name: postgres
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -19,7 +19,7 @@ services:
 
   mongo:
     image: mongo:7.0
-    container_name: pc_builder_mongo
+    container_name: mongo
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
@@ -34,6 +34,26 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  bun:
+    #image: oven/bun:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bun
+    init: true
+    ports:
+      - '3000:3000'
+    env_file:
+      - ./.env
+    #environment:
+    #  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    # command: ["bun", "--watch", "./src/index.ts"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
 
 volumes:
   postgres_data:

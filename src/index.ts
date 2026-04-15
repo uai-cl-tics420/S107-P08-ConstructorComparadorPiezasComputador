@@ -7,7 +7,7 @@ import { MongoClient } from 'mongodb';
 import { Pool } from 'pg';
 
 // Initialize MongoDB connection
-const mongoURL = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@localhost:${process.env.MONGO_PORT}/${process.env.MONGO_DB}?authSource=admin`;
+const mongoURL = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}?authSource=admin`;
 const mongoClient = new MongoClient(mongoURL);
 await mongoClient.connect();
 const db = mongoClient.db(process.env.MONGO_DB);
@@ -16,8 +16,8 @@ const db = mongoClient.db(process.env.MONGO_DB);
 const pgPool = new Pool({
   user: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
-  host: 'localhost',
-  port: parseInt(process.env.POSTGRES_PORT || '5432'),
+  host: process.env.POSTGRES_HOST,
+  port: parseInt(process.env.POSTGRES_PORT),
   database: process.env.POSTGRES_DB,
 });
 

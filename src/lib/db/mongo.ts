@@ -1,7 +1,7 @@
 import { MongoClient } from 'mongodb';
 import { getPricesByComponentId } from './postgres';
 
-const mongoUrl = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@localhost:${process.env.MONGO_PORT}/${process.env.MONGO_DB}?authSource=admin`;
+const mongoUrl = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}?authSource=admin`;
 
 const client = new MongoClient(mongoUrl);
 await client.connect();

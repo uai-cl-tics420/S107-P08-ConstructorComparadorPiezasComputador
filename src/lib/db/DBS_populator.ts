@@ -4,12 +4,12 @@ import * as userManager from './DBS_userManager';
 import * as componentManager from './DBS_componentAndPricesManager';
 
 // Database connection configuration
-const mongoUrl = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@localhost:${process.env.MONGO_PORT}/${process.env.MONGO_DB}?authSource=admin`;
+const mongoUrl = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}?authSource=admin`;
 const pgConfig = {
   user: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
-  host: 'localhost', // O el host correspondiente
-  port: parseInt(process.env.POSTGRES_PORT || '5432'),
+  host: process.env.POSTGRES_HOST,
+  port: parseInt(process.env.POSTGRES_PORT),
   database: process.env.POSTGRES_DB,
 };
 

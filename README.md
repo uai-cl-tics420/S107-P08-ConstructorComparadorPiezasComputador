@@ -1,4 +1,4 @@
-# S101-P08-ConstructorComparadorPiezasComputador
+# S107-P08-ConstructorComparadorPiezasComputador
 
 ### Descripción
 
@@ -11,7 +11,7 @@
 &emsp;Primero, asegurarse de crear un archivo .env en el directorio raíz a partir del archivo .env.example proporcionado como template, el secreto para la variable BETTER_AUTH_SECRET puede ser generado en terminal utilizando:
 
 ```bash
-npx auth secret
+bunx auth secret
 ```
 
 De esta manera BetterAuth no arrojará un aviso al iniciar la app debido a las características de BETTER_AUTH_SECRET.

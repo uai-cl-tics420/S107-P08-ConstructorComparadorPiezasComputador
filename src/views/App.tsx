@@ -125,6 +125,11 @@ export function App() {
         addToast('Solo puedes comparar 2 componentes a la vez', 'warning');
         return prev;
       }
+      // Solo permitir comparar componentes del mismo tipo
+      if (prev.length === 1 && prev[0]!.type_id !== component.type_id) {
+        addToast(`Solo puedes comparar ${prev[0]!.type_name} con ${prev[0]!.type_name}`, 'warning');
+        return prev;
+      }
       const next = [...prev, component];
       if (next.length === 2) setShowCompareModal(true);
       return next;

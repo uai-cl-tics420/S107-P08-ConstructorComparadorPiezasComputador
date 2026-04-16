@@ -23,7 +23,7 @@ export interface Price {
   recorded_at: string;
 }
 
-// Specs para verificación de compatibilidad
+// Specs para verificación de compatibilidad y display
 export interface ComponentSpecs {
   socket?: string;         // CPU/Motherboard: AM5, LGA1700
   ram_type?: string;       // CPU/Motherboard/RAM: DDR4, DDR5
@@ -31,6 +31,7 @@ export interface ComponentSpecs {
   form_factor?: string;    // Motherboard/Case: ATX, mATX, ITX
   storage_type?: string;   // Storage: NVMe, SATA
   wattage?: number;        // PSU: potencia
+  [key: string]: string | number | boolean | null | undefined;
 }
 
 export interface Component {

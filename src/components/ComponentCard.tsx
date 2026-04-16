@@ -1,5 +1,46 @@
 import type { Component } from "../types";
 
+// Nombres legibles para las specs
+const SPEC_LABELS: Record<string, string> = {
+  core_count: 'Cores', thread_count: 'Threads', tdp: 'TDP',
+  base_clock: 'Base Clock', boost_clock: 'Boost Clock',
+  socket: 'Socket', gpu: 'GPU Integrada',
+  cinebench_r20_single_score: 'CB R20 (1T)',
+  cinebench_r20_multi_score: 'CB R20 (nT)',
+  gpu_boost_clock: 'Boost Clock', vram_quantity: 'VRAM',
+  gpu_tdp: 'TDP', bus_width: 'Bus',
+  capacity: 'Capacidad', bus_speed: 'Velocidad',
+  ram_type: 'Tipo', module_count: 'Modulos',
+  chipset: 'Chipset', memory_slots_quantity: 'Slots RAM',
+  capacity_value: 'Capacidad', bus_type: 'Interface',
+  read_speed: 'Lectura', write_speed: 'Escritura',
+  wattage: 'Watts', certification: 'Certificacion',
+  is_modular: 'Modular', form_factor: 'Form Factor',
+  max_motherboard_form_factor: 'Form Factor',
+};
+
+// Specs principales por tipo de componente (orden de prioridad)
+const PRIORITY_SPECS: Record<string, string[]> = {
+  CPU:          ['core_count', 'thread_count', 'socket', 'tdp', 'boost_clock'],
+  GPU:          ['vram_quantity', 'gpu_boost_clock', 'gpu_tdp', 'bus_width'],
+  RAM:          ['capacity', 'bus_speed', 'ram_type', 'module_count'],
+  Motherboard:  ['chipset', 'socket', 'form_factor', 'memory_slots_quantity'],
+  Storage:      ['capacity_value', 'bus_type', 'read_speed', 'write_speed'],
+  PSU:          ['wattage', 'certification', 'is_modular'],
+  Case:         ['max_motherboard_form_factor', 'form_factor'],
+  'CPU Cooler': ['tdp', 'form_factor'],
+};
+
+function formatSpecValue(key: string, value: unknown): string {
+  if (value === null || value === undefined) return '-';
+  if (typeof value === 'boolean') return value ? 'Si' : 'No';
+  if (key === 'tdp' || key === 'gpu_tdp') return `${value}W`;
+  if (key === 'wattage') return `${value}W`;
+  if (key === 'vram_quantity') return `${value} GB`;
+  if (key === 'capacity') return `${value}`;
+  return String(value);
+}
+
 // Colores y gradientes por tipo de componente
 const TYPE_CONFIG: Record<string, { badge: string; glow: string; dot: string }> = {
   CPU:          { badge: "bg-violet-500/15 text-violet-300 border-violet-400/25", glow: "hover:shadow-violet-500/10", dot: "bg-violet-400" },
@@ -39,6 +80,23 @@ export function ComponentCard({ component, onAdd, onCompare, isSelectedForCompar
         </h3>
         <p className="text-neutral-500 text-xs mt-1 font-medium">{component.brand_name}</p>
       </div>
+
+      {/* Specs */}
+      {component.specs && (() => {
+        const priorityKeys = PRIORITY_SPECS[component.type_name] ?? [];
+        const specsToShow = priorityKeys.filter(k => component.specs?.[k] != null).slice(0, 4);
+
+        return specsToShow.length > 0 ? (
+          <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
+            {specsToShow.map(key => (
+              <div key={key} className="flex justify-between items-baseline gap-1">
+                <span className="text-neutral-500 text-[10px] uppercase tracking-wider font-medium truncate">{SPEC_LABELS[key] ?? key}</span>
+                <span className="text-neutral-300 text-xs font-semibold tabular-nums shrink-0">{formatSpecValue(key, component.specs![key])}</span>
+              </div>
+            ))}
+          </div>
+        ) : null;
+      })()}
 
       {/* Separador */}
       <div className="h-px bg-white/5" />

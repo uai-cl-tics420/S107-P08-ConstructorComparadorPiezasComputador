@@ -49,3 +49,8 @@ bun run populate
 docker-compose down -v
 docker-compose up -d --build
 ```
+
+#### Ingreso con email OTP:
+
+1. Se debe ingresar a https://resend.com/ y crear una cuenta.
+2. En el dashboard crear una nueva API key y copiarla en la variable de entorno `RESEND_API_KEY`, reemplazando el valor <KEY_HERE>, en el archivo `.env` según el formato descrito en el archivo `.env.example`.

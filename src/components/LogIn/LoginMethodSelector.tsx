@@ -20,6 +20,12 @@ export default function LoginMethodSelector() {
       </button>
 
       <button
+        onClick={() => setView('OTP')}
+        className='w-full bg-blue-600/10 border border-blue-500/30 text-blue-400 font-semibold py-2.5 rounded-lg hover:bg-blue-600/20 transition-colors cursor-pointer'>
+        Continúa con clave de uso único
+      </button>
+
+      <button
         onClick={handleGoogleLogin}
         className='w-full flex items-center justify-center gap-3 bg-white text-black font-semibold py-2.5 rounded-lg hover:bg-gray-200 transition-colors cursor-pointer'>
         <svg className='w-5 h-5' viewBox='0 0 24 24'>

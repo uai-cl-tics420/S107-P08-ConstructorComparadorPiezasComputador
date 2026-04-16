@@ -5,7 +5,6 @@ import { getComponents, getComponentById, getBrands, getComponentTypes } from '@
 import index from './index.html';
 import { MongoClient } from 'mongodb';
 import { Pool } from 'pg';
-import { processAuthTask } from '@/lib/auth/Login_Signon';
 
 // Initialize MongoDB connection
 const mongoURL = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}?authSource=admin`;
@@ -18,7 +17,7 @@ const pgPool = new Pool({
   user: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
   host: process.env.POSTGRES_HOST,
-  port: parseInt(process.env.POSTGRES_PORT || '5432'),
+  port: parseInt(process.env.POSTGRES_PORT!),
   database: process.env.POSTGRES_DB,
 });
 
@@ -60,27 +59,6 @@ const server = serve({
     '/api/brands': {
       async GET() {
         return Response.json(await getBrands());
-      },
-    },
-
-    '/api/login': {
-      async POST(req) {
-        try {
-          const body = await req.json();
-          const { task, payload } = body;
-
-          if (!task) {
-            return Response.json({ error: 'Falta el campo task' }, { status: 400 });
-          }
-
-          const result = await processAuthTask(task, payload);
-
-          return Response.json(result, {
-            status: result.success ? 200 : 401,
-          });
-        } catch (e) {
-          return Response.json({ error: 'Invalid request' }, { status: 400 });
-        }
       },
     },
   },

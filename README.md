@@ -22,12 +22,30 @@ De esta manera BetterAuth no arrojará un aviso al iniciar la app debido a las c
 docker-compose up -d --build
 ```
 
-&emsp;Para insertar datos de demostración al sistema de base de datos ejecutar en terminal:
+&emsp;Por último, para visualizar la app web visitar la dirección:
+
+http://localhost:3000
+
+---
+
+### Funcionalidades adicionales:
+
+#### Base de datos:
+
+&emsp;Para insertar datos demostrativos a la base de datos ejecutar en terminal:
 
 ```bash
 bun run populate
 ```
 
-&emsp;Para visualizar la app web visitar la dirección:
+#### Google SSO con OAuth:
 
-http://localhost:3000
+1. Se debe utilizar una cuenta de google para crear un proyecto de google cloud y habilitar OAuth.
+2. Se debe generar credenciales de cliente OAuth desde google cloud.
+3. Copiar `ID de cliente` y `Secreto de cliente` en las variables de entorno de `.env` en los campos faltantes de Google OAuth según el formato de `.env.example`
+4. Volver a montar los contenedores de docker ejecutando en terminal:
+
+```bash
+docker-compose down -v
+docker-compose up -d --build
+```

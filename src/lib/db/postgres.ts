@@ -14,7 +14,7 @@ await client.connect();
 export async function getPricesByComponentId(componentId: string) {
   try {
     const result = await client.query(
-      `SELECT id, vendor_id, vendor_name, price, recorded_at
+      `SELECT id, vendor_id, price, recorded_at
        FROM public.prices
        WHERE component_id = $1
        ORDER BY price ASC

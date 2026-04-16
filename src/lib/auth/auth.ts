@@ -21,9 +21,6 @@ export const auth = betterAuth({
       enabled: true,
     },
   },
-  plugins: [
-    bearer(), // <--- Debes activarlo aquí
-  ],
   secret: process.env.BETTER_AUTH_SECRET,
   baseURL: process.env.BETTER_AUTH_BASE_URL,
   basePath: process.env.BETTER_AUTH_BASE_PATH,

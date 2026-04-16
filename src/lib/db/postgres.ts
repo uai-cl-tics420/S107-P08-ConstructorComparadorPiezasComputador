@@ -2,7 +2,7 @@ import { Client } from 'pg';
 
 const client = new Client({
   host: process.env.POSTGRES_HOST,
-  port: parseInt(process.env.POSTGRES_PORT),
+  port: parseInt(process.env.POSTGRES_PORT || '5432'),
   database: process.env.POSTGRES_DB,
   user: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
@@ -19,7 +19,7 @@ export async function getPricesByComponentId(componentId: string) {
        WHERE component_id = $1
        ORDER BY price ASC, recorded_at DESC
        LIMIT 1`,
-      [componentId]
+      [componentId],
     );
 
     return result.rows.map((row: any) => ({

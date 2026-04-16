@@ -17,6 +17,7 @@ function start() {
       <Routes>
         <Route path='/' element={<App />} />
         <Route path='/login' element={<LogIn />} />
+        <Route path='/account' element={<App />} /> {/*PLACEHOLDER*/}
       </Routes>
     </BrowserRouter>,
   );

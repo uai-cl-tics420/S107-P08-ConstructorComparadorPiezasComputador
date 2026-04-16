@@ -6,9 +6,24 @@
 
 ---
 
+### Requerimientos
+
+&emsp;Necesita tener instalada la última verisón de bun y de docker:
+
+- [bun install](https://bun.com/docs/installation)
+- [Docker install](https://www.docker.com/get-started/)
+
+---
+
 ### Ejecución
 
-&emsp;Primero, asegurarse de crear un archivo .env en el directorio raíz a partir del archivo .env.example proporcionado como template, el secreto para la variable BETTER_AUTH_SECRET puede ser generado en terminal utilizando:
+&emsp;Primero, instale todas las librerías necesarias ejecutando en terminal:
+
+```bash
+bun install
+```
+
+&emsp;Luego, asegurarse de crear un archivo .env en el directorio raíz a partir del archivo .env.example proporcionado como template, el secreto para la variable BETTER_AUTH_SECRET puede ser generado en terminal utilizando:
 
 ```bash
 bunx auth secret
@@ -24,7 +39,7 @@ docker-compose up -d --build
 
 &emsp;Por último, para visualizar la app web visitar la dirección:
 
-http://localhost:3000
+[localhost:3000](http://localhost:3000)
 
 ---
 

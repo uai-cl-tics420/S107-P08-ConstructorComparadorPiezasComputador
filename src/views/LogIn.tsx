@@ -20,7 +20,7 @@ export function LogIn() {
       </header>
 
       <main className='flex-1 w-full mx-auto px-6 py-12 flex items-center justify-center'>
-        <div className='w-full max-w-3xl h-full max-h-150 flex border border-white/5 rounded-2xl overflow-hidden shadow-2xl'>
+        <div className='w-full max-w-3xl h-full flex border border-white/5 rounded-2xl overflow-hidden shadow-2xl'>
           <div className='hidden md:flex w-3/7 bg-linear-to-br from-blue-600/20 to-blue-900/40 border-r border-white/5 flex-col items-center justify-center text-center py-3'>
             <div className='flex flex-col items-center gap-4'>
               <div className='w-24 h-24 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-bold text-4xl shadow-lg'>

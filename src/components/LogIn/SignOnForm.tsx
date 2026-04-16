@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { signUp } from '@/lib/auth/auth-client';
 import { useNavigate } from 'react-router-dom';
+import { validatePassword } from '@/lib/auth/validators';
 
 export default function SignOnForm() {
   const [name, setName] = useState('');
@@ -14,7 +15,12 @@ export default function SignOnForm() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Validación local: ¿Las contraseñas coinciden?
+    const validation = validatePassword(password);
+    if (!validation.isValid) {
+      setError(`${validation.message!.join('\n')}`);
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError('Las contraseñas no coinciden');
       return;
@@ -34,7 +40,16 @@ export default function SignOnForm() {
         onRequest: () => setLoading(true),
         onResponse: () => setLoading(false),
         onError: (ctx) => {
-          setError(ctx.error.message || 'Error al crear la cuenta');
+          switch (ctx.error.message) {
+            case '[body.email] Invalid email address':
+              setError('El email no es válido');
+              break;
+            case 'User already exists. Use another email.':
+              setError('Este email ya está en uso');
+              break;
+            default:
+              setError('Error al crear la cuenta');
+          }
         },
         onSuccess: () => {
           navigate('/');
@@ -45,12 +60,16 @@ export default function SignOnForm() {
 
   return (
     <form onSubmit={handleSignUp} className='flex flex-col gap-4'>
-      {error && <div className='bg-red-500/10 border border-red-500/50 text-red-500 text-xs p-2 rounded'>{error}</div>}
+      {error && (
+        <div className='bg-red-500/10 border border-red-500/50 text-red-500 text-xs p-2 rounded whitespace-pre-line'>
+          {error}
+        </div>
+      )}
 
       {/* Campo: Nombre */}
       <div className='flex flex-col gap-1.5'>
         <label className='text-sm text-gray-300' htmlFor='name'>
-          Nombre completo
+          Nombre de usuario
         </label>
         <input
           id='name'

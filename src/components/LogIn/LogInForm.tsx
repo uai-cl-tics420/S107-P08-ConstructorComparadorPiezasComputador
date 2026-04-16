@@ -24,7 +24,16 @@ export default function LogInForm() {
         onRequest: () => setLoading(true),
         onResponse: () => setLoading(false),
         onError: (ctx) => {
-          setError(ctx.error.message || 'Error al iniciar sesión');
+          switch (ctx.error.message) {
+            case 'Invalid email':
+              setError('El email no es válido');
+              break;
+            case 'Invalid email or password':
+              setError('El email o contraseña son icorrectos');
+              break;
+            default:
+              setError('Error al crear la cuenta');
+          }
         },
         onSuccess: () => {
           navigate('/');
@@ -35,6 +44,12 @@ export default function LogInForm() {
 
   return (
     <form onSubmit={handleLogin} className='flex flex-col gap-4'>
+      {error && (
+        <div className='bg-red-500/10 border border-red-500/50 text-red-500 text-xs p-2 rounded whitespace-pre-line'>
+          {error}
+        </div>
+      )}
+
       <div className='flex flex-col gap-1.5'>
         <label className='text-sm text-gray-300' htmlFor='email'>
           Email

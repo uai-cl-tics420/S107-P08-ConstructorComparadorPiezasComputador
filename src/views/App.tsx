@@ -136,12 +136,16 @@ export function App() {
     });
   };
 
-  const handleSaveBuild = () => {
+  const handleSaveBuild = async () => {
     if (!saveName.trim()) return;
-    saveBuild(saveName.trim(), buildComponents);
-    addToast(`Build "${saveName.trim()}" guardado`, 'success');
-    setSaveName('');
-    setShowSaveDialog(false);
+    try {
+      await saveBuild(saveName.trim(), buildComponents);
+      addToast(`Build "${saveName.trim()}" guardado`, 'success');
+      setSaveName('');
+      setShowSaveDialog(false);
+    } catch {
+      addToast('Error al guardar el build', 'error');
+    }
   };
 
   const handleLoadBuild = (build: SavedBuild) => {
@@ -153,6 +157,14 @@ export function App() {
   const handleClearBuild = () => {
     setBuildComponents([]);
     addToast('Build limpiado', 'warning');
+  };
+
+  // Desde el placeholder de BuildList, ir directo a buscar un tipo específico
+  const handleSearchType = (typeName: string) => {
+    const type = componentTypes.find((t) => t.name === typeName);
+    if (type) setSelectedType(String(type.id));
+    setSearch('');
+    setActiveTab('search');
   };
 
   const handleLogout = async () => {
@@ -538,7 +550,7 @@ export function App() {
                 </div>
               )}
 
-              <BuildList buildComponents={buildComponents} onRemove={handleRemove} />
+              <BuildList buildComponents={buildComponents} onRemove={handleRemove} onSearchType={handleSearchType} />
             </div>
 
             {/* Right sidebar */}
@@ -547,9 +559,13 @@ export function App() {
               <SavedBuildsPanel
                 savedBuilds={savedBuilds}
                 onLoad={handleLoadBuild}
-                onDelete={(id) => {
-                  deleteBuild(id);
-                  addToast('Build eliminado', 'warning');
+                onDelete={async (id) => {
+                  try {
+                    await deleteBuild(id);
+                    addToast('Build eliminado', 'warning');
+                  } catch {
+                    addToast('Error al eliminar el build', 'error');
+                  }
                 }}
               />
             </div>

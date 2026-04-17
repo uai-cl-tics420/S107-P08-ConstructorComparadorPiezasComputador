@@ -2,7 +2,16 @@
 
 @layer base {
   :root {
-    @apply text-[rgba(255,255,255,0.87)] bg-[#0f1117] font-sans;
+    --bg-base: #050505;
+    --bg-surface: #0F0F0F;
+    --bg-elevated: #1A1A1A;
+    --border: #2A2A2A;
+    --text-primary: #FAFAFA;
+    --text-muted: #6B7280;
+    --accent-neon: #00FFA3;
+    --accent-alt: #7B61FF;
+
+    @apply text-[--text-primary] bg-[--bg-base] font-sans;
   }
 
   body {
@@ -10,19 +19,10 @@
   }
 }
 
-@keyframes spin {
-  from {
-    transform: rotate(0);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes cardIn {
+@keyframes fade-up {
   from {
     opacity: 0;
-    transform: translateY(14px);
+    transform: translateY(24px);
   }
   to {
     opacity: 1;
@@ -30,9 +30,32 @@
   }
 }
 
-.animate-card-in {
-  animation: cardIn 0.3s ease forwards;
-  opacity: 0;
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes glow-border {
+  0%, 100% {
+    border-color: rgb(42, 42, 42);
+  }
+  50% {
+    border-color: rgba(0, 255, 163, 0.3);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
 }
 
 @media (prefers-reduced-motion) {
@@ -40,9 +63,5 @@
   ::before,
   ::after {
     animation: none !important;
-  }
-
-  .animate-card-in {
-    opacity: 1;
   }
 }

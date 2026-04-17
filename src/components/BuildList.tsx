@@ -1,17 +1,18 @@
+import { motion } from 'framer-motion';
+import { X, Plus, TrendingDown } from 'lucide-react';
 import type { BuildComponent } from "../types";
 
-// Mismo orden que BuildChecklist — el orden lógico de selección de piezas
 const ALL_TYPES = ["CPU", "Motherboard", "RAM", "GPU", "Storage", "CPU Cooler", "PSU", "Case"];
 
-const TYPE_DOT_COLOR: Record<string, string> = {
-  CPU:          "text-violet-400 bg-violet-500/10 border-violet-400/20",
-  Motherboard:  "text-orange-400 bg-orange-500/10 border-orange-400/20",
-  RAM:          "text-blue-400 bg-blue-500/10 border-blue-400/20",
-  GPU:          "text-emerald-400 bg-emerald-500/10 border-emerald-400/20",
-  Storage:      "text-amber-400 bg-amber-500/10 border-amber-400/20",
-  "CPU Cooler": "text-cyan-400 bg-cyan-500/10 border-cyan-400/20",
-  PSU:          "text-red-400 bg-red-500/10 border-red-400/20",
-  Case:         "text-slate-400 bg-slate-500/10 border-slate-400/20",
+const TYPE_CONFIG: Record<string, { color: string; dot: string }> = {
+  CPU:          { color: '#7B61FF', dot: 'bg-violet-400' },
+  Motherboard:  { color: '#FB923C', dot: 'bg-orange-400' },
+  RAM:          { color: '#60A5FA', dot: 'bg-blue-400' },
+  GPU:          { color: '#00FFA3', dot: 'bg-emerald-400' },
+  Storage:      { color: '#FBBF24', dot: 'bg-amber-400' },
+  "CPU Cooler": { color: '#06B6D4', dot: 'bg-cyan-400' },
+  PSU:          { color: '#EF4444', dot: 'bg-red-400' },
+  Case:         { color: '#78716C', dot: 'bg-slate-400' },
 };
 
 interface Props {
@@ -21,7 +22,6 @@ interface Props {
 }
 
 export function BuildList({ buildComponents, onRemove, onSearchType }: Props) {
-  // Construir un mapa rápido de tipo → componente
   const byType = new Map<string, BuildComponent>();
   for (const entry of buildComponents) {
     byType.set(entry.component.type_name, entry);
@@ -37,129 +37,188 @@ export function BuildList({ buildComponents, onRemove, onSearchType }: Props) {
     return sum + maxPrice * quantity;
   }, 0);
 
-  return (
-    <div className="flex flex-col gap-4">
-      {/* Tabla */}
-      <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-gray-800">
-                <th className="text-left text-xs text-gray-500 font-medium px-5 py-3.5">Tipo</th>
-                <th className="text-left text-xs text-gray-500 font-medium px-5 py-3.5">Componente</th>
-                <th className="text-center text-xs text-gray-500 font-medium px-5 py-3.5">Cant.</th>
-                <th className="text-right text-xs text-gray-500 font-medium px-5 py-3.5">Mejor precio</th>
-                <th className="text-right text-xs text-gray-500 font-medium px-5 py-3.5">Subtotal</th>
-                <th className="px-5 py-3.5"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-800/60">
-              {ALL_TYPES.map((typeName) => {
-                const entry = byType.get(typeName);
-                const badge = TYPE_DOT_COLOR[typeName] ?? "text-gray-400 bg-gray-500/10 border-gray-400/20";
+  const addedCount = buildComponents.length;
 
-                if (entry) {
-                  // ── Fila con componente ──────────────────────────
-                  const { component, quantity } = entry;
-                  const minPrice = Math.min(...component.prices.map((p) => p.price));
-                  const bestVendor = component.prices.find((p) => p.price === minPrice);
-                  return (
-                    <tr key={typeName} className="hover:bg-gray-800/40 transition-colors">
-                      <td className="px-5 py-4">
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${badge}`}>
-                          {typeName}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4">
-                        <p className="text-white text-sm font-medium">{component.name}</p>
-                        <p className="text-gray-500 text-xs mt-0.5">{bestVendor?.vendor_name}</p>
-                      </td>
-                      <td className="px-5 py-4 text-center">
-                        <span className="text-gray-300 text-sm bg-gray-800 px-2.5 py-0.5 rounded-lg">
-                          {quantity}
-                        </span>
-                      </td>
-                      <td className="px-5 py-4 text-right text-green-400 text-sm font-semibold">
-                        ${minPrice.toLocaleString("es-CL")}
-                      </td>
-                      <td className="px-5 py-4 text-right text-white text-sm font-bold">
-                        ${(minPrice * quantity).toLocaleString("es-CL")}
-                      </td>
-                      <td className="px-5 py-4 text-right">
-                        <button
-                          onClick={() => onRemove(component.id)}
-                          className="text-gray-600 hover:text-red-400 transition-colors cursor-pointer"
-                          title="Eliminar"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                } else {
-                  // ── Fila placeholder ──────────────────────────────
-                  return (
-                    <tr key={typeName} className="opacity-40 hover:opacity-60 transition-opacity">
-                      <td className="px-5 py-3.5">
-                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${badge}`}>
-                          {typeName}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <p className="text-gray-600 text-sm italic">— Sin agregar</p>
-                      </td>
-                      <td className="px-5 py-3.5 text-center">
-                        <span className="text-gray-700 text-sm">—</span>
-                      </td>
-                      <td className="px-5 py-3.5 text-right">
-                        <span className="text-gray-700 text-sm">—</span>
-                      </td>
-                      <td className="px-5 py-3.5 text-right">
-                        <span className="text-gray-700 text-sm">—</span>
-                      </td>
-                      <td className="px-5 py-3.5 text-right">
-                        {onSearchType && (
-                          <button
-                            onClick={() => onSearchType(typeName)}
-                            className="text-xs text-blue-500 hover:text-blue-300 border border-blue-500/20 hover:border-blue-400/40 px-2 py-1 rounded-lg transition-all cursor-pointer whitespace-nowrap"
-                          >
-                            + Buscar
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                }
-              })}
-            </tbody>
-          </table>
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Header con contador */}
+      <motion.div
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
+      >
+        <div>
+          <h2 className="text-sm font-black uppercase tracking-widest text-[#6B7280] mb-1">Tu Build</h2>
+          <p className="text-3xl font-black text-[#FAFAFA]">
+            {addedCount}/8 componentes
+          </p>
         </div>
+        {addedCount > 0 && (
+          <motion.div
+            initial={{ scale: 0.8 }}
+            animate={{ scale: 1 }}
+            className="text-right"
+          >
+            <div className="text-[11px] font-bold uppercase tracking-widest text-[#6B7280] mb-2">Completitud</div>
+            <div className="w-12 h-12 rounded-full border-2 border-[#2A2A2A] flex items-center justify-center bg-[#1A1A1A]">
+              <span className="text-lg font-black text-[#00FFA3]">{Math.round((addedCount / 8) * 100)}%</span>
+            </div>
+          </motion.div>
+        )}
+      </motion.div>
+
+      {/* Items Grid */}
+      <div className="grid grid-cols-1 gap-3">
+        {ALL_TYPES.map((typeName, idx) => {
+          const entry = byType.get(typeName);
+          const config = TYPE_CONFIG[typeName] ?? { color: '#9CA3AF', dot: 'bg-gray-400' };
+
+          if (entry) {
+            const { component, quantity } = entry;
+            const minPrice = Math.min(...component.prices.map((p) => p.price));
+            const subtotal = minPrice * quantity;
+            const bestVendor = component.prices.find((p) => p.price === minPrice);
+
+            return (
+              <motion.div
+                key={typeName}
+                initial={{ opacity: 0, x: -24 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.04 }}
+                className="group relative bg-[#0F0F0F] border border-[#2A2A2A] rounded-lg p-4 hover:border-[#00FFA3]/40 hover:shadow-md hover:shadow-[#00FFA3]/10 transition-all duration-300"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  {/* Left: Type + Name (flex-grow) */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <motion.div
+                        className={`w-2 h-2 rounded-full ${config.dot}`}
+                        animate={{ opacity: [0.6, 1, 0.6] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
+                      <span className="text-[9px] font-black uppercase tracking-widest text-[#6B7280]">
+                        {typeName}
+                      </span>
+                    </div>
+                    <h4 className="text-sm font-bold text-[#FAFAFA] truncate group-hover:text-[#00FFA3] transition-colors">
+                      {component.name}
+                    </h4>
+                    <p className="text-[10px] text-[#6B7280] mt-1">
+                      {bestVendor?.vendor_name}
+                    </p>
+                  </div>
+
+                  {/* Right: Price + Quantity + Actions */}
+                  <div className="text-right space-y-2">
+                    <div className="flex items-center gap-2">
+                      {quantity > 1 && (
+                        <span className="text-[10px] font-bold bg-[#1A1A1A] text-[#6B7280] px-2 py-1 rounded">
+                          x{quantity}
+                        </span>
+                      )}
+                      <div className="text-right">
+                        <div className="text-[10px] font-bold uppercase tracking-widest text-[#6B7280]">Subtotal</div>
+                        <div className="text-lg font-black text-[#00FFA3]">
+                          ${subtotal.toLocaleString("es-CL")}
+                        </div>
+                      </div>
+                    </div>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => onRemove(component.id)}
+                      className="w-full flex items-center justify-center gap-1 px-2.5 py-1.5 bg-[#1A1A1A] hover:bg-red-500/20 border border-[#2A2A2A] hover:border-red-500/50 rounded-md text-[10px] font-bold text-[#6B7280] hover:text-red-400 transition-all"
+                    >
+                      <X className="w-3 h-3" />
+                      Quitar
+                    </motion.button>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          } else {
+            // Placeholder
+            return (
+              <motion.div
+                key={typeName}
+                initial={{ opacity: 0, x: -24 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: idx * 0.04 }}
+                className="group relative bg-[#0F0F0F]/40 border border-dashed border-[#2A2A2A] rounded-lg p-4 opacity-50 hover:opacity-75 hover:border-[#00FFA3]/30 transition-all"
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className={`w-2 h-2 rounded-full ${config.dot}/40`} />
+                      <span className="text-[9px] font-black uppercase tracking-widest text-[#6B7280]/60">
+                        {typeName}
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#6B7280]/60 italic">Sin agregar</p>
+                  </div>
+                  {onSearchType && (
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => onSearchType(typeName)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-[#1A1A1A] border border-[#00FFA3]/30 hover:border-[#00FFA3] rounded-md text-[10px] font-bold text-[#00FFA3] hover:bg-[#00FFA3]/10 transition-all whitespace-nowrap"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Buscar
+                    </motion.button>
+                  )}
+                </div>
+              </motion.div>
+            );
+          }
+        })}
       </div>
 
-      {/* Resumen de precios — solo si hay al menos un componente */}
-      {buildComponents.length > 0 && (
-        <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <p className="text-gray-400 text-xs mb-1">Total con mejores precios</p>
-            <p className="text-3xl font-bold text-green-400">${totalMin.toLocaleString("es-CL")}</p>
-            {totalMin !== totalMax && (
-              <p className="text-gray-600 text-xs mt-1">
-                Máximo posible: ${totalMax.toLocaleString("es-CL")}
-              </p>
-            )}
+      {/* Summary Card - Premium */}
+      {addedCount > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mt-4 bg-gradient-to-br from-[#1A1A1A] to-[#0F0F0F] border border-[#00FFA3]/20 rounded-xl p-6 space-y-4"
+        >
+          {/* Total Mínimo - Destacado */}
+          <div className="space-y-2">
+            <p className="text-[9px] font-black uppercase tracking-widest text-[#6B7280]">Total con mejores precios</p>
+            <motion.p
+              key={totalMin}
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              className="text-5xl font-black text-[#00FFA3] tabular-nums"
+            >
+              ${totalMin.toLocaleString("es-CL")}
+            </motion.p>
           </div>
-          <div className="text-right">
-            <p className="text-gray-500 text-xs">
-              Ahorras hasta{" "}
-              <span className="text-green-400 font-semibold">
-                ${(totalMax - totalMin).toLocaleString("es-CL")}
-              </span>{" "}
-              eligiendo las mejores tiendas
+
+          {/* Savings Badge */}
+          {totalMin !== totalMax && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center gap-2 bg-[#00FFA3]/10 border border-[#00FFA3]/40 rounded-lg px-4 py-3"
+            >
+              <TrendingDown className="w-4 h-4 text-[#00FFA3]" />
+              <div className="flex-1">
+                <p className="text-[9px] font-bold uppercase tracking-widest text-[#6B7280]">Puedes ahorrar</p>
+                <p className="text-lg font-black text-[#00FFA3]">
+                  ${(totalMax - totalMin).toLocaleString("es-CL")}
+                </p>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Secondary Info */}
+          {totalMin !== totalMax && (
+            <p className="text-[10px] text-[#6B7280] border-t border-[#2A2A2A] pt-3">
+              Máximo posible: ${totalMax.toLocaleString("es-CL")} eligiendo peores tiendas
             </p>
-          </div>
-        </div>
+          )}
+        </motion.div>
       )}
     </div>
   );

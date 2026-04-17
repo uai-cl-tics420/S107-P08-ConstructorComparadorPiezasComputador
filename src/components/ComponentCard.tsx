@@ -1,21 +1,21 @@
 import { motion } from 'framer-motion';
-import { Plus, ArrowLeftRight, Zap } from 'lucide-react';
+import { Plus, ArrowLeftRight } from 'lucide-react';
 import type { Component } from "../types";
 
 const SPEC_LABELS: Record<string, string> = {
   core_count: 'Cores', thread_count: 'Threads', tdp: 'TDP',
-  base_clock: 'Base Clock', boost_clock: 'Boost Clock',
-  socket: 'Socket', gpu: 'GPU Integrada',
+  base_clock: 'Base Clk', boost_clock: 'Boost Clk',
+  socket: 'Socket', gpu: 'GPU Int.',
   cinebench_r20_single_score: 'CB R20 (1T)',
   cinebench_r20_multi_score: 'CB R20 (nT)',
-  gpu_boost_clock: 'Boost Clock', vram_quantity: 'VRAM',
+  gpu_boost_clock: 'Boost Clk', vram_quantity: 'VRAM',
   gpu_tdp: 'TDP', bus_width: 'Bus',
-  capacity: 'Capacidad', bus_speed: 'Velocidad',
-  ram_type: 'Tipo', module_count: 'Modulos',
+  capacity: 'Capacidad', bus_speed: 'Bus Spd',
+  ram_type: 'Tipo', module_count: 'Módulos',
   chipset: 'Chipset', memory_slots_quantity: 'Slots RAM',
   capacity_value: 'Capacidad', bus_type: 'Interface',
   read_speed: 'Lectura', write_speed: 'Escritura',
-  wattage: 'Watts', certification: 'Certificacion',
+  wattage: 'Watts', certification: 'Cert.',
   is_modular: 'Modular', form_factor: 'Form Factor',
   max_motherboard_form_factor: 'Form Factor',
 };
@@ -31,20 +31,20 @@ const PRIORITY_SPECS: Record<string, string[]> = {
   'CPU Cooler': ['tdp', 'form_factor'],
 };
 
-const TYPE_CONFIG: Record<string, { color: string; accentLight: string; accentDark: string }> = {
-  CPU:          { color: '#7B61FF', accentLight: 'bg-violet-500/20 border-violet-500/40', accentDark: 'text-violet-300' },
-  GPU:          { color: '#00FFA3', accentLight: 'bg-emerald-500/20 border-emerald-500/40', accentDark: 'text-emerald-300' },
-  RAM:          { color: '#60A5FA', accentLight: 'bg-blue-500/20 border-blue-500/40', accentDark: 'text-blue-300' },
-  Motherboard:  { color: '#FB923C', accentLight: 'bg-orange-500/20 border-orange-500/40', accentDark: 'text-orange-300' },
-  Storage:      { color: '#FBBF24', accentLight: 'bg-amber-500/20 border-amber-500/40', accentDark: 'text-amber-300' },
-  PSU:          { color: '#EF4444', accentLight: 'bg-red-500/20 border-red-500/40', accentDark: 'text-red-300' },
-  Case:         { color: '#78716C', accentLight: 'bg-slate-500/20 border-slate-500/40', accentDark: 'text-slate-300' },
-  "CPU Cooler": { color: '#06B6D4', accentLight: 'bg-cyan-500/20 border-cyan-500/40', accentDark: 'text-cyan-300' },
+const TYPE_ACCENT: Record<string, string> = {
+  CPU:          '#A78BFA',
+  GPU:          '#34D399',
+  RAM:          '#60A5FA',
+  Motherboard:  '#FB923C',
+  Storage:      '#FBBF24',
+  PSU:          '#F87171',
+  Case:         '#94A3B8',
+  'CPU Cooler': '#22D3EE',
 };
 
 function formatSpecValue(key: string, value: unknown): string {
-  if (value === null || value === undefined) return '-';
-  if (typeof value === 'boolean') return value ? 'Si' : 'No';
+  if (value === null || value === undefined) return '—';
+  if (typeof value === 'boolean') return value ? 'Sí' : 'No';
   if (key === 'tdp' || key === 'gpu_tdp') return `${value}W`;
   if (key === 'wattage') return `${value}W`;
   if (key === 'vram_quantity') return `${value} GB`;
@@ -63,149 +63,135 @@ export function ComponentCard({ component, onAdd, onCompare, isSelectedForCompar
   const minPrice = Math.min(...component.prices.map((p) => p.price));
   const maxPrice = Math.max(...component.prices.map((p) => p.price));
   const savings = maxPrice - minPrice;
-  const config = TYPE_CONFIG[component.type_name] ?? { color: '#9CA3AF', accentLight: 'bg-gray-500/20 border-gray-500/40', accentDark: 'text-gray-300' };
+  const accent = TYPE_ACCENT[component.type_name] ?? '#9CA3AF';
 
   const priorityKeys = PRIORITY_SPECS[component.type_name] ?? [];
   const specsToShow = priorityKeys.filter(k => component.specs?.[k] != null).slice(0, 3);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -24 }}
       transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-      whileHover={{ y: -6, borderColor: 'rgba(0, 255, 163, 0.2)' }}
-      className={`group relative h-full bg-[#0F0F0F] backdrop-blur-sm border border-[#2A2A2A] rounded-2xl p-6 flex flex-col gap-5 transition-all duration-300 ${
-        isSelectedForCompare ? 'border-[#00FFA3]/50 shadow-lg shadow-[#00FFA3]/10' : 'hover:shadow-lg hover:shadow-[#2A2A2A]/50'
+      className="relative group h-full"
+    >
+      {/* GlassCard: gradient border — intensificado en hover */}
+      <div className="absolute -inset-[1px] rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-400 bg-gradient-to-br from-white/28 via-white/8 to-transparent pointer-events-none" />
+
+      <div className={`relative h-full rounded-xl border bg-[#0A0A0A]/90 backdrop-blur-xl p-5 z-10 flex flex-col gap-4 transition-[border-color] duration-300 ${
+        isSelectedForCompare ? 'border-violet-500/40 bg-violet-500/5' : 'border-[#242424] group-hover:border-white/35'
       }`}>
 
-      {/* Header: Badge + Title (2/3 width) */}
-      <div className="space-y-3">
+        {/* Top shimmer line — Apple-style */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
+
+        {/* Type badge + accent dot */}
         <div className="flex items-center gap-2">
-          <motion.div
-            className="w-2 h-2 rounded-full"
-            style={{ backgroundColor: config.color }}
-            animate={{ opacity: [0.7, 1, 0.7] }}
-            transition={{ duration: 2, repeat: Infinity }}
+          <span
+            className="w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-300 group-hover:scale-125"
+            style={{ backgroundColor: accent, boxShadow: `0 0 0 0 ${accent}` }}
           />
-          <span className="text-xs font-black uppercase tracking-widest text-[#FAFAFA]/60">
+          <span className="font-mono text-[9px] uppercase tracking-[0.18em] text-zinc-600 group-hover:text-zinc-500 transition-colors duration-300">
             {component.type_name}
           </span>
         </div>
-        <h3 className="text-lg font-black text-[#FAFAFA] leading-tight group-hover:text-[#00FFA3]/80 transition-colors line-clamp-3">
-          {component.name}
-        </h3>
-        <p className="text-[10px] font-medium text-[#6B7280] uppercase tracking-widest">
-          {component.brand_name}
-        </p>
-      </div>
 
-      {/* Specs Grid - Asimétrico */}
-      {specsToShow.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.1 }}
-          className="space-y-2.5 bg-[#1A1A1A]/40 rounded-lg p-3.5 border border-[#2A2A2A]/60"
-        >
-          {specsToShow.map((key, idx) => (
-            <motion.div
-              key={key}
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.15 + idx * 0.05 }}
-              className="flex items-center justify-between gap-3"
-            >
-              <span className="text-[9px] font-semibold uppercase tracking-widest text-[#6B7280]">
-                {SPEC_LABELS[key] ?? key}
-              </span>
-              <span className="text-xs font-bold text-[#FAFAFA] tabular-nums">
-                {formatSpecValue(key, component.specs![key])}
-              </span>
-            </motion.div>
-          ))}
-        </motion.div>
-      )}
-
-      {/* Price Section - Extremo contraste */}
-      <div className="space-y-3 mt-auto">
-        <div className="flex items-baseline justify-between">
-          <span className="text-[9px] font-black uppercase tracking-widest text-[#6B7280]">Mejor precio</span>
-          <motion.span
-            key={minPrice}
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            className="text-2xl font-black text-[#00FFA3] tabular-nums"
-          >
-            ${minPrice.toLocaleString("es-CL")}
-          </motion.span>
+        {/* Name + brand */}
+        <div className="space-y-1.5">
+          <h3 className="text-white font-semibold text-sm leading-snug line-clamp-2 group-hover:text-white transition-colors">
+            {component.name}
+          </h3>
+          <p className="font-mono text-[9px] text-zinc-700 uppercase tracking-[0.15em]">
+            {component.brand_name}
+          </p>
         </div>
 
-        {savings > 0 && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex items-center gap-1.5 bg-[#00FFA3]/10 border border-[#00FFA3]/30 rounded-lg px-3 py-2"
-          >
-            <Zap className="w-3.5 h-3.5 text-[#00FFA3]" />
-            <span className="text-xs font-bold text-[#00FFA3]">
-              Ahorra ${savings.toLocaleString("es-CL")}
-            </span>
-          </motion.div>
+        {/* Specs — TIPOGRAFÍA MONOESPACIADA ENGINEERING */}
+        {specsToShow.length > 0 && (
+          <div className="border-t border-[#1C1C1C] pt-3.5 space-y-2.5">
+            {specsToShow.map(key => (
+              <div key={key} className="flex items-baseline justify-between gap-3">
+                <span className="font-mono text-[9px] text-zinc-700 uppercase tracking-[0.15em] shrink-0">
+                  {SPEC_LABELS[key] ?? key}
+                </span>
+                <span className="font-mono text-[11px] text-zinc-300 font-medium tabular-nums">
+                  {formatSpecValue(key, component.specs![key])}
+                </span>
+              </div>
+            ))}
+          </div>
         )}
-      </div>
 
-      {/* Vendors List */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="space-y-1.5 text-[11px]"
-      >
-        {component.prices.slice(0, 2).map((p) => (
-          <div key={p.id} className="flex items-center justify-between px-2 py-1 rounded-md bg-[#1A1A1A]/30">
-            <span className={p.price === minPrice ? 'text-[#FAFAFA] font-semibold' : 'text-[#6B7280]'}>
-              {p.vendor_name}
-            </span>
-            <span className={p.price === minPrice ? 'text-[#00FFA3] font-bold' : 'text-[#6B7280]'}>
-              ${p.price.toLocaleString("es-CL")}
+        {/* Price section */}
+        <div className="mt-auto space-y-3">
+          <div className="flex items-baseline justify-between">
+            <span className="font-mono text-[9px] text-zinc-700 uppercase tracking-[0.15em]">Mejor precio</span>
+            {/* Precio: máximo brillo y contraste */}
+            <span className="text-2xl font-black text-white tabular-nums drop-shadow-[0_0_12px_rgba(255,255,255,0.25)] group-hover:drop-shadow-[0_0_16px_rgba(255,255,255,0.4)] transition-all duration-300">
+              ${minPrice.toLocaleString("es-CL")}
             </span>
           </div>
-        ))}
-      </motion.div>
 
-      {/* Buttons - Staggered */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25 }}
-        className="flex gap-2 pt-2"
-      >
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => onAdd(component)}
-          className="flex-1 flex items-center justify-center gap-2 bg-[#00FFA3] hover:bg-[#00FFA3]/90 text-[#050505] text-xs font-black py-2.5 rounded-lg transition-all duration-200 cursor-pointer"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Agregar
-        </motion.button>
-        {onCompare && (
+          {/* Vendor list */}
+          <div className="bg-[#0F0F0F] border border-[#1C1C1C] rounded-lg p-2.5 space-y-1.5">
+            {component.prices.slice(0, 2).map((p) => (
+              <div key={p.id} className="flex items-center justify-between gap-2">
+                <span className={`font-mono text-[10px] truncate ${
+                  p.price === minPrice ? 'text-zinc-400' : 'text-zinc-700'
+                }`}>
+                  {p.vendor_name}
+                </span>
+                {/* Mejor precio: texto blanco puro */}
+                <span className={`font-mono text-[10px] tabular-nums shrink-0 ${
+                  p.price === minPrice ? 'text-white font-bold' : 'text-zinc-700'
+                }`}>
+                  ${p.price.toLocaleString("es-CL")}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {savings > 0 && (
+            <p className="font-mono text-[9px] text-zinc-700 text-center tracking-wider">
+              Ahorra <span className="text-zinc-500">${savings.toLocaleString("es-CL")}</span>
+            </p>
+          )}
+        </div>
+
+        {/* Botones: CTA primario alto contraste + secundario stealth */}
+        <div className="flex gap-2 pt-3 border-t border-[#1C1C1C]">
+          {/* BOTÓN PRIMARIO — Fondo blanco, texto negro, glow en hover */}
           <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={() => onCompare(component)}
-            className={`px-3 py-2.5 border rounded-lg transition-all duration-200 cursor-pointer ${
-              isSelectedForCompare
-                ? `${config.accentLight} ${config.accentDark} text-xs font-bold`
-                : 'bg-[#1A1A1A] border-[#2A2A2A] hover:border-[#00FFA3]/30 text-[#6B7280] hover:text-[#FAFAFA] text-xs font-bold'
-            }`}
-            title={isSelectedForCompare ? "Quitar de comparación" : "Comparar"}
+            whileHover={{
+              scale: 1.02,
+              boxShadow: '0 0 18px rgba(255,255,255,0.22), 0 4px 14px rgba(0,0,0,0.5)',
+            }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+            onClick={() => onAdd(component)}
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-white hover:bg-zinc-50 text-black font-bold font-mono text-[11px] rounded-lg transition-colors duration-150 cursor-pointer"
           >
-            <ArrowLeftRight className="w-3.5 h-3.5" />
+            <Plus className="w-3.5 h-3.5 transition-transform duration-150 group-hover:scale-110" />
+            Agregar
           </motion.button>
-        )}
-      </motion.div>
+          {onCompare && (
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ duration: 0.15 }}
+              onClick={() => onCompare(component)}
+              className={`px-3 py-2.5 border rounded-lg transition-all duration-200 cursor-pointer ${
+                isSelectedForCompare
+                  ? 'border-violet-500/50 bg-violet-500/10 text-violet-400'
+                  : 'border-white/10 hover:border-white/40 hover:bg-white/6 text-zinc-600 hover:text-zinc-200'
+              }`}
+              title={isSelectedForCompare ? "Quitar de comparación" : "Comparar"}
+            >
+              <ArrowLeftRight className="w-3.5 h-3.5" />
+            </motion.button>
+          )}
+        </div>
+      </div>
     </motion.div>
   );
 }

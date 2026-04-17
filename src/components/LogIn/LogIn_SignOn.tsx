@@ -1,13 +1,17 @@
 import { useState, createContext, useContext } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import LogInForm from './LogInForm';
 import SignOnForm from './SignOnForm';
 import LoginMethodSelector from './LoginMethodSelector';
 import OTPSignOn from './OTPSignOn';
 
 type ViewType = 'selection' | 'login' | 'signon' | 'OTP';
+
 interface LoginContextType {
   setView: (view: ViewType) => void;
+  onAuthSuccess: () => void;
 }
+
 const LoginContext = createContext<LoginContextType | undefined>(undefined);
 
 export const useLoginView = () => {
@@ -16,45 +20,89 @@ export const useLoginView = () => {
   return context;
 };
 
-const LogInSignOnContent = () => {
-  const [view, setView] = useState<ViewType>('selection');
+const VIEW_META: Record<ViewType, { title: string; sub: string }> = {
+  selection: { title: 'PC Builder',       sub: 'Elige cómo quieres continuar' },
+  login:     { title: 'Inicia sesión',    sub: 'Ingresa tus credenciales' },
+  signon:    { title: 'Crea tu cuenta',   sub: 'Completa el formulario' },
+  OTP:       { title: 'Clave de acceso',  sub: 'Acceso sin contraseña' },
+};
 
-  const step = {
-    selection: 'Bienvenido a PC Builder',
-    login: 'Inicia sesión',
-    signon: 'Crea tu cuenta',
-    OTP: 'Ingresa con clave de uso único',
-  };
+const viewVariant = {
+  hidden:  { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0,  transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] } },
+  exit:    { opacity: 0, y: -10, transition: { duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] } },
+};
+
+interface Props {
+  onAuthSuccess: () => void;
+}
+
+const LogInSignOnContent = ({ onAuthSuccess }: Props) => {
+  const [view, setView] = useState<ViewType>('selection');
+  const meta = VIEW_META[view];
 
   return (
-    <LoginContext.Provider value={{ setView }}>
-      <div className='w-full h-full flex flex-col justify-center p-8'>
-        <div className='flex flex-col w-full min-h-90 flex-1 justify-between'>
-          <div className='flex flex-col flex-1 justify-between'>
-            <h2 className='text-xl font-bold text-white'>{step[view]}</h2>
-            <p className='text-gray-400 text-sm mb-6'>
-              {view === 'selection' ? 'Elige cómo quieres continuar' : 'Ingresa tus datos para continuar'}
-            </p>
-            {view === 'selection' && <LoginMethodSelector />}
-            {view === 'OTP' && <OTPSignOn />}
-            {view === 'login' && <LogInForm />}
-            {view === 'signon' && <SignOnForm />}
-          </div>
+    <LoginContext.Provider value={{ setView, onAuthSuccess }}>
+      <div className='p-8 flex flex-col gap-6'>
 
+        {/* Header — tipografía de contraste extremo */}
+        <AnimatePresence mode='wait'>
+          <motion.div
+            key={view + '-header'}
+            variants={viewVariant}
+            initial='hidden'
+            animate='visible'
+            exit='exit'
+            className='space-y-1.5'
+          >
+            <h2 className='text-2xl font-black tracking-tighter text-white leading-none'>
+              {meta.title}
+            </h2>
+            <p className='font-mono text-[9px] text-zinc-600 uppercase tracking-[0.18em]'>
+              {meta.sub}
+            </p>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Contenido — transición suave entre vistas */}
+        <AnimatePresence mode='wait'>
+          <motion.div
+            key={view}
+            variants={viewVariant}
+            initial='hidden'
+            animate='visible'
+            exit='exit'
+          >
+            {view === 'selection' && <LoginMethodSelector />}
+            {view === 'login'     && <LogInForm />}
+            {view === 'signon'    && <SignOnForm />}
+            {view === 'OTP'       && <OTPSignOn />}
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Volver — solo en sub-vistas */}
+        <AnimatePresence>
           {view !== 'selection' && (
-            <div className='mt-6 text-center border-t border-white/5'>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className='border-t border-[#1A1A1A] pt-4 text-center'
+            >
               <button
                 onClick={() => setView('selection')}
-                className='text-blue-500 hover:text-blue-400 text-sm mt-3 transition-colors cursor-pointer bg-transparent border-none p-0'>
-                ← Volver a métodos de ingreso
+                className='font-mono text-[9px] text-zinc-700 hover:text-zinc-400 uppercase tracking-widest transition-colors duration-200 cursor-pointer'
+              >
+                ← Volver a métodos
               </button>
-            </div>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </div>
     </LoginContext.Provider>
   );
 };
 
-// 3. Exportar el componente final
-export const LogInSignOn = () => <LogInSignOnContent />;
+export const LogInSignOn = ({ onAuthSuccess }: Props) => (
+  <LogInSignOnContent onAuthSuccess={onAuthSuccess} />
+);

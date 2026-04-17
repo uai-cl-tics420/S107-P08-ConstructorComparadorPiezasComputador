@@ -1,7 +1,11 @@
-import { authClient } from '@/lib/auth/auth-client';
-import { set } from 'better-auth';
 import { useState, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
+import { authClient } from '@/lib/auth/auth-client';
+import { useLoginView } from './LogIn_SignOn';
+
+const inputClass = 'w-full font-mono text-sm bg-[#0F0F0F] border border-[#1E1E1E] text-white placeholder-zinc-800 rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#333] transition-colors duration-200';
+const labelClass = 'font-mono text-[9px] text-zinc-600 uppercase tracking-[0.15em]';
 
 export default function OTPSignOn() {
   const [email, setEmail] = useState('');
@@ -10,33 +14,24 @@ export default function OTPSignOn() {
   const [step, setStep] = useState<'request' | 'verify'>('request');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
-  const navigate = useNavigate();
+  const { onAuthSuccess } = useLoginView();
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const handleSendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    const { data, error } = await authClient.emailOtp.sendVerificationOtp(
-      {
-        email: email,
-        type: 'sign-in',
-      },
+    await authClient.emailOtp.sendVerificationOtp(
+      { email, type: 'sign-in' },
       {
         onRequest: () => setLoading(true),
         onResponse: () => setLoading(false),
-        onSuccess: () => {
-          setStep('verify');
-        },
+        onSuccess: () => setStep('verify'),
         onError: (ctx) => {
-          switch (ctx.error.message) {
-            case 'Invalid email':
-              setError('El email no es válido');
-              break;
-            default:
-              setError(ctx.error.message || 'Error al enviar el código');
-          }
+          setError(ctx.error.message === 'Invalid email'
+            ? 'El email no es válido'
+            : ctx.error.message || 'Error al enviar el código'
+          );
         },
       },
     );
@@ -47,24 +42,18 @@ export default function OTPSignOn() {
     setError(null);
 
     await authClient.signIn.emailOtp(
-      {
-        email,
-        otp,
-        callbackURL: '/',
-      },
+      { email, otp, callbackURL: '/' },
       {
         onRequest: () => setLoading(true),
         onResponse: () => setLoading(false),
-        onSuccess: () => {
-          navigate('/');
-        },
+        onSuccess: () => onAuthSuccess(),
         onError: (ctx) => {
           switch (ctx.error.message) {
             case 'Invalid OTP':
               setError('Código incorrecto');
               break;
             case 'Too many attempts':
-              setError('Demasiados intentos, vuelva atrás e ingrese su email neuvamente');
+              setError('Demasiados intentos. Vuelve atrás e ingresa tu email de nuevo');
               break;
             default:
               setError(ctx.error.message || 'Error al verificar el código');
@@ -75,19 +64,12 @@ export default function OTPSignOn() {
   };
 
   const handleOtpChange = (value: string, index: number) => {
-    if (isNaN(Number(value))) return; // Solo números
-
+    if (isNaN(Number(value))) return;
     const newOtp = [...otpArray];
     newOtp[index] = value.substring(value.length - 1);
     setOtpArray(newOtp);
-
-    // Actualizar el string OTP final para BetterAuth
     setOtp(newOtp.join(''));
-
-    // Avanzar al siguiente input
-    if (value && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
+    if (value && index < 5) inputRefs.current[index + 1]?.focus();
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
@@ -97,68 +79,91 @@ export default function OTPSignOn() {
   };
 
   return (
-    <div className='flex-1 flex flex-col'>
-      <form
-        onSubmit={step === 'request' ? handleSendOTP : handleVerifyOTP}
-        className='flex-1 flex flex-col gap-4 justify-between'>
-        <div>
-          {error && (
-            <div className='bg-red-500/10 border border-red-500/50 text-red-500 text-xs p-2 rounded whitespace-pre-line mb-4'>
-              {error}
-            </div>
-          )}
-          {step === 'request' && (
-            <div className='flex flex-col gap-1.5'>
-              <label className='text-sm text-gray-300' htmlFor='email'>
-                Email
-              </label>
-              <input
-                id='email'
-                type='email'
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder='tu@email.com'
-                className='bg-[#0f1117] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 placeholder-slate-500'
-                required
-              />
-            </div>
-          )}
-          {step === 'verify' && (
-            <div className='flex flex-col gap-6 items-center py-4'>
-              <p className='text-sm text-gray-400'>Ingresa el código de 6 dígitos</p>
-              <div className='flex gap-2 justify-center'>
-                {otpArray.map((digit, index) => (
-                  <input
-                    key={index}
-                    type='text'
-                    maxLength={1}
-                    value={digit}
-                    ref={(el) => {
-                      inputRefs.current[index] = el;
-                    }}
-                    onChange={(e) => handleOtpChange(e.target.value, index)}
-                    onKeyDown={(e) => handleKeyDown(e, index)}
-                    className='w-10 h-12 bg-[#0f1117] border border-white/10 rounded-lg text-white text-center text-xl font-bold focus:border-blue-500 focus:outline-none transition-colors'
-                  />
-                ))}
-              </div>
-              <button
-                type='button'
-                onClick={() => setStep('request')}
-                className='text-xs text-blue-500 hover:text-blue-400'>
-                ¿No llega el código? Volver atrás
-              </button>
-            </div>
-          )}
-        </div>
+    <form
+      onSubmit={step === 'request' ? handleSendOTP : handleVerifyOTP}
+      className='flex flex-col gap-4'
+    >
+      {error && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className='bg-red-500/8 border border-red-500/20 text-red-400 font-mono text-[10px] px-3 py-2.5 rounded-lg'
+        >
+          {error}
+        </motion.div>
+      )}
 
-        <button
-          type='submit'
-          disabled={loading}
-          className='mt-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-2 rounded-lg transition-colors'>
-          {loading ? 'Procesando...' : step === 'request' ? 'Enviar código' : 'Verificar'}
-        </button>
-      </form>
-    </div>
+      {step === 'request' && (
+        <div className='flex flex-col gap-2'>
+          <label className={labelClass} htmlFor='otp-email'>Email</label>
+          <input
+            id='otp-email' type='email' value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder='tu@email.com'
+            className={inputClass} required
+          />
+        </div>
+      )}
+
+      {step === 'verify' && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className='flex flex-col items-center gap-5 py-2'
+        >
+          <p className='font-mono text-[9px] text-zinc-600 uppercase tracking-widest text-center'>
+            Código de 6 dígitos enviado a<br />
+            <span className='text-zinc-400 mt-0.5 block'>{email}</span>
+          </p>
+
+          {/* OTP cells — stealth tech style */}
+          <div className='flex gap-2'>
+            {otpArray.map((digit, index) => (
+              <motion.input
+                key={index}
+                type='text'
+                maxLength={1}
+                value={digit}
+                ref={(el) => { inputRefs.current[index] = el; }}
+                onChange={(e) => handleOtpChange(e.target.value, index)}
+                onKeyDown={(e) => handleKeyDown(e, index)}
+                whileFocus={{ borderColor: 'rgba(255,255,255,0.3)', scale: 1.04 }}
+                className='w-10 h-12 bg-[#0F0F0F] border border-[#1E1E1E] rounded-lg text-white text-center font-mono text-lg font-bold focus:outline-none transition-colors cursor-text'
+              />
+            ))}
+          </div>
+
+          <button
+            type='button'
+            onClick={() => { setStep('request'); setOtpArray(['','','','','','']); setOtp(''); }}
+            className='font-mono text-[9px] text-zinc-700 hover:text-zinc-500 uppercase tracking-widest transition-colors duration-200'
+          >
+            ¿No llegó el código? Reintentar
+          </button>
+        </motion.div>
+      )}
+
+      {/* CTA primario */}
+      <motion.button
+        type='submit'
+        disabled={loading}
+        whileHover={!loading ? {
+          scale: 1.015,
+          boxShadow: '0 0 20px rgba(255,255,255,0.2), 0 4px 16px rgba(0,0,0,0.5)',
+        } : {}}
+        whileTap={{ scale: 0.98 }}
+        transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className='mt-1 w-full flex items-center justify-center gap-2 bg-white hover:bg-zinc-50 disabled:bg-zinc-200 text-black font-bold font-mono text-xs py-3 rounded-lg transition-colors duration-150 cursor-pointer disabled:cursor-not-allowed'
+      >
+        {loading ? (
+          <>
+            <Loader2 className='w-3.5 h-3.5 animate-spin' />
+            {step === 'request' ? 'Enviando...' : 'Verificando...'}
+          </>
+        ) : (
+          step === 'request' ? 'Enviar código' : 'Verificar código'
+        )}
+      </motion.button>
+    </form>
   );
 }

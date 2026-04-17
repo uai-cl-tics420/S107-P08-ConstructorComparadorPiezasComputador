@@ -1,26 +1,30 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Loader2 } from 'lucide-react';
 import { signUp } from '@/lib/auth/auth-client';
-import { useNavigate } from 'react-router-dom';
 import { validatePassword } from '@/lib/auth/validators';
+import { useLoginView } from './LogIn_SignOn';
+
+const inputClass = 'w-full font-mono text-sm bg-[#0F0F0F] border border-[#1E1E1E] text-white placeholder-zinc-800 rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#333] transition-colors duration-200';
+const labelClass = 'font-mono text-[9px] text-zinc-600 uppercase tracking-[0.15em]';
 
 export default function SignOnForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState(''); // Nuevo estado
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const { onAuthSuccess } = useLoginView();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const validation = validatePassword(password);
     if (!validation.isValid) {
-      setError(`${validation.message!.join('\n')}`);
+      setError(validation.message!.join('\n'));
       return;
     }
-
     if (password !== confirmPassword) {
       setError('Las contraseñas no coinciden');
       return;
@@ -29,13 +33,8 @@ export default function SignOnForm() {
     setLoading(true);
     setError(null);
 
-    const { data, error: authError } = await signUp.email(
-      {
-        email,
-        password,
-        name,
-        callbackURL: '/',
-      },
+    await signUp.email(
+      { email, password, name, callbackURL: '/' },
       {
         onRequest: () => setLoading(true),
         onResponse: () => setLoading(false),
@@ -51,92 +50,88 @@ export default function SignOnForm() {
               setError('Error al crear la cuenta');
           }
         },
-        onSuccess: () => {
-          navigate('/');
-        },
+        onSuccess: () => onAuthSuccess(),
       },
     );
   };
 
+  const passwordMismatch = confirmPassword !== '' && password !== confirmPassword;
+
   return (
-    <form onSubmit={handleSignUp} className='flex flex-col gap-4'>
+    <form onSubmit={handleSignUp} className='flex flex-col gap-3.5'>
+
       {error && (
-        <div className='bg-red-500/10 border border-red-500/50 text-red-500 text-xs p-2 rounded whitespace-pre-line'>
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className='bg-red-500/8 border border-red-500/20 text-red-400 font-mono text-[10px] px-3 py-2.5 rounded-lg whitespace-pre-line'
+        >
           {error}
-        </div>
+        </motion.div>
       )}
 
-      {/* Campo: Nombre */}
-      <div className='flex flex-col gap-1.5'>
-        <label className='text-sm text-gray-300' htmlFor='name'>
-          Nombre de usuario
-        </label>
+      <div className='flex flex-col gap-2'>
+        <label className={labelClass} htmlFor='name'>Nombre de usuario</label>
         <input
-          id='name'
-          type='text'
-          value={name}
+          id='name' type='text' value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder='Tu nombre'
-          className='bg-[#0f1117] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 placeholder-slate-500'
-          required
+          className={inputClass} required
         />
       </div>
 
-      {/* Campo: Email */}
-      <div className='flex flex-col gap-1.5'>
-        <label className='text-sm text-gray-300' htmlFor='email-signup'>
-          Email
-        </label>
+      <div className='flex flex-col gap-2'>
+        <label className={labelClass} htmlFor='email-signup'>Email</label>
         <input
-          id='email-signup'
-          type='email'
-          value={email}
+          id='email-signup' type='email' value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder='tu@email.com'
-          className='bg-[#0f1117] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 placeholder-slate-500'
-          required
+          className={inputClass} required
         />
       </div>
 
-      {/* Campo: Contraseña */}
-      <div className='flex flex-col gap-1.5'>
-        <label className='text-sm text-gray-300' htmlFor='password-signup'>
-          Contraseña
-        </label>
+      <div className='flex flex-col gap-2'>
+        <label className={labelClass} htmlFor='password-signup'>Contraseña</label>
         <input
-          id='password-signup'
-          type='password'
-          value={password}
+          id='password-signup' type='password' value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder='••••••••'
-          className='bg-[#0f1117] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 placeholder-slate-500'
-          required
-          minLength={8}
+          className={inputClass} required minLength={8}
         />
       </div>
 
-      {/* Campo: Confirmar Contraseña */}
-      <div className='flex flex-col gap-1.5'>
-        <label className='text-sm text-gray-300' htmlFor='confirm-password'>
-          Confirmar contraseña
-        </label>
+      <div className='flex flex-col gap-2'>
+        <label className={labelClass} htmlFor='confirm-password'>Confirmar contraseña</label>
         <input
-          id='confirm-password'
-          type='password'
-          value={confirmPassword}
+          id='confirm-password' type='password' value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           placeholder='••••••••'
-          className={`bg-[#0f1117] border ${password !== confirmPassword && confirmPassword !== '' ? 'border-red-500' : 'border-white/10'} rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 placeholder-slate-500`}
+          className={`${inputClass} ${passwordMismatch ? '!border-red-500/40' : ''}`}
           required
         />
       </div>
 
-      <button
+      {/* CTA primario — blanco sólido con glow + spinner */}
+      <motion.button
         type='submit'
         disabled={loading}
-        className='mt-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 text-white font-semibold py-2 rounded-lg transition-colors'>
-        {loading ? 'Creando cuenta...' : 'Crear cuenta'}
-      </button>
+        whileHover={!loading ? {
+          scale: 1.015,
+          boxShadow: '0 0 20px rgba(255,255,255,0.2), 0 4px 16px rgba(0,0,0,0.5)',
+        } : {}}
+        whileTap={{ scale: 0.98 }}
+        transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className='mt-1 w-full flex items-center justify-center gap-2 bg-white hover:bg-zinc-50 disabled:bg-zinc-200 text-black font-bold font-mono text-xs py-3 rounded-lg transition-colors duration-150 cursor-pointer disabled:cursor-not-allowed'
+      >
+        {loading ? (
+          <>
+            <Loader2 className='w-3.5 h-3.5 animate-spin' />
+            Creando cuenta...
+          </>
+        ) : (
+          'Crear cuenta'
+        )}
+      </motion.button>
     </form>
   );
 }

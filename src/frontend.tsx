@@ -6,19 +6,29 @@
  */
 
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import { App } from '@/views/App';
 import { LogIn } from '@/views/LogIn';
+
+function AnimatedRoutes() {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode='wait'>
+      <Routes location={location} key={location.pathname}>
+        <Route path='/' element={<App />} />
+        <Route path='/login' element={<LogIn />} />
+        <Route path='/account' element={<App />} /> {/*PLACEHOLDER*/}
+      </Routes>
+    </AnimatePresence>
+  );
+}
 
 function start() {
   const root = createRoot(document.getElementById('root')!);
   root.render(
     <BrowserRouter>
-      <Routes>
-        <Route path='/' element={<App />} />
-        <Route path='/login' element={<LogIn />} />
-        <Route path='/account' element={<App />} /> {/*PLACEHOLDER*/}
-      </Routes>
+      <AnimatedRoutes />
     </BrowserRouter>,
   );
 }

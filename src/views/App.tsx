@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
+import { Search, ChevronDown, User, LogOut, Loader2 } from 'lucide-react';
 import { useSession, signOut } from '@/lib/auth/auth-client';
 import { ComponentCard } from '@/components/ComponentCard';
 import { BuildList } from '@/components/BuildList';
@@ -189,152 +191,195 @@ export function App() {
 
   const hasActiveFilters = search || selectedType || selectedBrand || minPrice || maxPrice;
 
-  return (
-    <div className='min-h-screen bg-[#0f1117] text-white'>
-      {/* Header */}
-      <header className='sticky top-0 z-10 bg-[#0f1117]/80 backdrop-blur-md border-b border-white/5 px-6 py-4'>
-        <div className='max-w-7xl mx-auto flex items-center justify-between'>
-          <div className='flex items-center gap-3'>
-            <Link to='/' className='flex items-center gap-3'>
-              <div className='w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm'>
-                PC
-              </div>
-              <div>
-                <h1 className='text-base font-bold text-white leading-none'>PC Builder</h1>
-                <p className='text-gray-500 text-xs mt-0.5'>Compara precios y arma tu PC</p>
-              </div>
-            </Link>
-          </div>
+  // Bento Grid: large card for high-end CPUs and GPUs
+  function isLargeCard(component: Component): boolean {
+    const name = component.name.toLowerCase();
+    if (component.type_name === 'CPU') {
+      if (name.includes('ryzen 9') || name.includes('core i9') || name.includes('threadripper') ||
+          name.includes('7950') || name.includes('7900x') || name.includes('9950')) return true;
+      if (component.specs?.core_count && Number(component.specs.core_count) >= 12) return true;
+    }
+    if (component.type_name === 'GPU') {
+      if (name.includes('4090') || name.includes('4080') || name.includes('7900 xtx') ||
+          name.includes('4070 ti') || name.includes('w7900')) return true;
+      if (component.specs?.vram_quantity && Number(component.specs.vram_quantity) >= 20) return true;
+    }
+    return false;
+  }
 
-          <div className='flex items-center ml-4 self-stretch gap-3'>
+  const containerVariant = {
+    hidden: {},
+    visible: { transition: { staggerChildren: 0.055 } },
+  };
+
+  const cardVariant = {
+    hidden: { opacity: 0, y: 18 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: { delay: i * 0.04, duration: 0.38, ease: [0.25, 0.46, 0.45, 0.94] },
+    }),
+  };
+
+  if (isPending) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.25 }}
+        className='min-h-screen bg-[#050505] flex items-center justify-center'
+      >
+        <div className='flex flex-col items-center gap-3'>
+          <Loader2 className='w-5 h-5 text-white animate-spin' />
+          <span className='font-mono text-[9px] text-zinc-700 uppercase tracking-widest'>Iniciando...</span>
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20, filter: 'blur(5px)' }}
+      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      exit={{ opacity: 0, y: -20, filter: 'blur(8px)' }}
+      transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+      className='min-h-screen bg-[#050505] text-white'
+    >
+
+      {/* ── HEADER — Glassmorphism Stealth ── */}
+      <header className='sticky top-0 z-20 border-b border-[#171717] bg-[#050505]/85 backdrop-blur-xl px-6 py-4'>
+        <div className='max-w-7xl mx-auto flex items-center justify-between'>
+
+          {/* Logo — Mono engineering */}
+          <Link to='/' className='group flex flex-col gap-0.5'>
+            <span className='font-mono text-sm font-bold text-white tracking-[0.12em] uppercase group-hover:text-zinc-200 transition-colors'>
+              PC·BUILDER
+            </span>
+            <span className='font-mono text-[9px] text-zinc-700 tracking-[0.2em] uppercase'>
+              Compara · Arma · Ahorra
+            </span>
+          </Link>
+
+          <div className='flex items-center gap-3'>
             {buildComponents.length > 0 && (
-              <button
+              <motion.button
+                whileTap={{ scale: 0.97 }}
                 onClick={() => setActiveTab('build')}
-                className='flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors cursor-pointer'>
-                <span className='inline-flex items-center justify-center w-5 h-5 bg-white/20 rounded-full text-xs font-bold'>
+                className='flex items-center gap-2 border border-white/10 hover:border-white/20 bg-white/4 hover:bg-white/7 text-white font-mono text-xs px-3 py-2 rounded-lg transition-all cursor-pointer'>
+                <span className='font-mono w-4 h-4 bg-white/10 rounded flex items-center justify-center text-[10px] font-bold'>
                   {buildComponents.length}
                 </span>
                 Mi Build
-              </button>
+              </motion.button>
             )}
 
             {isPending ? (
-              <div className='flex items-center px-6 h-full text-gray-500 text-sm animate-pulse'>Cargando...</div>
+              <div className='h-8 w-20 bg-[#111] rounded-lg animate-pulse' />
             ) : session ? (
-              <div className='relative ml-4'>
+              <div className='relative'>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className='flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-white/5 transition-all cursor-pointer'>
-                  <div className='w-8 h-8 rounded-full bg-blue-600/20 flex items-center justify-center text-xs text-blue-400 border border-blue-500/30 font-bold'>
+                  className='flex items-center gap-2 px-2.5 py-2 border border-white/10 hover:border-white/18 hover:bg-white/4 rounded-lg transition-all cursor-pointer'>
+                  <div className='w-6 h-6 rounded-md bg-[#161616] border border-white/10 flex items-center justify-center font-mono text-[10px] font-bold text-zinc-400'>
                     {session.user.name?.charAt(0).toUpperCase() || 'U'}
                   </div>
-                  <span className='text-sm font-medium text-gray-200 hidden sm:block'>
-                    {session.user.name || session.user.email?.split('@')[0]}
+                  <span className='font-mono text-[11px] text-zinc-500 hidden sm:block'>
+                    {session.user.name?.split(' ')[0] || session.user.email?.split('@')[0]}
                   </span>
-                  <svg
-                    className={`w-4 h-4 text-gray-500 transition-transform ${showUserMenu ? 'rotate-180' : ''}`}
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'>
-                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
-                  </svg>
+                  <ChevronDown className={`w-3 h-3 text-zinc-700 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
                 </button>
 
-                {showUserMenu && (
-                  <>
-                    <div className='fixed inset-0 z-10' onClick={() => setShowUserMenu(false)}></div>
-
-                    <div className='absolute right-0 mt-2 w-56 bg-[#161922] border border-white/10 rounded-2xl shadow-2xl z-20 overflow-hidden animate-in fade-in zoom-in duration-100'>
-                      <div className='p-3 border-b border-white/5'>
-                        <p className='text-xs text-gray-500 px-2'>Sesión inicada como</p>
-                        <p className='text-sm text-white font-medium px-2 truncate'>{session.user.email}</p>
-                      </div>
-
-                      <div className='p-2'>
-                        <Link
-                          to='/account'
-                          onClick={() => setShowUserMenu(false)}
-                          className='flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-all'>
-                          <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                            <path
-                              strokeLinecap='round'
-                              strokeLinejoin='round'
-                              strokeWidth={2}
-                              d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
-                            />
-                          </svg>
-                          Configuración y cuenta
-                        </Link>
-
-                        <button
-                          onClick={handleLogout}
-                          className='w-full flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-400/5 rounded-lg transition-all cursor-pointer'>
-                          <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                            <path
-                              strokeLinecap='round'
-                              strokeLinejoin='round'
-                              strokeWidth={2}
-                              d='M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1'
-                            />
-                          </svg>
-                          Cerrar sesión
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
+                <AnimatePresence>
+                  {showUserMenu && (
+                    <>
+                      <div className='fixed inset-0 z-10' onClick={() => setShowUserMenu(false)} />
+                      <motion.div
+                        initial={{ opacity: 0, y: 6, scale: 0.96 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 4, scale: 0.96 }}
+                        transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        className='absolute right-0 mt-2 w-52 bg-[#080808]/98 backdrop-blur-xl border border-[#222] rounded-xl shadow-2xl shadow-black/60 z-20 overflow-hidden'>
+                        <div className='px-4 py-3 border-b border-[#171717]'>
+                          <p className='font-mono text-[9px] text-zinc-700 uppercase tracking-widest'>Sesión activa</p>
+                          <p className='font-mono text-xs text-zinc-400 mt-0.5 truncate'>{session.user.email}</p>
+                        </div>
+                        <div className='p-1.5 space-y-0.5'>
+                          <Link
+                            to='/account'
+                            onClick={() => setShowUserMenu(false)}
+                            className='flex items-center gap-2.5 px-3 py-2 font-mono text-xs text-zinc-500 hover:text-white hover:bg-white/5 rounded-lg transition-all'>
+                            <User className='w-3.5 h-3.5' />
+                            Configuración
+                          </Link>
+                          <button
+                            onClick={handleLogout}
+                            className='w-full flex items-center gap-2.5 px-3 py-2 font-mono text-xs text-red-500/70 hover:text-red-400 hover:bg-red-500/5 rounded-lg transition-all cursor-pointer'>
+                            <LogOut className='w-3.5 h-3.5' />
+                            Cerrar sesión
+                          </button>
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
               </div>
             ) : (
               <Link
                 to='/login'
-                className='flex items-center px-6 h-full bg-blue-600 hover:bg-blue-500 border rounded-xl text-sm border-none font-medium transition-all cursor-pointer whitespace-nowrap'>
-                Iniciar Sesión
+                className='font-mono text-xs text-zinc-500 hover:text-white border border-white/10 hover:border-white/22 px-4 py-2 rounded-lg transition-all'>
+                Iniciar sesión
               </Link>
             )}
           </div>
         </div>
       </header>
 
-      <main className='max-w-7xl mx-auto px-6 py-6'>
-        {/* Tabs */}
-        <div className='flex gap-1 mb-6 bg-gray-900 border border-gray-800 p-1 rounded-xl w-fit'>
-          <button
-            onClick={() => setActiveTab('search')}
-            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-              activeTab === 'search'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                : 'text-gray-400 hover:text-white'
-            }`}>
-            Buscar componentes
-          </button>
-          <button
-            onClick={() => setActiveTab('build')}
-            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
-              activeTab === 'build'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20'
-                : 'text-gray-400 hover:text-white'
-            }`}>
-            Mi Build
-            {buildComponents.length > 0 && (
-              <span className='ml-1.5 inline-flex items-center justify-center w-4 h-4 bg-blue-400/30 rounded-full text-xs'>
-                {buildComponents.length}
-              </span>
-            )}
-          </button>
+      <main className='max-w-7xl mx-auto px-6 py-8'>
+
+        {/* ── TABS — Line minimal ── */}
+        <div className='flex gap-0 mb-8 border-b border-[#171717]'>
+          {(['search', 'build'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`relative pb-3 px-1 mr-6 font-mono text-[11px] uppercase tracking-widest transition-colors duration-200 cursor-pointer flex items-center gap-2 ${
+                activeTab === tab ? 'text-white' : 'text-zinc-700 hover:text-zinc-400'
+              }`}>
+              {activeTab === tab && (
+                <motion.div
+                  layoutId='tab-indicator'
+                  className='absolute bottom-0 left-0 right-0 h-px bg-white'
+                  transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
+                />
+              )}
+              {tab === 'search' ? 'Componentes' : 'Mi Build'}
+              {tab === 'build' && buildComponents.length > 0 && (
+                <span className='font-mono text-[9px] text-zinc-700 border border-white/10 px-1.5 py-0.5 rounded tabular-nums'>
+                  {buildComponents.length}
+                </span>
+              )}
+            </button>
+          ))}
         </div>
 
-        {/* Tab: Buscar */}
+        {/* ── TAB: BUSCAR ── */}
         {activeTab === 'search' && (
           <div>
+
             {/* Compare bar */}
             {compareList.length > 0 && (
-              <div className='flex items-center justify-between bg-violet-500/10 border border-violet-500/25 rounded-xl px-4 py-3 mb-4'>
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                className='flex items-center justify-between border border-[#242424] bg-[#0A0A0A]/80 backdrop-blur-xl rounded-xl px-4 py-3 mb-4'>
                 <div className='flex items-center gap-3 flex-wrap'>
-                  <span className='text-violet-300 text-sm font-semibold'>Comparando {compareList.length}/2:</span>
+                  <span className='font-mono text-[9px] text-zinc-600 uppercase tracking-widest'>
+                    Comparando {compareList.length}/2
+                  </span>
                   {compareList.map((c) => (
-                    <span
-                      key={c.id}
-                      className='text-white text-xs bg-white/10 border border-white/10 px-2.5 py-1 rounded-lg'>
+                    <span key={c.id} className='font-mono text-[10px] text-zinc-400 border border-[#242424] px-2.5 py-1 rounded'>
                       {c.name}
                     </span>
                   ))}
@@ -343,190 +388,178 @@ export function App() {
                   {compareList.length === 2 && (
                     <button
                       onClick={() => setShowCompareModal(true)}
-                      className='bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer'>
+                      className='font-mono text-[10px] text-white border border-white/15 hover:border-white/28 hover:bg-white/5 px-3 py-1.5 rounded transition-all cursor-pointer uppercase tracking-widest'>
                       Ver comparación
                     </button>
                   )}
                   <button
                     onClick={() => setCompareList([])}
-                    className='text-violet-400 hover:text-violet-300 text-xs px-2 py-1.5 rounded-lg hover:bg-white/5 transition-all cursor-pointer'>
+                    className='font-mono text-[10px] text-zinc-700 hover:text-zinc-400 px-2 py-1.5 transition-colors cursor-pointer'>
                     Cancelar
                   </button>
                 </div>
-              </div>
+              </motion.div>
             )}
 
-            {/* Filtros */}
-            <div className='flex flex-col gap-3 mb-6'>
-              <div className='flex flex-col sm:flex-row gap-3'>
-                <div className='relative flex-1'>
-                  <svg
-                    className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'>
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
-                    />
-                  </svg>
-                  <input
-                    type='text'
-                    placeholder='Buscar componentes...'
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className='w-full bg-gray-900 border border-gray-800 text-white placeholder-gray-600 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all'
-                  />
-                </div>
-                <select
-                  value={selectedType}
-                  onChange={(e) => setSelectedType(e.target.value)}
-                  className='bg-gray-900 border border-gray-800 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/60 cursor-pointer appearance-none'>
-                  <option value=''>Todos los tipos</option>
-                  {componentTypes.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={selectedBrand}
-                  onChange={(e) => setSelectedBrand(e.target.value)}
-                  className='bg-gray-900 border border-gray-800 text-white rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/60 cursor-pointer appearance-none'>
-                  <option value=''>Todas las marcas</option>
-                  {brands.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            {/* ── FILTROS — GLASSMORPHISM REAL ── */}
+            <div className='relative mb-8 rounded-xl border border-[#1E1E1E] bg-[#080808]/80 backdrop-blur-xl p-4'>
+              {/* Top shimmer */}
+              <div className='absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent' />
 
-              {/* Price range + sort */}
-              <div className='flex flex-col sm:flex-row gap-3'>
-                <div className='flex items-center gap-2 flex-1'>
-                  <span className='text-gray-500 text-xs shrink-0'>Precio:</span>
-                  <input
-                    type='number'
-                    placeholder='Mín'
-                    value={minPrice}
-                    onChange={(e) => setMinPrice(e.target.value)}
-                    className='flex-1 bg-gray-900 border border-gray-800 text-white placeholder-gray-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all'
-                  />
-                  <span className='text-gray-600 text-xs'>–</span>
-                  <input
-                    type='number'
-                    placeholder='Máx'
-                    value={maxPrice}
-                    onChange={(e) => setMaxPrice(e.target.value)}
-                    className='flex-1 bg-gray-900 border border-gray-800 text-white placeholder-gray-600 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/20 transition-all'
-                  />
-                  {(minPrice || maxPrice) && (
-                    <button
-                      onClick={() => {
-                        setMinPrice('');
-                        setMaxPrice('');
-                      }}
-                      className='text-gray-500 hover:text-white transition-colors text-sm shrink-0 cursor-pointer'
-                      title='Limpiar rango'>
-                      ✕
-                    </button>
-                  )}
+              <div className='flex flex-col gap-3'>
+                {/* Row 1: Search + Type + Brand */}
+                <div className='flex flex-col sm:flex-row gap-2.5'>
+                  <div className='relative flex-1'>
+                    <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-700' />
+                    <input
+                      type='text'
+                      placeholder='Buscar componentes...'
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className='w-full font-mono text-xs bg-[#0F0F0F] border border-[#1E1E1E] text-white placeholder-zinc-800 rounded-lg pl-9 pr-4 py-2.5 focus:outline-none focus:border-[#303030] transition-all'
+                    />
+                  </div>
+                  <select
+                    value={selectedType}
+                    onChange={(e) => setSelectedType(e.target.value)}
+                    className='font-mono text-xs bg-[#0F0F0F] border border-[#1E1E1E] text-zinc-400 rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#303030] cursor-pointer appearance-none transition-all min-w-[140px]'>
+                    <option value=''>Todos los tipos</option>
+                    {componentTypes.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                  </select>
+                  <select
+                    value={selectedBrand}
+                    onChange={(e) => setSelectedBrand(e.target.value)}
+                    className='font-mono text-xs bg-[#0F0F0F] border border-[#1E1E1E] text-zinc-400 rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#303030] cursor-pointer appearance-none transition-all min-w-[140px]'>
+                    <option value=''>Todas las marcas</option>
+                    {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  </select>
                 </div>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className='bg-gray-900 border border-gray-800 text-white rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-blue-500/60 cursor-pointer appearance-none'>
-                  <option value='default'>Ordenar por defecto</option>
-                  <option value='price_asc'>Precio: menor a mayor</option>
-                  <option value='price_desc'>Precio: mayor a menor</option>
-                  <option value='name'>Nombre A–Z</option>
-                </select>
+
+                {/* Row 2: Price + Sort + Clear */}
+                <div className='flex flex-col sm:flex-row gap-2.5 items-center'>
+                  <div className='flex items-center gap-2 flex-1'>
+                    <span className='font-mono text-[9px] text-zinc-700 uppercase tracking-widest shrink-0'>Precio</span>
+                    <input
+                      type='number' placeholder='Mín' value={minPrice}
+                      onChange={(e) => setMinPrice(e.target.value)}
+                      className='flex-1 font-mono text-xs bg-[#0F0F0F] border border-[#1E1E1E] text-white placeholder-zinc-800 rounded-lg px-3 py-2 focus:outline-none focus:border-[#303030] transition-all'
+                    />
+                    <span className='text-zinc-800 text-xs'>—</span>
+                    <input
+                      type='number' placeholder='Máx' value={maxPrice}
+                      onChange={(e) => setMaxPrice(e.target.value)}
+                      className='flex-1 font-mono text-xs bg-[#0F0F0F] border border-[#1E1E1E] text-white placeholder-zinc-800 rounded-lg px-3 py-2 focus:outline-none focus:border-[#303030] transition-all'
+                    />
+                    {(minPrice || maxPrice) && (
+                      <button onClick={() => { setMinPrice(''); setMaxPrice(''); }}
+                        className='font-mono text-xs text-zinc-700 hover:text-zinc-400 cursor-pointer transition-colors shrink-0'>✕</button>
+                    )}
+                  </div>
+                  <div className='flex items-center gap-2 shrink-0'>
+                    <select
+                      value={sortBy} onChange={(e) => setSortBy(e.target.value)}
+                      className='font-mono text-xs bg-[#0F0F0F] border border-[#1E1E1E] text-zinc-400 rounded-lg px-3 py-2 focus:outline-none focus:border-[#303030] cursor-pointer appearance-none transition-all'>
+                      <option value='default'>Ordenar: Defecto</option>
+                      <option value='price_asc'>Precio ↑</option>
+                      <option value='price_desc'>Precio ↓</option>
+                      <option value='name'>Nombre A–Z</option>
+                    </select>
+                    {hasActiveFilters && (
+                      <button onClick={clearFilters}
+                        className='font-mono text-[9px] text-zinc-700 hover:text-zinc-400 border border-white/8 hover:border-white/15 px-3 py-2 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                        Limpiar
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Resultados */}
+            {/* ── RESULTADOS ── */}
             {loading ? (
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
+              <div className='grid grid-cols-12 gap-3'>
                 {Array.from({ length: 8 }).map((_, i) => (
-                  <SkeletonCard key={i} />
+                  <div key={i} className='col-span-12 sm:col-span-6 lg:col-span-3'><SkeletonCard /></div>
                 ))}
               </div>
             ) : displayedComponents.length === 0 ? (
-              <div className='flex flex-col items-center justify-center py-20 gap-4'>
-                <div className='w-16 h-16 bg-neutral-900 border border-white/5 rounded-2xl flex items-center justify-center'>
-                  <svg className='w-8 h-8 text-neutral-600' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={1.5}
-                      d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
-                    />
-                  </svg>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className='flex flex-col items-center justify-center py-24 gap-4'>
+                <div className='w-10 h-10 border border-[#1E1E1E] rounded-xl flex items-center justify-center'>
+                  <Search className='w-4 h-4 text-zinc-800' />
                 </div>
-                <div className='text-center'>
-                  <p className='text-neutral-300 text-sm font-medium'>No se encontraron componentes</p>
-                  <p className='text-neutral-600 text-xs mt-1'>
-                    {hasActiveFilters
-                      ? 'Prueba con otros filtros o amplía el rango de precios'
-                      : 'No hay componentes disponibles por ahora'}
+                <div className='text-center space-y-1'>
+                  <p className='text-zinc-400 text-sm'>Sin resultados</p>
+                  <p className='font-mono text-[9px] text-zinc-800 uppercase tracking-widest'>
+                    {hasActiveFilters ? 'Ajusta los filtros' : 'No hay componentes disponibles'}
                   </p>
                 </div>
                 {hasActiveFilters && (
-                  <button
-                    onClick={clearFilters}
-                    className='text-xs text-blue-400 hover:text-blue-300 border border-blue-400/20 hover:border-blue-400/40 px-4 py-2 rounded-lg transition-all cursor-pointer'>
-                    Limpiar todos los filtros
+                  <button onClick={clearFilters}
+                    className='font-mono text-[9px] text-zinc-600 hover:text-zinc-400 border border-white/8 hover:border-white/15 px-4 py-2 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                    Limpiar filtros
                   </button>
                 )}
-              </div>
+              </motion.div>
             ) : (
-              <>
-                <p className='text-gray-600 text-xs mb-4'>{displayedComponents.length} componentes encontrados</p>
-                <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
-                  {displayedComponents.map((c, i) => (
-                    <div key={c.id} className='animate-card-in' style={{ animationDelay: `${i * 40}ms` }}>
-                      <ComponentCard
-                        component={c}
-                        onAdd={handleAdd}
-                        onCompare={handleCompare}
-                        isSelectedForCompare={compareList.some((x) => x.id === c.id)}
-                      />
-                    </div>
-                  ))}
+              <motion.div variants={containerVariant} initial='hidden' animate='visible'>
+                <p className='font-mono text-[9px] text-zinc-800 uppercase tracking-widest mb-4'>
+                  {displayedComponents.length} componentes
+                </p>
+                {/* ── BENTO GRID — Asimétrico ── */}
+                <div className='grid grid-cols-12 gap-3'>
+                  {displayedComponents.map((c, i) => {
+                    const large = isLargeCard(c);
+                    return (
+                      <motion.div
+                        key={c.id}
+                        custom={i}
+                        variants={cardVariant}
+                        className={large
+                          ? 'col-span-12 sm:col-span-6 lg:col-span-6'
+                          : 'col-span-12 sm:col-span-6 lg:col-span-3'
+                        }>
+                        <ComponentCard
+                          component={c}
+                          onAdd={handleAdd}
+                          onCompare={handleCompare}
+                          isSelectedForCompare={compareList.some((x) => x.id === c.id)}
+                        />
+                      </motion.div>
+                    );
+                  })}
                 </div>
-              </>
+              </motion.div>
             )}
           </div>
         )}
 
-        {/* Tab: Mi Build */}
+        {/* ── TAB: MI BUILD ── */}
         {activeTab === 'build' && (
           <div className='flex flex-col lg:flex-row gap-6'>
-            {/* Main build area */}
             <div className='flex-1 flex flex-col gap-4'>
               <div className='flex items-center justify-between'>
                 <div>
-                  <h2 className='text-lg font-bold'>Mi Build</h2>
-                  <p className='text-gray-500 text-xs mt-0.5'>
+                  <p className='font-mono text-[9px] text-zinc-700 uppercase tracking-widest mb-1'>Configuración actual</p>
+                  <h2 className='text-white font-semibold text-base'>
                     {buildComponents.length === 0
-                      ? 'Agrega componentes desde la búsqueda'
-                      : `${buildComponents.length} componente${buildComponents.length > 1 ? 's' : ''} agregado${buildComponents.length > 1 ? 's' : ''}`}
-                  </p>
+                      ? 'Agrega componentes'
+                      : `${buildComponents.length} componente${buildComponents.length > 1 ? 's' : ''} seleccionado${buildComponents.length > 1 ? 's' : ''}`}
+                  </h2>
                 </div>
                 {buildComponents.length > 0 && (
                   <div className='flex gap-2'>
                     <button
                       onClick={() => setShowSaveDialog(true)}
-                      className='text-xs text-blue-400 hover:text-blue-300 border border-blue-400/20 hover:border-blue-400/40 px-3 py-1.5 rounded-lg transition-all cursor-pointer'>
-                      Guardar build
+                      className='font-mono text-[10px] text-zinc-500 hover:text-white border border-white/10 hover:border-white/20 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                      Guardar
                     </button>
                     <button
                       onClick={handleClearBuild}
-                      className='text-xs text-red-400 hover:text-red-300 border border-red-400/20 hover:border-red-400/40 px-3 py-1.5 rounded-lg transition-all cursor-pointer'>
-                      Limpiar todo
+                      className='font-mono text-[10px] text-red-500/50 hover:text-red-400 border border-red-500/15 hover:border-red-500/30 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                      Limpiar
                     </button>
                   </div>
                 )}
@@ -536,14 +569,12 @@ export function App() {
               {compatibilityIssues.length > 0 && (
                 <div className='flex flex-col gap-2'>
                   {compatibilityIssues.map((issue, i) => (
-                    <div
-                      key={i}
-                      className={`flex items-start gap-3 px-4 py-3 rounded-xl border text-sm ${
-                        issue.type === 'error'
-                          ? 'bg-red-500/10 border-red-500/25 text-red-300'
-                          : 'bg-amber-500/10 border-amber-500/25 text-amber-300'
-                      }`}>
-                      <span className='font-bold shrink-0'>{issue.type === 'error' ? '✕' : '⚠'}</span>
+                    <div key={i} className={`flex items-start gap-3 px-4 py-3 rounded-xl border font-mono text-xs ${
+                      issue.type === 'error'
+                        ? 'bg-red-500/5 border-red-500/15 text-red-400/80'
+                        : 'bg-amber-500/5 border-amber-500/15 text-amber-400/80'
+                    }`}>
+                      <span className='shrink-0 mt-px'>{issue.type === 'error' ? '✕' : '△'}</span>
                       <span>{issue.message}</span>
                     </div>
                   ))}
@@ -553,8 +584,7 @@ export function App() {
               <BuildList buildComponents={buildComponents} onRemove={handleRemove} onSearchType={handleSearchType} />
             </div>
 
-            {/* Right sidebar */}
-            <div className='lg:w-72 flex flex-col gap-4'>
+            <div className='lg:w-64 flex flex-col gap-4'>
               <BuildChecklist build={buildComponents} />
               <SavedBuildsPanel
                 savedBuilds={savedBuilds}
@@ -573,43 +603,39 @@ export function App() {
         )}
       </main>
 
-      {/* Save build dialog */}
+      {/* ── SAVE DIALOG ── */}
       {showSaveDialog && (
         <div
-          className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm'
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowSaveDialog(false);
-          }}>
-          <div className='bg-neutral-900 border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl p-6 flex flex-col gap-4'>
-            <h3 className='text-white font-semibold'>Guardar build</h3>
+          className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md'
+          onClick={(e) => { if (e.target === e.currentTarget) setShowSaveDialog(false); }}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+            className='relative bg-[#080808]/98 backdrop-blur-xl border border-[#1E1E1E] rounded-xl w-full max-w-sm shadow-2xl shadow-black/80 p-6 flex flex-col gap-4'>
+            <div className='absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent' />
+            <div>
+              <p className='font-mono text-[9px] text-zinc-700 uppercase tracking-widest mb-1'>Guardar build</p>
+              <h3 className='text-white font-semibold text-sm'>Dale un nombre a tu configuración</h3>
+            </div>
             <input
-              type='text'
-              placeholder='Nombre del build...'
-              value={saveName}
+              type='text' placeholder='Mi gaming build...' value={saveName}
               onChange={(e) => setSaveName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSaveBuild();
-              }}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleSaveBuild(); }}
               autoFocus
-              className='bg-neutral-800 border border-white/10 text-white placeholder-neutral-500 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-blue-500/60 transition-all'
+              className='font-mono text-xs bg-[#0F0F0F] border border-[#1E1E1E] text-white placeholder-zinc-800 rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#303030] transition-all'
             />
             <div className='flex gap-2'>
-              <button
-                onClick={handleSaveBuild}
-                disabled={!saveName.trim()}
-                className='flex-1 bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold py-2.5 rounded-xl transition-all cursor-pointer'>
+              <button onClick={handleSaveBuild} disabled={!saveName.trim()}
+                className='flex-1 font-mono text-[11px] text-white border border-white/12 hover:border-white/25 hover:bg-white/5 disabled:opacity-25 disabled:cursor-not-allowed py-2.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
                 Guardar
               </button>
-              <button
-                onClick={() => {
-                  setShowSaveDialog(false);
-                  setSaveName('');
-                }}
-                className='px-4 bg-white/5 hover:bg-white/10 border border-white/10 text-white text-sm py-2.5 rounded-xl transition-all cursor-pointer'>
+              <button onClick={() => { setShowSaveDialog(false); setSaveName(''); }}
+                className='px-4 font-mono text-[11px] text-zinc-600 border border-white/8 hover:border-white/15 hover:text-zinc-400 py-2.5 rounded-lg transition-all cursor-pointer'>
                 Cancelar
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 
@@ -617,16 +643,12 @@ export function App() {
       {showCompareModal && compareList.length === 2 && (
         <CompareModal
           components={compareList}
-          onClose={() => {
-            setShowCompareModal(false);
-            setCompareList([]);
-          }}
+          onClose={() => { setShowCompareModal(false); setCompareList([]); }}
         />
       )}
 
-      {/* Toast notifications */}
       <ToastContainer toasts={toasts} onRemove={removeToast} />
-    </div>
+    </motion.div>
   );
 }
 

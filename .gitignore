@@ -135,3 +135,4 @@ dist
 !.yarn/versions__pycache__/
 
 .vscode
+.claude/

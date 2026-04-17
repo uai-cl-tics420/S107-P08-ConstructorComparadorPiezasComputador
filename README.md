@@ -1,4 +1,4 @@
-# S101-P08-ConstructorComparadorPiezasComputador
+# S107-P08-ConstructorComparadorPiezasComputador
 
 ### Descripción
 
@@ -6,12 +6,27 @@
 
 ---
 
+### Requerimientos
+
+&emsp;Necesita tener instalada la última verisón de bun y de docker:
+
+- [bun install](https://bun.com/docs/installation)
+- [Docker install](https://www.docker.com/get-started/)
+
+---
+
 ### Ejecución
 
-&emsp;Primero, asegurarse de crear un archivo .env en el directorio raíz a partir del archivo .env.example proporcionado como template, el secreto para la variable BETTER_AUTH_SECRET puede ser generado en terminal utilizando:
+&emsp;Primero, instale todas las librerías necesarias ejecutando en terminal:
 
 ```bash
-npx auth secret
+bun install
+```
+
+&emsp;Luego, asegurarse de crear un archivo .env en el directorio raíz a partir del archivo .env.example proporcionado como template, el secreto para la variable BETTER_AUTH_SECRET puede ser generado en terminal utilizando:
+
+```bash
+bunx auth secret
 ```
 
 De esta manera BetterAuth no arrojará un aviso al iniciar la app debido a las características de BETTER_AUTH_SECRET.
@@ -22,12 +37,35 @@ De esta manera BetterAuth no arrojará un aviso al iniciar la app debido a las c
 docker-compose up -d --build
 ```
 
-&emsp;Para insertar datos de demostración al sistema de base de datos ejecutar en terminal:
+&emsp;Por último, para visualizar la app web visitar la dirección:
+
+[localhost:3000](http://localhost:3000)
+
+---
+
+### Funcionalidades adicionales:
+
+#### Base de datos:
+
+&emsp;Para insertar datos demostrativos a la base de datos ejecutar en terminal:
 
 ```bash
 bun run populate
 ```
 
-&emsp;Para visualizar la app web visitar la dirección:
+#### Google SSO con OAuth:
 
-http://localhost:3000
+1. Se debe utilizar una cuenta de google para crear un proyecto de google cloud y habilitar OAuth.
+2. Se debe generar credenciales de cliente OAuth desde google cloud.
+3. Copiar `ID de cliente` y `Secreto de cliente` en las variables de entorno de `.env` en los campos faltantes de Google OAuth según el formato de `.env.example`
+4. Volver a montar los contenedores de docker ejecutando en terminal:
+
+```bash
+docker-compose down -v
+docker-compose up -d --build
+```
+
+#### Ingreso con email OTP:
+
+1. Se debe ingresar a https://resend.com/ y crear una cuenta.
+2. En el dashboard crear una nueva API key y copiarla en la variable de entorno `RESEND_API_KEY`, reemplazando el valor <KEY_HERE>, en el archivo `.env` según el formato descrito en el archivo `.env.example`.

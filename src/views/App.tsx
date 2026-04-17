@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useSession, signOut } from '@/lib/auth/auth-client';
 import { ComponentCard } from '@/components/ComponentCard';
 import { BuildList } from '@/components/BuildList';
 import { ToastContainer } from '@/components/ToastContainer';
@@ -27,6 +28,10 @@ export function App() {
   const [sortBy, setSortBy] = useState('default');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'search' | 'build'>('search');
+
+  const [showUserMenu, setShowUserMenu] = useState(false);
+  const navigate = useNavigate();
+  const { data: session, isPending } = useSession();
 
   // Compare mode
   const [compareList, setCompareList] = useState<Component[]>([]);
@@ -150,6 +155,17 @@ export function App() {
     addToast('Build limpiado', 'warning');
   };
 
+  const handleLogout = async () => {
+    await signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          setShowUserMenu(false);
+          navigate('/login');
+        },
+      },
+    });
+  };
+
   const clearFilters = () => {
     setSearch('');
     setSelectedType('');
@@ -167,32 +183,103 @@ export function App() {
       <header className='sticky top-0 z-10 bg-[#0f1117]/80 backdrop-blur-md border-b border-white/5 px-6 py-4'>
         <div className='max-w-7xl mx-auto flex items-center justify-between'>
           <div className='flex items-center gap-3'>
-            <div className='w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm'>
-              PC
-            </div>
-            <div>
-              <h1 className='text-base font-bold text-white leading-none'>PC Builder</h1>
-              <p className='text-gray-500 text-xs mt-0.5'>Compara precios y arma tu PC</p>
-            </div>
-            <div className='flex items-center ml-4 self-stretch'>
-              <Link
-                to='/login'
-                className='flex items-center px-6 h-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-sm font-medium transition-all cursor-pointer whitespace-nowrap'>
-                Iniciar Sesión
-              </Link>
-            </div>
+            <Link to='/' className='flex items-center gap-3'>
+              <div className='w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm'>
+                PC
+              </div>
+              <div>
+                <h1 className='text-base font-bold text-white leading-none'>PC Builder</h1>
+                <p className='text-gray-500 text-xs mt-0.5'>Compara precios y arma tu PC</p>
+              </div>
+            </Link>
           </div>
 
-          {buildComponents.length > 0 && (
-            <button
-              onClick={() => setActiveTab('build')}
-              className='flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors cursor-pointer'>
-              <span className='inline-flex items-center justify-center w-5 h-5 bg-white/20 rounded-full text-xs font-bold'>
-                {buildComponents.length}
-              </span>
-              Mi Build
-            </button>
-          )}
+          <div className='flex items-center ml-4 self-stretch gap-3'>
+            {buildComponents.length > 0 && (
+              <button
+                onClick={() => setActiveTab('build')}
+                className='flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors cursor-pointer'>
+                <span className='inline-flex items-center justify-center w-5 h-5 bg-white/20 rounded-full text-xs font-bold'>
+                  {buildComponents.length}
+                </span>
+                Mi Build
+              </button>
+            )}
+
+            {isPending ? (
+              <div className='flex items-center px-6 h-full text-gray-500 text-sm animate-pulse'>Cargando...</div>
+            ) : session ? (
+              <div className='relative ml-4'>
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className='flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-white/5 transition-all cursor-pointer'>
+                  <div className='w-8 h-8 rounded-full bg-blue-600/20 flex items-center justify-center text-xs text-blue-400 border border-blue-500/30 font-bold'>
+                    {session.user.name?.charAt(0).toUpperCase() || 'U'}
+                  </div>
+                  <span className='text-sm font-medium text-gray-200 hidden sm:block'>
+                    {session.user.name || session.user.email?.split('@')[0]}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 text-gray-500 transition-transform ${showUserMenu ? 'rotate-180' : ''}`}
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'>
+                    <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 9l-7 7-7-7' />
+                  </svg>
+                </button>
+
+                {showUserMenu && (
+                  <>
+                    <div className='fixed inset-0 z-10' onClick={() => setShowUserMenu(false)}></div>
+
+                    <div className='absolute right-0 mt-2 w-56 bg-[#161922] border border-white/10 rounded-2xl shadow-2xl z-20 overflow-hidden animate-in fade-in zoom-in duration-100'>
+                      <div className='p-3 border-b border-white/5'>
+                        <p className='text-xs text-gray-500 px-2'>Sesión inicada como</p>
+                        <p className='text-sm text-white font-medium px-2 truncate'>{session.user.email}</p>
+                      </div>
+
+                      <div className='p-2'>
+                        <Link
+                          to='/account'
+                          onClick={() => setShowUserMenu(false)}
+                          className='flex items-center gap-3 px-3 py-2 text-sm text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-all'>
+                          <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                              strokeWidth={2}
+                              d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
+                            />
+                          </svg>
+                          Configuración y cuenta
+                        </Link>
+
+                        <button
+                          onClick={handleLogout}
+                          className='w-full flex items-center gap-3 px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-400/5 rounded-lg transition-all cursor-pointer'>
+                          <svg className='w-4 h-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <path
+                              strokeLinecap='round'
+                              strokeLinejoin='round'
+                              strokeWidth={2}
+                              d='M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1'
+                            />
+                          </svg>
+                          Cerrar sesión
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : (
+              <Link
+                to='/login'
+                className='flex items-center px-6 h-full bg-blue-600 hover:bg-blue-500 border rounded-xl text-sm border-none font-medium transition-all cursor-pointer whitespace-nowrap'>
+                Iniciar Sesión
+              </Link>
+            )}
+          </div>
         </div>
       </header>
 

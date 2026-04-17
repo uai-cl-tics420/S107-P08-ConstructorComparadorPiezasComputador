@@ -1,6 +1,6 @@
 import '@/lib/config'; // Validates env variables on app start
 import { serve } from 'bun';
-import { auth } from '@/lib/db/auth';
+import { auth } from '@/lib/auth/auth';
 import { getComponents, getComponentById, getBrands, getComponentTypes } from '@/lib/db/mongo';
 import index from './index.html';
 import { MongoClient } from 'mongodb';
@@ -17,7 +17,7 @@ const pgPool = new Pool({
   user: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
   host: process.env.POSTGRES_HOST,
-  port: parseInt(process.env.POSTGRES_PORT ?? '5432'),
+  port: parseInt(process.env.POSTGRES_PORT!),
   database: process.env.POSTGRES_DB,
 });
 

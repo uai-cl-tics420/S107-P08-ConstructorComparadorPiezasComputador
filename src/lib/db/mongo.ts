@@ -1,5 +1,6 @@
-import { MongoClient } from 'mongodb';
+import { MongoClient, ObjectId } from 'mongodb';
 import { getPricesByComponentId } from './postgres';
+import type { Vendor } from '@/types/Database_types';
 
 const mongoUrl = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}?authSource=admin`;
 
@@ -38,21 +39,26 @@ export async function getComponents(search?: string, typeId?: string, brandId?: 
   const transformed = await Promise.all(docs.map(transformComponent));
 
   // Filter to only show components with prices
-  return transformed.filter(comp => comp.prices.length > 0);
+  return transformed.filter((comp) => comp.prices.length > 0);
 }
 
 export async function getComponentById(id: string) {
-  const doc = await db.collection('components').findOne({ _id: id });
+  const doc = await db.collection('components').findOne({ _id: new ObjectId(id) });
   if (!doc) return null;
   return transformComponent(doc);
 }
 
 export async function getBrands() {
   const docs = await db.collection('brands').find({}).toArray();
-  return docs.map(b => ({ id: b._id, name: b.name }));
+  return docs.map((b) => ({ id: b._id, name: b.name }));
 }
 
 export async function getComponentTypes() {
   const docs = await db.collection('component_types').find({}).toArray();
-  return docs.map(t => ({ id: t._id, name: t.name, max_quantity: 10 }));
+  return docs.map((t) => ({ id: t._id, name: t.name, max_quantity: 10 }));
+}
+
+export async function getVendorById(id: string): Promise<Vendor | null> {
+  const doc = await db.collection<Vendor>('vendors').findOne({ _id: id });
+  return doc;
 }

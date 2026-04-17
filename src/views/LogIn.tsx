@@ -8,10 +8,10 @@ export function LogIn() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, filter: 'blur(5px)' }}
-      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-      exit={{ opacity: 0, y: -40, filter: 'blur(10px)' }}
-      transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+      initial={{ opacity: 0, scale: 0.98 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.98 }}
+      transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
       className='min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center relative overflow-hidden'
     >
 

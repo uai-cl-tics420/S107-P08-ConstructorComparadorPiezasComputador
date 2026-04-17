@@ -240,12 +240,19 @@ export function App() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20, filter: 'blur(5px)' }}
-      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-      exit={{ opacity: 0, y: -20, filter: 'blur(8px)' }}
-      transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-      className='min-h-screen bg-[#050505] text-white'
+      initial={{ opacity: 0, scale: 1.02 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 1 }}
+      transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+      className='min-h-screen bg-[#050505] text-white relative'
     >
+      {/* Glassy Reveal Overlay — se desvanece durante entrada */}
+      <motion.div
+        initial={{ opacity: 0.08, backdropFilter: 'blur(12px)' }}
+        animate={{ opacity: 0, backdropFilter: 'blur(0px)' }}
+        transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+        className='absolute inset-0 pointer-events-none'
+      />
 
       {/* ── HEADER — Glassmorphism Stealth ── */}
       <header className='sticky top-0 z-20 border-b border-[#171717] bg-[#050505]/85 backdrop-blur-xl px-6 py-4'>
@@ -604,40 +611,57 @@ export function App() {
       </main>
 
       {/* ── SAVE DIALOG ── */}
-      {showSaveDialog && (
-        <div
-          className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md'
-          onClick={(e) => { if (e.target === e.currentTarget) setShowSaveDialog(false); }}>
+      <AnimatePresence>
+        {showSaveDialog && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: 10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
-            className='relative bg-[#080808]/98 backdrop-blur-xl border border-[#1E1E1E] rounded-xl w-full max-w-sm shadow-2xl shadow-black/80 p-6 flex flex-col gap-4'>
-            <div className='absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent' />
-            <div>
-              <p className='font-mono text-[9px] text-zinc-700 uppercase tracking-widest mb-1'>Guardar build</p>
-              <h3 className='text-white font-semibold text-sm'>Dale un nombre a tu configuración</h3>
-            </div>
-            <input
-              type='text' placeholder='Mi gaming build...' value={saveName}
-              onChange={(e) => setSaveName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') handleSaveBuild(); }}
-              autoFocus
-              className='font-mono text-xs bg-[#0F0F0F] border border-[#1E1E1E] text-white placeholder-zinc-800 rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#303030] transition-all'
-            />
-            <div className='flex gap-2'>
-              <button onClick={handleSaveBuild} disabled={!saveName.trim()}
-                className='flex-1 font-mono text-[11px] text-white border border-white/12 hover:border-white/25 hover:bg-white/5 disabled:opacity-25 disabled:cursor-not-allowed py-2.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
-                Guardar
-              </button>
-              <button onClick={() => { setShowSaveDialog(false); setSaveName(''); }}
-                className='px-4 font-mono text-[11px] text-zinc-600 border border-white/8 hover:border-white/15 hover:text-zinc-400 py-2.5 rounded-lg transition-all cursor-pointer'>
-                Cancelar
-              </button>
-            </div>
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-2xl'
+            onClick={(e) => { if (e.target === e.currentTarget) setShowSaveDialog(false); }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className='relative w-full max-w-sm'
+            >
+              {/* GlassCard Gradient Border */}
+              <div className='absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-white/12 via-white/4 to-transparent pointer-events-none' />
+
+              <div className='relative bg-[#0F0F0F]/90 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 flex flex-col gap-4'>
+                <div className='absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent' />
+
+                <div>
+                  <p className='font-mono text-[9px] text-zinc-700 uppercase tracking-widest mb-1'>Guardar build</p>
+                  <h3 className='text-white font-semibold text-sm'>Dale un nombre a tu configuración</h3>
+                </div>
+
+                <input
+                  type='text' placeholder='Mi gaming build...' value={saveName}
+                  onChange={(e) => setSaveName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleSaveBuild(); }}
+                  autoFocus
+                  className='font-mono text-xs bg-[#0A0A0A] border border-white/10 text-white placeholder-zinc-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-white/20 transition-all'
+                />
+
+                <div className='flex gap-2'>
+                  <button onClick={handleSaveBuild} disabled={!saveName.trim()}
+                    className='flex-1 font-mono text-[11px] text-white bg-white/8 border border-white/12 hover:border-white/25 hover:bg-white/12 disabled:opacity-25 disabled:cursor-not-allowed py-2.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                    Guardar
+                  </button>
+                  <button onClick={() => { setShowSaveDialog(false); setSaveName(''); }}
+                    className='px-4 font-mono text-[11px] text-zinc-600 border border-white/8 hover:border-white/15 hover:text-zinc-400 py-2.5 rounded-lg transition-all cursor-pointer'>
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           </motion.div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
       {/* Compare modal */}
       {showCompareModal && compareList.length === 2 && (

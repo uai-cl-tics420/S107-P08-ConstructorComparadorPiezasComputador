@@ -4,24 +4,36 @@ interface Props {
   build: BuildComponent[];
 }
 
-const REQUIRED_TYPES = ["CPU", "GPU", "RAM", "Motherboard", "Storage", "PSU"];
-const OPTIONAL_TYPES = ["Case", "CPU Cooler"];
+// Orden lógico de selección de piezas al armar una PC:
+// CPU define socket y DDR → Motherboard se elige según CPU → RAM según motherboard →
+// GPU independiente → Storage independiente → Cooler depende del CPU →
+// PSU depende del consumo total → Case depende del form factor de la motherboard
+const ALL_TYPES = [
+  "CPU",
+  "Motherboard",
+  "RAM",
+  "GPU",
+  "Storage",
+  "CPU Cooler",
+  "PSU",
+  "Case",
+];
 
 const TYPE_DOT_COLOR: Record<string, string> = {
-  CPU:         "bg-violet-400",
-  GPU:         "bg-emerald-400",
-  RAM:         "bg-blue-400",
-  Motherboard: "bg-orange-400",
-  Storage:     "bg-amber-400",
-  PSU:         "bg-red-400",
-  Case:        "bg-slate-400",
+  CPU:          "bg-violet-400",
+  Motherboard:  "bg-orange-400",
+  RAM:          "bg-blue-400",
+  GPU:          "bg-emerald-400",
+  Storage:      "bg-amber-400",
   "CPU Cooler": "bg-cyan-400",
+  PSU:          "bg-red-400",
+  Case:         "bg-slate-400",
 };
 
 export function BuildChecklist({ build }: Props) {
   const presentTypes = new Set(build.map(b => b.component.type_name));
-  const completedRequired = REQUIRED_TYPES.filter(t => presentTypes.has(t)).length;
-  const percentage = Math.round((completedRequired / REQUIRED_TYPES.length) * 100);
+  const completed = ALL_TYPES.filter(t => presentTypes.has(t)).length;
+  const percentage = Math.round((completed / ALL_TYPES.length) * 100);
 
   return (
     <div className="bg-neutral-900/60 border border-white/5 rounded-2xl p-4 flex flex-col gap-3">
@@ -38,40 +50,20 @@ export function BuildChecklist({ build }: Props) {
         />
       </div>
 
-      {/* Required */}
+      {/* Lista única */}
       <div className="flex flex-col gap-1">
-        <p className="text-neutral-500 text-xs font-medium uppercase tracking-wider mb-0.5">Requeridos</p>
-        {REQUIRED_TYPES.map(type => {
+        {ALL_TYPES.map((type, i) => {
           const present = presentTypes.has(type);
           return (
             <div key={type} className="flex items-center justify-between py-1">
               <div className="flex items-center gap-2">
+                <span className="text-neutral-700 text-[10px] tabular-nums w-3 shrink-0">{i + 1}</span>
                 <span className={`w-2 h-2 rounded-full shrink-0 ${TYPE_DOT_COLOR[type] ?? "bg-gray-400"}`} />
                 <span className="text-neutral-300 text-xs">{type}</span>
               </div>
               {present
                 ? <span className="text-green-400 text-xs font-medium">✓ Agregado</span>
                 : <span className="text-neutral-600 text-xs">— Faltante</span>
-              }
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Optional */}
-      <div className="flex flex-col gap-1 pt-1 border-t border-white/5">
-        <p className="text-neutral-500 text-xs font-medium uppercase tracking-wider mb-0.5">Opcionales</p>
-        {OPTIONAL_TYPES.map(type => {
-          const present = presentTypes.has(type);
-          return (
-            <div key={type} className="flex items-center justify-between py-1">
-              <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full shrink-0 ${TYPE_DOT_COLOR[type] ?? "bg-gray-400"}`} />
-                <span className="text-neutral-400 text-xs">{type}</span>
-              </div>
-              {present
-                ? <span className="text-green-400 text-xs font-medium">✓ Agregado</span>
-                : <span className="text-neutral-700 text-xs">— Opcional</span>
               }
             </div>
           );

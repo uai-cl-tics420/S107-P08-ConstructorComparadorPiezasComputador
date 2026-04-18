@@ -39,6 +39,7 @@ docker-compose up -d --build
 &emsp;Para insertar datos a la base de datos ejecutar en terminal:
 
 ```bash
+pip install -r scraper/requirements.txt
 python scraper/fetch_data.py
 ```
 

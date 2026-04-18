@@ -139,6 +139,7 @@ dist
 # python
 __pycache__/
 *.pyc
+**/requirements.txt
 
 # claude
 .claude/

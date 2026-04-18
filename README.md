@@ -8,28 +8,17 @@
 
 ### Requerimientos
 
-&emsp;Necesita tener instalada la última verisón de bun y de docker:
+&emsp;Necesita tener instalada la última verisón de docker:
 
-- [bun install](https://bun.com/docs/installation)
 - [Docker install](https://www.docker.com/get-started/)
 
 ---
 
 ### Ejecución
 
-&emsp;Primero, instale todas las librerías necesarias ejecutando en terminal:
+&emsp;Asegurarse de crear un archivo .env en el directorio raíz a partir del archivo .env.example proporcionado como template.
 
-```bash
-bun install
-```
-
-&emsp;Luego, asegurarse de crear un archivo .env en el directorio raíz a partir del archivo .env.example proporcionado como template, el secreto para la variable BETTER_AUTH_SECRET puede ser generado en terminal utilizando:
-
-```bash
-bunx auth secret
-```
-
-De esta manera BetterAuth no arrojará un aviso al iniciar la app debido a las características de BETTER_AUTH_SECRET.
+&emsp;El secreto para la variable BETTER_AUTH_SECRET necesitara al menos 32 caracteres.
 
 &emsp;Para montar el sistema de base de datos y la aplicación web ejecutar en terminal:
 
@@ -47,10 +36,10 @@ docker-compose up -d --build
 
 #### Base de datos:
 
-&emsp;Para insertar datos demostrativos a la base de datos ejecutar en terminal:
+&emsp;Para insertar datos a la base de datos ejecutar en terminal:
 
 ```bash
-bun run populate
+python scraper/fetch_data.py
 ```
 
 #### Google SSO con OAuth:

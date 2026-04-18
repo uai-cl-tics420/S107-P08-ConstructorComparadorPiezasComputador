@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, ArrowLeftRight } from 'lucide-react';
+import { Plus, ArrowLeftRight, ChevronDown } from 'lucide-react';
 import type { Component } from "../types";
 
 const SPEC_LABELS: Record<string, string> = {
@@ -60,6 +61,8 @@ interface Props {
 }
 
 export function ComponentCard({ component, onAdd, onCompare, isSelectedForCompare }: Props) {
+  const [showAllPrices, setShowAllPrices] = useState(false);
+
   const minPrice = Math.min(...component.prices.map((p) => p.price));
   const maxPrice = Math.max(...component.prices.map((p) => p.price));
   const savings = maxPrice - minPrice;
@@ -67,6 +70,9 @@ export function ComponentCard({ component, onAdd, onCompare, isSelectedForCompar
 
   const priorityKeys = PRIORITY_SPECS[component.type_name] ?? [];
   const specsToShow = priorityKeys.filter(k => component.specs?.[k] != null).slice(0, 3);
+
+  const visiblePrices = showAllPrices ? component.prices : component.prices.slice(0, 2);
+  const hasMorePrices = component.prices.length > 2;
 
   return (
     <motion.div
@@ -134,7 +140,7 @@ export function ComponentCard({ component, onAdd, onCompare, isSelectedForCompar
 
           {/* Vendor list */}
           <div className="bg-[#0F0F0F] border border-[#1C1C1C] rounded-lg p-2.5 space-y-1.5">
-            {component.prices.slice(0, 2).map((p) => (
+            {visiblePrices.map((p) => (
               <div key={p.id} className="flex items-center justify-between gap-2">
                 <span className={`font-mono text-[10px] truncate ${
                   p.price === minPrice ? 'text-zinc-400' : 'text-zinc-700'
@@ -149,6 +155,21 @@ export function ComponentCard({ component, onAdd, onCompare, isSelectedForCompar
                 </span>
               </div>
             ))}
+
+            {/* Botón para expandir/contraer */}
+            {hasMorePrices && (
+              <motion.button
+                onClick={() => setShowAllPrices(!showAllPrices)}
+                className="w-full mt-2 pt-2 border-t border-[#1C1C1C] flex items-center justify-center gap-1.5 py-2 text-zinc-600 hover:text-zinc-400 transition-colors duration-200"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <span className="font-mono text-[9px] uppercase tracking-[0.15em]">
+                  {showAllPrices ? 'Ver menos' : `Ver ${component.prices.length - 2} más`}
+                </span>
+                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${showAllPrices ? 'rotate-180' : ''}`} />
+              </motion.button>
+            )}
           </div>
 
           {savings > 0 && (

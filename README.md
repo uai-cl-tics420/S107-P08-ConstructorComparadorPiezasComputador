@@ -6,30 +6,17 @@
 
 ---
 
-### Requerimientos
-
-&emsp;Necesita tener instalada la última verisón de bun y de docker:
-
-- [bun install](https://bun.com/docs/installation)
-- [Docker install](https://www.docker.com/get-started/)
-
----
-
 ### Ejecución
 
-&emsp;Primero, instale todas las librerías necesarias ejecutando en terminal:
+#### Requerimientos
 
-```bash
-bun install
-```
+&emsp;Necesita tener instalada la última verisón de docker:
 
-&emsp;Luego, asegurarse de crear un archivo .env en el directorio raíz a partir del archivo .env.example proporcionado como template, el secreto para la variable BETTER_AUTH_SECRET puede ser generado en terminal utilizando:
+- [Docker](https://www.docker.com/get-started/)
 
-```bash
-bunx auth secret
-```
+#### Pasos
 
-De esta manera BetterAuth no arrojará un aviso al iniciar la app debido a las características de BETTER_AUTH_SECRET.
+&emsp;Asegurarse de crear un archivo [.env](.env) en el directorio raíz a partir del archivo [.env.example](.env.example) proporcionado como template y **completar los campos `POSTGRES_PASSWORD` y `MONGO_PASSWORD`**.
 
 &emsp;Para montar el sistema de base de datos y la aplicación web ejecutar en terminal:
 
@@ -45,19 +32,45 @@ docker-compose up -d --build
 
 ### Funcionalidades adicionales:
 
+#### Requisitos:
+
+&emsp;Necesita tener instalada la última verisón de docker, bun y python.
+
+- [Docker](https://www.docker.com/get-started/)
+- [bun](https://bun.com/docs/installation)
+- [python](https://www.python.org/downloads/)
+
 #### Base de datos:
 
-&emsp;Para insertar datos demostrativos a la base de datos ejecutar en terminal:
+&emsp;Para insertar datos scrapeados a la base de datos ejecutar en terminal:
+
+```bash
+bun run scrape
+```
+
+&emsp;Para insertar datos de demostración a la base de datos ejecutar en terminal:
 
 ```bash
 bun run populate
 ```
 
+#### Better Auth secret:
+
+&emsp;Según está configurado el proyecto, Better Auth arrojará warning al iniciar la aplicación por formato de la variable de entorno `BETTER_AUTH_SECRET` en [.env](.env).
+
+&emsp;Para evitar esto generar un secreto ejecutando en terminal:
+
+```bash
+bunx auth secret
+```
+
+&emsp;Luego copiar este secreto en la variable de entorno `BETTER_AUTH_SECRET` del archivo [.env](.env).
+
 #### Google SSO con OAuth:
 
-1. Se debe utilizar una cuenta de google para crear un proyecto de google cloud y habilitar OAuth.
-2. Se debe generar credenciales de cliente OAuth desde google cloud.
-3. Copiar `ID de cliente` y `Secreto de cliente` en las variables de entorno de `.env` en los campos faltantes de Google OAuth según el formato de `.env.example`
+1. Se debe utilizar una cuenta de google para crear un proyecto en la [consola de google cloud](https://console.cloud.google.com/) y habilitar OAuth.
+2. Se debe generar credenciales de cliente OAuth desde la [consola de google cloud](https://console.cloud.google.com/).
+3. Copiar `ID de cliente` y `Secreto de cliente` en las variables de entorno de [.env](.env) en los campos faltantes de Google OAuth según el formato de [.env.example](.env.example)
 4. Volver a montar los contenedores de docker ejecutando en terminal:
 
 ```bash
@@ -67,5 +80,21 @@ docker-compose up -d --build
 
 #### Ingreso con email OTP:
 
-1. Se debe ingresar a https://resend.com/ y crear una cuenta.
-2. En el dashboard crear una nueva API key y copiarla en la variable de entorno `RESEND_API_KEY`, reemplazando el valor <KEY_HERE>, en el archivo `.env` según el formato descrito en el archivo `.env.example`.
+1. Se debe ingresar a [resend](https://resend.com/) y crear una cuenta.
+2. En el dashboard crear una nueva API key y copiarla en la variable de entorno `RESEND_API_KEY`, reemplazando el valor <KEY_HERE>, en el archivo [.env](.env) según el formato descrito en el archivo [.env.example](.env.example).
+
+#### Edición de la app web:
+
+1. Parar la ejecución del contenedor de Docker **"bun"** ejecutando:
+
+```bash
+docker stop bun
+```
+
+2. Ejecutar la app en modo desarrollador ejecutando:
+
+```bash
+bun run dev
+```
+
+3. Esperar hasta que bun indiquie que la app está lista y visitar la dirección [localhost:3000](http://localhost:3000/).

@@ -10,22 +10,6 @@ CATEGORY_CPU_COOLER = 12
 CATEGORY_FANS       = 87
 CATEGORY_PC_CASE    = 10
 
-STORES = [
-    8015, 3, 8279, 7289, 4913, 128, 8378, 6365, 2570, 6101, 4, 788, 2603,
-    8312, 3758, 7718, 201, 398, 397, 755, 31, 61, 193, 7, 5705, 5639, 5903,
-    3164, 656, 6300, 8576, 7652, 4451, 1911, 88, 1580, 172, 38, 2801, 6398,
-    8444, 9, 8147, 326, 2735, 4484, 6662, 1217, 87, 27, 281, 4287, 56, 1283,
-    7388, 1845, 2967, 197, 4814, 8543, 8180, 199, 43, 8642, 3956, 4154, 294,
-    6563, 23, 392, 887, 260, 195, 225, 8477, 3395, 3362, 37, 118, 39, 5144,
-    2339, 6233, 257, 266, 3263, 3890, 4880, 11, 8148, 34, 12, 953, 6299,
-    5177, 2471, 18, 8510, 2009, 223, 2768, 4088, 194, 7487, 293, 1877, 67,
-    47, 86, 22, 1514, 3165, 955, 1086, 8213, 2670, 2438, 6464, 6134, 4121,
-    176, 181, 4616, 167, 3032, 8114, 173, 264, 4220, 6992, 170, 231, 2636,
-    6, 280, 2174, 789, 2141, 359, 14, 45, 85, 8411, 7619,
-]
-
-_STORES_PARAMS = "&".join(f"stores={s}" for s in STORES)
-
 _SKIP_SPEC_KEYS = frozenset({"id", "unicode", "default_bucket", "total_core_count", "picture"})
 _NULL_STRINGS   = frozenset({"No posee", "no posee", "N/A", ""})
 
@@ -110,6 +94,9 @@ def browse_category(
     page_size: int = 10,
     exclude_refurbished: bool = False,
 ) -> dict:
+    '''
+    { product_id: { name, slug, picture_url, last_updated, normal_price, offer_price, ...specs }, ... }
+    '''
     url = f"{_BASE}/categories/{category_id}/browse/"
     resp = _SESSION.get(
         url,
@@ -119,17 +106,18 @@ def browse_category(
             "page_size": page_size,
         },
     )
+    _STORES_PARAMS = "&".join(f"stores={s}" for s in get_stores().keys())
     full_url = resp.request.url + "&" + _STORES_PARAMS
     resp = _SESSION.get(full_url)
     resp.raise_for_status()
-    return resp.json()
+    return process_json_response(resp.json())
 
 
 def browse_cpus        (page=1, page_size=10, **kw): return browse_category(CATEGORY_CPU,        page, page_size, **kw)
 def browse_ram         (page=1, page_size=20, **kw): return browse_category(CATEGORY_RAM,        page, page_size, **kw)
 def browse_motherboards(page=1, page_size=20, **kw): return browse_category(CATEGORY_MB,         page, page_size, **kw)
 def browse_gpus        (page=1, page_size=20, **kw): return browse_category(CATEGORY_GPU,        page, page_size, **kw)
-def browse_psus        (page=1, page_size=20, **kw): return browse_category(CATEGORY_PSU,        page, page_size, **kw)
+def browse_psu         (page=1, page_size=20, **kw): return browse_category(CATEGORY_PSU,        page, page_size, **kw)
 def browse_cpu_coolers (page=1, page_size=20, **kw): return browse_category(CATEGORY_CPU_COOLER, page, page_size, **kw)
 def browse_fans        (page=1, page_size=20, **kw): return browse_category(CATEGORY_FANS,       page, page_size, **kw)
 def browse_pc_cases    (page=1, page_size=20, **kw): return browse_category(CATEGORY_PC_CASE,    page, page_size, **kw)
@@ -145,7 +133,6 @@ def process_json_response(json_response: dict) -> dict:
                 continue
             offer_price, normal_price = _clp_prices(product_entry)
             results[product_id] = {
-                "id":           product_id,
                 "name":         product.get("name"),
                 "slug":         product.get("slug"),
                 "picture_url":  product.get("picture_url"),
@@ -189,6 +176,9 @@ def process_product_prices(entities: list) -> list[dict]:
 
 
 def get_product_prices(product_id: int) -> list[dict]:
+    '''
+    [{ entity_id, store_id, store_url, name, sku, external_url, condition, is_visible, normal_price, offer_price, is_available, last_updated, picture_urls[], best_coupon }, ...]
+    '''
     data = _get(
         f"{_BASE}/products/available_entities/",
         ids=product_id,
@@ -197,3 +187,11 @@ def get_product_prices(product_id: int) -> list[dict]:
     results = data.get("results", [])
     entities = results[0].get("entities", []) if results else []
     return process_product_prices(entities)
+
+def get_stores() -> dict:
+    '''
+    { store_id: store_name, ... }
+    '''
+    resp = requests.get("https://publicapi.solotodo.com/stores/")
+    resp.raise_for_status()
+    return {s['id']: s['name'] for s in resp.json()}

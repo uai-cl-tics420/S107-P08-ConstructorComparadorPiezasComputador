@@ -2,19 +2,34 @@
 
 @theme {
   /* Containers */
-  --color-tw-base: #eaeaea;
-  --color-tw-surface: #f9f9f9;
-  --color-tw-elevated: #ffffff;
-  --color-tw-border: #cdcfd3;
+  --color-tw-base: #efefef;
+  --color-tw-base-deep: #ffffff;
+  --color-tw-base-highlight: #c8c8c8;
+  --color-tw-surface: #f5f5f5;
+  --color-tw-surface-deep: #f9f9f9;
+  --color-tw-surface-highlight: #ffffff;
+  --color-tw-border: #babcc0;
+  --color-tw-border-deep: #cdcfd3;
+  --color-tw-border-highlight: #dcddf2;
 
   /* Text */
   --color-tw-primary: #111111;
-  --color-tw-muted: #6b7280;
-  --color-tw-muted-deep: #3f3f46;
+  --color-tw-primary-deep: #212121;
+  --color-tw-primary-highlight: #000000;
+  --color-tw-muted: #3f3f46;
+  --color-tw-muted-deep: #6b7280;
+  --color-tw-muted-highlight: #2f2f36;
 
   /* Accents */
   --color-tw-accent: #00ca51;
   --color-tw-alt: #5100d4;
+
+  /* Effects */
+  --color-tw-glass: #000000;
+  --color-tw-alert: #fb2c36;
+  --color-tw-alert-bright: #f87171;
+  --color-tw-warning: #f59e0b;
+  --color-tw-warning-bright: #fbbf24;
 
   --font-sans: 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif';
   --font-display: 'Geist', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif';
@@ -27,18 +42,33 @@
   [data-theme='dark'] {
     /* Containers */
     --color-tw-base: #050505;
+    --color-tw-base-deep: #000000;
+    --color-tw-base-highlight: #151515;
     --color-tw-surface: #0f0f0f;
-    --color-tw-elevated: #1a1a1a;
+    --color-tw-surface-deep: #080808;
+    --color-tw-surface-highlight: #1a1a1a;
     --color-tw-border: #2a2a2a;
+    --color-tw-border-deep: #171717;
+    --color-tw-border-highlight: #303030;
 
     /* Text */
     --color-tw-primary: #fafafa;
+    --color-tw-primary-deep: #e4e4e7;
+    --color-tw-primary-highlight: #ffffff;
     --color-tw-muted: #6b7280;
     --color-tw-muted-deep: #3f3f46;
+    --color-tw-muted-highlight: #9f9fa9;
 
     /* Accents */
     --color-tw-accent: #00ffa3;
     --color-tw-alt: #7b61ff;
+
+    /* Effects */
+    --color-tw-glass: #ffffff;
+    --color-tw-alert: #fb2c36;
+    --color-tw-alert-bright: #f87171;
+    --color-tw-warning: #f59e0b;
+    --color-tw-warning-bright: #fbbf24;
   }
 
   body {

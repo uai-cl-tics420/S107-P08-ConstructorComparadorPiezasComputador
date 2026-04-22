@@ -1,27 +1,57 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+@theme {
+  /* Containers */
+  --color-tw-base: #eaeaea;
+  --color-tw-surface: #f9f9f9;
+  --color-tw-elevated: #ffffff;
+  --color-tw-border: #cdcfd3;
+
+  /* Text */
+  --color-tw-primary: #111111;
+  --color-tw-muted: #6b7280;
+  --color-tw-muted-deep: #3f3f46;
+
+  /* Accents */
+  --color-tw-accent: #00ca51;
+  --color-tw-alt: #5100d4;
+
+  --font-sans: 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif';
+  --font-display: 'Geist', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif';
+
+  --spacing-18: 4.5rem;
+  --spacing-22: 5.5rem;
+}
 
 @layer base {
-  :root {
-    --bg-base:     #050505;
-    --bg-surface:  #0A0A0A;
-    --bg-elevated: #111111;
-    --border:      #242424;
-    --text-primary:#FAFAFA;
-    --text-muted:  #71717A;
-    --font-mono:   'JetBrains Mono', ui-monospace, monospace;
+  [data-theme='dark'] {
+    /* Containers */
+    --color-tw-base: #050505;
+    --color-tw-surface: #0f0f0f;
+    --color-tw-elevated: #1a1a1a;
+    --color-tw-border: #2a2a2a;
 
-    @apply text-[--text-primary] bg-[--bg-base];
-    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
+    /* Text */
+    --color-tw-primary: #fafafa;
+    --color-tw-muted: #6b7280;
+    --color-tw-muted-deep: #3f3f46;
+
+    /* Accents */
+    --color-tw-accent: #00ffa3;
+    --color-tw-alt: #7b61ff;
   }
 
   body {
     @apply min-w-[320px] min-h-screen m-0;
+
+    background-color: var(--color-tw-base);
+    color: var(--color-tw-primary);
   }
 
   /* Monospace utility para specs técnicas */
   .font-engineering {
     font-family: var(--font-mono);
-    font-feature-settings: "tnum" 1;
+    font-feature-settings: 'tnum' 1;
   }
 }
 
@@ -48,7 +78,8 @@
 }
 
 @keyframes glow-border {
-  0%, 100% {
+  0%,
+  100% {
     border-color: rgb(42, 42, 42);
   }
   50% {

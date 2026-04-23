@@ -4,7 +4,7 @@
   /* Containers */
   --color-tw-base: #efefef;
   --color-tw-base-deep: #ffffff;
-  --color-tw-base-highlight: #c8c8c8;
+  --color-tw-base-highlight: #dfdfdf;
   --color-tw-surface: #f5f5f5;
   --color-tw-surface-deep: #f9f9f9;
   --color-tw-surface-highlight: #ffffff;
@@ -21,15 +21,43 @@
   --color-tw-muted-highlight: #2f2f36;
 
   /* Accents */
-  --color-tw-accent: #00ca51;
-  --color-tw-alt: #5100d4;
+  --color-tw-accent: #10b981;
+  --color-tw-alt: #7c3aed;
 
   /* Effects */
   --color-tw-glass: #000000;
   --color-tw-alert: #fb2c36;
-  --color-tw-alert-bright: #f87171;
+  --color-tw-alert-highlight: #dc2626;
   --color-tw-warning: #f59e0b;
-  --color-tw-warning-bright: #fbbf24;
+  --color-tw-warning-highlight: #d97706;
+  --color-tw-success: #16a34a;
+  --color-tw-success-highlight: #21c55e;
+
+  /* Components */
+  --color-tw-cpu: #7c3aed;
+  --color-tw-cpu-deep: #8b5cf6;
+  --color-tw-cpu-highlight: #6d28d9;
+  --color-tw-motherboard: #ea580c;
+  --color-tw-motherboard-deep: #f97316;
+  --color-tw-motherboard-highlight: #c2410c;
+  --color-tw-ram: #2563eb;
+  --color-tw-ram-deep: #3b82f6;
+  --color-tw-ram-highlight: #1d4ed8;
+  --color-tw-gpu: #059669;
+  --color-tw-gpu-deep: #10b981;
+  --color-tw-gpu-highlight: #047857;
+  --color-tw-storage: #d97706;
+  --color-tw-storage-deep: #f59e0b;
+  --color-tw-storage-highlight: #b45309;
+  --color-tw-cooler: #0891b2;
+  --color-tw-cooler-deep: #06b6d4;
+  --color-tw-cooler-highlight: #0e7490;
+  --color-tw-psu: #dc2626;
+  --color-tw-psu-deep: #ef4444;
+  --color-tw-psu-highlight: #b91c1c;
+  --color-tw-case: #475569;
+  --color-tw-case-deep: #64748b;
+  --color-tw-case-highlight: #334155;
 
   --font-sans: 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif';
   --font-display: 'Geist', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif';
@@ -60,15 +88,43 @@
     --color-tw-muted-highlight: #9f9fa9;
 
     /* Accents */
-    --color-tw-accent: #00ffa3;
-    --color-tw-alt: #7b61ff;
+    --color-tw-accent: #34d399;
+    --color-tw-alt: #8b5cf6;
 
     /* Effects */
     --color-tw-glass: #ffffff;
     --color-tw-alert: #fb2c36;
-    --color-tw-alert-bright: #f87171;
+    --color-tw-alert-highlight: #f87171;
     --color-tw-warning: #f59e0b;
-    --color-tw-warning-bright: #fbbf24;
+    --color-tw-warning-highlight: #fbbf24;
+    --color-tw-success: #22c55e;
+    --color-tw-success-highlight: #4ade80;
+
+    /* Components */
+    --color-tw-cpu: #a78bfa;
+    --color-tw-cpu-deep: #8b5cf6;
+    --color-tw-cpu-highlight: #c4b5fd;
+    --color-tw-motherboard: #fb923c;
+    --color-tw-motherboard-deep: #f97316;
+    --color-tw-motherboard-highlight: #fdba74;
+    --color-tw-ram: #60a5fa;
+    --color-tw-ram-deep: #3b82f6;
+    --color-tw-ram-highlight: #93c5fd;
+    --color-tw-gpu: #34d399;
+    --color-tw-gpu-deep: #10b981;
+    --color-tw-gpu-highlight: #6ee7b7;
+    --color-tw-storage: #fbbf24;
+    --color-tw-storage-deep: #f59e0b;
+    --color-tw-storage-highlight: #fcd34d;
+    --color-tw-cooler: #22d3ee;
+    --color-tw-cooler-deep: #06b6d4;
+    --color-tw-cooler-highlight: #67e8f9;
+    --color-tw-psu: #f87171;
+    --color-tw-psu-deep: #ef4444;
+    --color-tw-psu-highlight: #fca5a5;
+    --color-tw-case: #94a3b8;
+    --color-tw-case-deep: #64748b;
+    --color-tw-case-highlight: #cbd5e1;
   }
 
   body {

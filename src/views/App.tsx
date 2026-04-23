@@ -360,7 +360,7 @@ export function App() {
                           </Link>
                           <button
                             onClick={handleLogout}
-                            className='w-full flex items-center gap-2.5 px-3 py-2 font-mono text-xs text-tw-alert/70 hover:text-tw-alert-bright hover:bg-tw-alert/5 rounded-lg transition-all cursor-pointer'>
+                            className='w-full flex items-center gap-2.5 px-3 py-2 font-mono text-xs text-tw-alert/70 hover:text-tw-alert-highlight hover:bg-tw-alert/5 rounded-lg transition-all cursor-pointer'>
                             <LogOut className='w-3.5 h-3.5' />
                             Cerrar sesión
                           </button>
@@ -373,7 +373,7 @@ export function App() {
             ) : (
               <Link
                 to='/login'
-                className='font-mono text-xs text-tw-muted hover:text-tw-primary border border-tw-border/50 hover:border-tw-border bg-tw-surface/30 hover:bg-tw-surface/60 px-4 py-2 rounded-lg transition-all'>
+                className='font-mono text-xs text-tw-mute border border-tw-border/50 hover:border-tw-border bg-tw-surface/50 hover:bg-tw-surface hover:text-tw-primary px-4 py-2 rounded-lg transition-all'>
                 Iniciar sesión
               </Link>
             )}
@@ -630,7 +630,7 @@ export function App() {
                     </button>
                     <button
                       onClick={handleClearBuild}
-                      className='font-mono text-[10px] text-tw-alert/50 hover:text-tw-alert-bright border border-tw-alert/15 hover:border-tw-alert/30 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                      className='font-mono text-[10px] text-tw-alert/50 hover:text-tw-alert-highlight border border-tw-alert/15 hover:border-tw-alert/30 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
                       Limpiar
                     </button>
                   </div>
@@ -645,8 +645,8 @@ export function App() {
                       key={i}
                       className={`flex items-start gap-3 px-4 py-3 rounded-xl border font-mono text-xs ${
                         issue.type === 'error'
-                          ? 'bg-tw-alert/5 border-tw-alert/15 text-tw-alert-bright/80'
-                          : 'bg-tw-warning/5 border-tw-warbg-tw-warning/15 text-tw-warning-bright/80'
+                          ? 'bg-tw-alert/5 border-tw-alert/15 text-tw-alert-highlight/80'
+                          : 'bg-tw-warning/5 border-tw-warbg-tw-warning/15 text-tw-warning-highlight/80'
                       }`}>
                       <span className='shrink-0 mt-px'>{issue.type === 'error' ? '✕' : '△'}</span>
                       <span>{issue.message}</span>

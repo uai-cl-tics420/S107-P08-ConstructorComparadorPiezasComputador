@@ -97,7 +97,7 @@ export function ComponentCard({ component, onAdd, onCompare, isSelectedForCompar
       <div className='absolute -inset-px rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-400 bg-linear-to-br from-tw-glass/28 via-tw-glass/8 to-transparent pointer-events-none' />
 
       <div
-        className={`relative h-full rounded-xl border bg-tw-surface/90 backdrop-blur-xl p-5 z-10 flex flex-col gap-4 transition-[border-color] duration-300 ${
+        className={`relative h-full rounded-xl border bg-tw-surface-deep hover:bg-tw-surface backdrop-blur-xl p-5 z-10 flex flex-col gap-4 transition-[border-color] duration-300 ${
           isSelectedForCompare ? 'border-tw-alt/40 bg-tw-alt/5' : 'border-tw-border group-hover:border-tw-glass/35'
         }`}>
         {/* Top shimmer line — Apple-style */}

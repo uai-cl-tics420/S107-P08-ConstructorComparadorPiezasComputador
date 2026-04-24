@@ -625,12 +625,12 @@ export function App() {
                   <div className='flex gap-2'>
                     <button
                       onClick={() => setShowSaveDialog(true)}
-                      className='font-mono text-[10px] text-tw-muted hover:text-tw-primary border border-tw-glass/10 hover:border-tw-glass/20 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                      className='font-mono text-[10px] text-tw-muted-highlight hover:text-tw-primary border border-tw-glass/10 hover:border-tw-glass/20 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
                       Guardar
                     </button>
                     <button
                       onClick={handleClearBuild}
-                      className='font-mono text-[10px] text-tw-alert/50 hover:text-tw-alert-highlight border border-tw-alert/15 hover:border-tw-alert/30 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                      className='font-mono text-[10px] text-tw-alert hover:text-tw-alert-highlight border border-tw-alert/15 hover:border-tw-alert/30 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
                       Limpiar
                     </button>
                   </div>

@@ -14,7 +14,7 @@ import { useToast } from '@/hooks/useToast';
 import { useSavedBuilds } from '@/hooks/useSavedBuilds';
 import { checkCompatibility } from '@/utils/compatibility';
 import type { Component, ComponentType, Brand, BuildComponent, SavedBuild } from '@/types';
-import { ThemeContext } from '../frontend';
+import { ThemeContext } from '@/frontend';
 import '@/index.css';
 
 export function App() {
@@ -307,12 +307,12 @@ export function App() {
 
             <button
               onClick={toggleTheme}
-              className='p-2 border border-tw-border/50 hover:border-tw-border bg-tw-surface/50 hover:bg-tw-surface rounded-lg transition-all cursor-pointer group'
+              className='p-2 border border-tw-border-deep/50 hover:border-tw-border bg-tw-primary hover:bg-tw-primary-highlight rounded-lg transition-all cursor-pointer group'
               title={`Cambiar a modo ${theme === 'dark' ? 'claro' : 'oscuro'}`}>
               {theme === 'dark' ? (
-                <Sun className='w-4 h-4 text-tw-muted group-hover:text-tw-accent transition-colors' />
+                <Sun className='w-4 h-4 text-tw-base group-hover:text-tw-accent transition-colors' />
               ) : (
-                <Moon className='w-4 h-4 text-tw-muted group-hover:text-tw-alt transition-colors' />
+                <Moon className='w-4 h-4 text-tw-base group-hover:text-tw-alt transition-colors' />
               )}
             </button>
 
@@ -323,7 +323,7 @@ export function App() {
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className='flex items-center gap-2 px-2.5 py-2 border border-tw-border/50 hover:border-tw-border bg-tw-surface/50 hover:bg-tw-surface rounded-lg transition-all cursor-pointer group'>
-                  <div className='w-6 h-6 rounded-md bg-tw-base border border-tw-border/50 flex items-center justify-center font-mono text-[10px] font-bold text-tw-muted group-hover:text-tw-primary transition-colors'>
+                  <div className='w-6 h-6 rounded-md bg-tw-surface border border-tw-border/50 flex items-center justify-center font-mono text-[10px] font-bold text-tw-muted group-hover:text-tw-primary transition-colors'>
                     {session.user.name?.charAt(0).toUpperCase() || 'U'}
                   </div>
                   <span className='font-mono text-[11px] text-tw-muted group-hover:text-tw-primary hidden sm:block transition-colors'>
@@ -373,7 +373,7 @@ export function App() {
             ) : (
               <Link
                 to='/login'
-                className='font-mono text-xs text-tw-mute border border-tw-border/50 hover:border-tw-border bg-tw-surface/50 hover:bg-tw-surface hover:text-tw-primary px-4 py-2 rounded-lg transition-all'>
+                className='font-mono text-xs text-tw-mute border text-tw-base border-tw-border-deep/50 hover:border-tw-accent/75 bg-tw-primary hover:bg-tw-primary-highlight hover:text-tw-accent px-4 py-2 rounded-lg transition-all'>
                 Iniciar sesión
               </Link>
             )}

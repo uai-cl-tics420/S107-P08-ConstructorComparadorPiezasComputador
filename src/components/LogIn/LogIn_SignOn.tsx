@@ -21,16 +21,24 @@ export const useLoginView = () => {
 };
 
 const VIEW_META: Record<ViewType, { title: string; sub: string }> = {
-  selection: { title: 'PC Builder',       sub: 'Elige cómo quieres continuar' },
-  login:     { title: 'Inicia sesión',    sub: 'Ingresa tus credenciales' },
-  signon:    { title: 'Crea tu cuenta',   sub: 'Completa el formulario' },
-  OTP:       { title: 'Clave de acceso',  sub: 'Acceso sin contraseña' },
+  selection: { title: 'PC Builder', sub: 'Elige cómo quieres continuar' },
+  login: { title: 'Inicia sesión', sub: 'Ingresa tus credenciales' },
+  signon: { title: 'Crea tu cuenta', sub: 'Completa el formulario' },
+  OTP: { title: 'Clave de acceso', sub: 'Acceso sin contraseña' },
 };
 
 const viewVariant = {
-  hidden:  { opacity: 0, y: 12 },
-  visible: { opacity: 1, y: 0,  transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] } },
-  exit:    { opacity: 0, y: -10, transition: { duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] } },
+  hidden: { opacity: 0, y: 12 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] as const },
+  },
+  exit: {
+    opacity: 0,
+    y: -10,
+    transition: { duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] as const },
+  },
 };
 
 interface Props {
@@ -44,7 +52,6 @@ const LogInSignOnContent = ({ onAuthSuccess }: Props) => {
   return (
     <LoginContext.Provider value={{ setView, onAuthSuccess }}>
       <div className='p-8 flex flex-col gap-6'>
-
         {/* Header — tipografía de contraste extremo */}
         <AnimatePresence mode='wait'>
           <motion.div
@@ -53,30 +60,19 @@ const LogInSignOnContent = ({ onAuthSuccess }: Props) => {
             initial='hidden'
             animate='visible'
             exit='exit'
-            className='space-y-1.5'
-          >
-            <h2 className='text-2xl font-black tracking-tighter text-white leading-none'>
-              {meta.title}
-            </h2>
-            <p className='font-mono text-[9px] text-zinc-600 uppercase tracking-[0.18em]'>
-              {meta.sub}
-            </p>
+            className='space-y-1.5'>
+            <h2 className='text-2xl font-black tracking-tighter text-tw-primary leading-none'>{meta.title}</h2>
+            <p className='font-mono text-[9px] text-tw-muted uppercase tracking-[0.18em]'>{meta.sub}</p>
           </motion.div>
         </AnimatePresence>
 
         {/* Contenido — transición suave entre vistas */}
         <AnimatePresence mode='wait'>
-          <motion.div
-            key={view}
-            variants={viewVariant}
-            initial='hidden'
-            animate='visible'
-            exit='exit'
-          >
+          <motion.div key={view} variants={viewVariant} initial='hidden' animate='visible' exit='exit'>
             {view === 'selection' && <LoginMethodSelector />}
-            {view === 'login'     && <LogInForm />}
-            {view === 'signon'    && <SignOnForm />}
-            {view === 'OTP'       && <OTPSignOn />}
+            {view === 'login' && <LogInForm />}
+            {view === 'signon' && <SignOnForm />}
+            {view === 'OTP' && <OTPSignOn />}
           </motion.div>
         </AnimatePresence>
 
@@ -87,12 +83,10 @@ const LogInSignOnContent = ({ onAuthSuccess }: Props) => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className='border-t border-[#1A1A1A] pt-4 text-center'
-            >
+              className='border-t border-tw-border-deep pt-4 text-center'>
               <button
                 onClick={() => setView('selection')}
-                className='font-mono text-[9px] text-zinc-700 hover:text-zinc-400 uppercase tracking-widest transition-colors duration-200 cursor-pointer'
-              >
+                className='font-mono text-[9px] text-tw-muted-deep hover:text-tw-muted-highlight uppercase tracking-widest transition-colors duration-200 cursor-pointer'>
                 ← Volver a métodos
               </button>
             </motion.div>
@@ -103,6 +97,4 @@ const LogInSignOnContent = ({ onAuthSuccess }: Props) => {
   );
 };
 
-export const LogInSignOn = ({ onAuthSuccess }: Props) => (
-  <LogInSignOnContent onAuthSuccess={onAuthSuccess} />
-);
+export const LogInSignOn = ({ onAuthSuccess }: Props) => <LogInSignOnContent onAuthSuccess={onAuthSuccess} />;

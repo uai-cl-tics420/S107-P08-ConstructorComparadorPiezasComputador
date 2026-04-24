@@ -32,6 +32,8 @@
   --color-tw-warning-highlight: #d97706;
   --color-tw-success: #16a34a;
   --color-tw-success-highlight: #21c55e;
+  --color-tw-btn-glow: #26262680;
+  --color-tw-btn-shadow: #ffffff33;
 
   /* Components */
   --color-tw-cpu: #7c3aed;
@@ -99,6 +101,8 @@
     --color-tw-warning-highlight: #fbbf24;
     --color-tw-success: #22c55e;
     --color-tw-success-highlight: #4ade80;
+    --color-tw-btn-glow: #ffffff2e;
+    --color-tw-btn-shadow: #00000080;
 
     /* Components */
     --color-tw-cpu: #a78bfa;

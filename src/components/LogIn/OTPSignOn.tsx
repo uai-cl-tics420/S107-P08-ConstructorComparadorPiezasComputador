@@ -4,8 +4,9 @@ import { Loader2 } from 'lucide-react';
 import { authClient } from '@/lib/auth/auth-client';
 import { useLoginView } from './LogIn_SignOn';
 
-const inputClass = 'w-full font-mono text-sm bg-[#0F0F0F] border border-[#1E1E1E] text-white placeholder-zinc-800 rounded-lg px-4 py-2.5 focus:outline-none focus:border-[#333] transition-colors duration-200';
-const labelClass = 'font-mono text-[9px] text-zinc-600 uppercase tracking-[0.15em]';
+const inputClass =
+  'w-full font-mono text-sm bg-tw-surface border border-tw-border-deep text-tw-primary placeholder-tw-muted-deep rounded-lg px-4 py-2.5 focus:outline-none focus:border-tw-border-highlight transition-colors duration-200';
+const labelClass = 'font-mono text-[9px] text-tw-muted uppercase tracking-[0.15em]';
 
 export default function OTPSignOn() {
   const [email, setEmail] = useState('');
@@ -28,9 +29,10 @@ export default function OTPSignOn() {
         onResponse: () => setLoading(false),
         onSuccess: () => setStep('verify'),
         onError: (ctx) => {
-          setError(ctx.error.message === 'Invalid email'
-            ? 'El email no es válido'
-            : ctx.error.message || 'Error al enviar el código'
+          setError(
+            ctx.error.message === 'Invalid email'
+              ? 'El email no es válido'
+              : ctx.error.message || 'Error al enviar el código',
           );
         },
       },
@@ -79,28 +81,29 @@ export default function OTPSignOn() {
   };
 
   return (
-    <form
-      onSubmit={step === 'request' ? handleSendOTP : handleVerifyOTP}
-      className='flex flex-col gap-4'
-    >
+    <form onSubmit={step === 'request' ? handleSendOTP : handleVerifyOTP} className='flex flex-col gap-4'>
       {error && (
         <motion.div
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
-          className='bg-red-500/8 border border-red-500/20 text-red-400 font-mono text-[10px] px-3 py-2.5 rounded-lg'
-        >
+          className='bg-tw-alert/8 border border-tw-alert/20 text-tw-alert-highlight font-mono text-[10px] px-3 py-2.5 rounded-lg'>
           {error}
         </motion.div>
       )}
 
       {step === 'request' && (
         <div className='flex flex-col gap-2'>
-          <label className={labelClass} htmlFor='otp-email'>Email</label>
+          <label className={labelClass} htmlFor='otp-email'>
+            Email
+          </label>
           <input
-            id='otp-email' type='email' value={email}
+            id='otp-email'
+            type='email'
+            value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder='tu@email.com'
-            className={inputClass} required
+            className={inputClass}
+            required
           />
         </div>
       )}
@@ -109,11 +112,10 @@ export default function OTPSignOn() {
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          className='flex flex-col items-center gap-5 py-2'
-        >
-          <p className='font-mono text-[9px] text-zinc-600 uppercase tracking-widest text-center'>
+          className='flex flex-col items-center gap-5 py-2'>
+          <p className='font-mono text-[9px] text-tw-muted uppercase tracking-widest text-center'>
             Código de 6 dígitos enviado a<br />
-            <span className='text-zinc-400 mt-0.5 block'>{email}</span>
+            <span className='text-tw-muted-highlight mt-0.5 block'>{email}</span>
           </p>
 
           {/* OTP cells — stealth tech style */}
@@ -124,20 +126,25 @@ export default function OTPSignOn() {
                 type='text'
                 maxLength={1}
                 value={digit}
-                ref={(el) => { inputRefs.current[index] = el; }}
+                ref={(el) => {
+                  inputRefs.current[index] = el;
+                }}
                 onChange={(e) => handleOtpChange(e.target.value, index)}
                 onKeyDown={(e) => handleKeyDown(e, index)}
                 whileFocus={{ borderColor: 'rgba(255,255,255,0.3)', scale: 1.04 }}
-                className='w-10 h-12 bg-[#0F0F0F] border border-[#1E1E1E] rounded-lg text-white text-center font-mono text-lg font-bold focus:outline-none transition-colors cursor-text'
+                className='w-10 h-12 bg-tw-surface border border-tw-border-deep rounded-lg text-tw-primary text-center font-mono text-lg font-bold focus:outline-none transition-colors cursor-text'
               />
             ))}
           </div>
 
           <button
             type='button'
-            onClick={() => { setStep('request'); setOtpArray(['','','','','','']); setOtp(''); }}
-            className='font-mono text-[9px] text-zinc-700 hover:text-zinc-500 uppercase tracking-widest transition-colors duration-200'
-          >
+            onClick={() => {
+              setStep('request');
+              setOtpArray(['', '', '', '', '', '']);
+              setOtp('');
+            }}
+            className='font-mono text-[9px] text-tw-muted-deep hover:text-tw-muted uppercase tracking-widest transition-colors duration-200'>
             ¿No llegó el código? Reintentar
           </button>
         </motion.div>
@@ -147,21 +154,26 @@ export default function OTPSignOn() {
       <motion.button
         type='submit'
         disabled={loading}
-        whileHover={!loading ? {
-          scale: 1.015,
-          boxShadow: '0 0 20px rgba(255,255,255,0.2), 0 4px 16px rgba(0,0,0,0.5)',
-        } : {}}
+        whileHover={
+          !loading
+            ? {
+                scale: 1.015,
+                boxShadow: '0 0 20px rgba(255,255,255,0.2), 0 4px 16px rgba(0,0,0,0.5)',
+              }
+            : {}
+        }
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className='mt-1 w-full flex items-center justify-center gap-2 bg-white hover:bg-zinc-50 disabled:bg-zinc-200 text-black font-bold font-mono text-xs py-3 rounded-lg transition-colors duration-150 cursor-pointer disabled:cursor-not-allowed'
-      >
+        className='mt-1 w-full flex items-center justify-center gap-2 bg-tw-primary hover:bg-tw-primary-highlight disabled:bg-tw-primary-deep text-tw-base font-bold font-mono text-xs py-3 rounded-lg transition-colors duration-150 cursor-pointer disabled:cursor-not-allowed'>
         {loading ? (
           <>
             <Loader2 className='w-3.5 h-3.5 animate-spin' />
             {step === 'request' ? 'Enviando...' : 'Verificando...'}
           </>
+        ) : step === 'request' ? (
+          'Enviar código'
         ) : (
-          step === 'request' ? 'Enviar código' : 'Verificar código'
+          'Verificar código'
         )}
       </motion.button>
     </form>

@@ -51,20 +51,20 @@ export default function LoginMethodSelector() {
         variants={itemVariant}
         whileHover={{
           scale: 1.015,
-          boxShadow: '0 0 20px rgba(255,255,255,0.18), 0 4px 16px rgba(0,0,0,0.5)',
+          boxShadow: '0 0 20px var-(--color-tw-btn-glow), 0 4px 16px var(--color-tw-btn-shadow)',
         }}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
         onClick={handleGoogleLogin}
-        className='w-full flex items-center justify-center gap-2.5 bg-white hover:bg-zinc-50 text-black font-bold font-mono text-xs py-3 rounded-lg transition-colors duration-150 cursor-pointer'>
+        className='w-full flex items-center justify-center gap-2.5 bg-tw-primary hover:bg-tw-primary-highlight text-tw-base font-bold font-mono text-xs py-3 rounded-lg transition-colors duration-150 cursor-pointer'>
         <GoogleIcon />
         Continuar con Google
       </motion.button>
 
       <div className='flex items-center gap-3 my-0.5'>
-        <div className='flex-1 h-px bg-[#1C1C1C]' />
-        <span className='font-mono text-[9px] text-zinc-700 uppercase tracking-widest'>o</span>
-        <div className='flex-1 h-px bg-[#1C1C1C]' />
+        <div className='flex-1 h-px bg-tw-base-highlight' />
+        <span className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest'>o</span>
+        <div className='flex-1 h-px bg-tw-base-highlight' />
       </div>
 
       {/* Credenciales — botón stealth */}
@@ -74,7 +74,7 @@ export default function LoginMethodSelector() {
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.98 }}
         onClick={() => setView('login')}
-        className='w-full font-mono text-xs text-zinc-300 border border-white/10 hover:border-white/28 hover:bg-white/4 py-2.5 rounded-lg transition-all duration-200 cursor-pointer'>
+        className='w-full font-mono text-xs text-tw-primary-deep border border-tw-glass/10 hover:border-tw-glass/28 hover:bg-tw-glass/4 py-2.5 rounded-lg transition-all duration-200 cursor-pointer'>
         Iniciar sesión con credenciales
       </motion.button>
 
@@ -85,7 +85,7 @@ export default function LoginMethodSelector() {
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.98 }}
         onClick={() => setView('OTP')}
-        className='w-full font-mono text-xs text-zinc-300 border border-white/10 hover:border-white/28 hover:bg-white/4 py-2.5 rounded-lg transition-all duration-200 cursor-pointer'>
+        className='w-full font-mono text-xs text-tw-primary-deep border border-tw-glass/10 hover:border-tw-glass/28 hover:bg-tw-glass/4 py-2.5 rounded-lg transition-all duration-200 cursor-pointer'>
         Continuar con clave de uso único
       </motion.button>
 
@@ -95,7 +95,7 @@ export default function LoginMethodSelector() {
         variants={itemVariant}
         whileTap={{ scale: 0.98 }}
         onClick={() => setView('signon')}
-        className='w-full font-mono text-[10px] text-zinc-600 hover:text-zinc-400 py-2 transition-colors duration-200 cursor-pointer'>
+        className='w-full font-mono text-[10px] text-tw-muted hover:text-tw-muted-highlight py-2 transition-colors duration-200 cursor-pointer'>
         ¿Primera vez? Crear cuenta
       </motion.button>
     </motion.div>

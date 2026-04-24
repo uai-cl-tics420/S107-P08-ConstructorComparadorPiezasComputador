@@ -1,7 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useMemo, useContext } from 'react';
+import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ChevronDown, User, LogOut, Loader2 } from 'lucide-react';
+import { Search, ChevronDown, User, LogOut, Loader2, Sun, Moon } from 'lucide-react';
 import { useSession, signOut } from '@/lib/auth/auth-client';
 import { ComponentCard } from '@/components/ComponentCard';
 import { BuildList } from '@/components/BuildList';
@@ -14,9 +14,12 @@ import { useToast } from '@/hooks/useToast';
 import { useSavedBuilds } from '@/hooks/useSavedBuilds';
 import { checkCompatibility } from '@/utils/compatibility';
 import type { Component, ComponentType, Brand, BuildComponent, SavedBuild } from '@/types';
+import { ThemeContext } from '@/frontend';
 import '@/index.css';
 
 export function App() {
+  const { theme, setTheme } = useContext(ThemeContext);
+
   const [components, setComponents] = useState<Component[]>([]);
   const [componentTypes, setComponentTypes] = useState<ComponentType[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
@@ -195,13 +198,26 @@ export function App() {
   function isLargeCard(component: Component): boolean {
     const name = component.name.toLowerCase();
     if (component.type_name === 'CPU') {
-      if (name.includes('ryzen 9') || name.includes('core i9') || name.includes('threadripper') ||
-          name.includes('7950') || name.includes('7900x') || name.includes('9950')) return true;
+      if (
+        name.includes('ryzen 9') ||
+        name.includes('core i9') ||
+        name.includes('threadripper') ||
+        name.includes('7950') ||
+        name.includes('7900x') ||
+        name.includes('9950')
+      )
+        return true;
       if (component.specs?.core_count && Number(component.specs.core_count) >= 12) return true;
     }
     if (component.type_name === 'GPU') {
-      if (name.includes('4090') || name.includes('4080') || name.includes('7900 xtx') ||
-          name.includes('4070 ti') || name.includes('w7900')) return true;
+      if (
+        name.includes('4090') ||
+        name.includes('4080') ||
+        name.includes('7900 xtx') ||
+        name.includes('4070 ti') ||
+        name.includes('w7900')
+      )
+        return true;
       if (component.specs?.vram_quantity && Number(component.specs.vram_quantity) >= 20) return true;
     }
     return false;
@@ -212,13 +228,24 @@ export function App() {
     visible: { transition: { staggerChildren: 0.055 } },
   };
 
-  const cardVariant = {
+  const cardVariant: Variants = {
     hidden: { opacity: 0, y: 18 },
     visible: (i: number) => ({
       opacity: 1,
       y: 0,
       transition: { delay: i * 0.04, duration: 0.38, ease: [0.25, 0.46, 0.45, 0.94] },
     }),
+  };
+
+  const toggleTheme = () => {
+    if (!document.startViewTransition) {
+      setTheme(theme === 'dark' ? 'light' : 'dark');
+      return;
+    }
+
+    document.startViewTransition(() => {
+      setTheme(theme === 'dark' ? 'light' : 'dark');
+    });
   };
 
   if (isPending) {
@@ -228,11 +255,10 @@ export function App() {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.25 }}
-        className='min-h-screen bg-[#050505] flex items-center justify-center'
-      >
+        className='min-h-screen bg-base flex items-center justify-center'>
         <div className='flex flex-col items-center gap-3'>
-          <Loader2 className='w-5 h-5 text-white animate-spin' />
-          <span className='font-mono text-[9px] text-zinc-700 uppercase tracking-widest'>Iniciando...</span>
+          <Loader2 className='w-5 h-5 text-tw-primary animate-spin' />
+          <span className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest'>Iniciando...</span>
         </div>
       </motion.div>
     );
@@ -244,8 +270,7 @@ export function App() {
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 1 }}
       transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-      className='min-h-screen bg-[#050505] text-white relative'
-    >
+      className='min-h-screen bg-tw-base text-tw-primary relative'>
       {/* Glassy Reveal Overlay — se desvanece durante entrada */}
       <motion.div
         initial={{ opacity: 0.08, backdropFilter: 'blur(12px)' }}
@@ -255,15 +280,14 @@ export function App() {
       />
 
       {/* ── HEADER — Glassmorphism Stealth ── */}
-      <header className='sticky top-0 z-20 border-b border-[#171717] bg-[#050505]/85 backdrop-blur-xl px-6 py-4'>
+      <header className='sticky top-0 z-20 border-b border-tw-border-deep bg-tw-base/85 backdrop-blur-xl px-6 py-4'>
         <div className='max-w-7xl mx-auto flex items-center justify-between'>
-
           {/* Logo — Mono engineering */}
           <Link to='/' className='group flex flex-col gap-0.5'>
-            <span className='font-mono text-sm font-bold text-white tracking-[0.12em] uppercase group-hover:text-zinc-200 transition-colors'>
+            <span className='font-mono text-sm font-bold text-tw-primary tracking-[0.12em] uppercase group-hover:text-tw-primary-deep transition-colors'>
               PC·BUILDER
             </span>
-            <span className='font-mono text-[9px] text-zinc-700 tracking-[0.2em] uppercase'>
+            <span className='font-mono text-[9px] text-tw-muted-deep tracking-[0.2em] uppercase'>
               Compara · Arma · Ahorra
             </span>
           </Link>
@@ -273,28 +297,41 @@ export function App() {
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setActiveTab('build')}
-                className='flex items-center gap-2 border border-white/10 hover:border-white/20 bg-white/4 hover:bg-white/7 text-white font-mono text-xs px-3 py-2 rounded-lg transition-all cursor-pointer'>
-                <span className='font-mono w-4 h-4 bg-white/10 rounded flex items-center justify-center text-[10px] font-bold'>
+                className='flex items-center gap-2 border border-tw-glass/10 hover:border-tw-glass/20 bg-tw-base-highlight/4 hover:bg-tw-base-highlight/7 text-tw-primary font-mono text-xs px-3 py-2 rounded-lg transition-all cursor-pointer'>
+                <span className='font-mono w-4 h-4 bg-tw-base-highlight/10 rounded flex items-center justify-center text-[10px] font-bold'>
                   {buildComponents.length}
                 </span>
                 Mi Build
               </motion.button>
             )}
 
+            <button
+              onClick={toggleTheme}
+              className='p-2 border border-tw-border-deep/50 hover:border-tw-border bg-tw-primary hover:bg-tw-primary-highlight rounded-lg transition-all cursor-pointer group'
+              title={`Cambiar a modo ${theme === 'dark' ? 'claro' : 'oscuro'}`}>
+              {theme === 'dark' ? (
+                <Sun className='w-4 h-4 text-tw-base group-hover:text-tw-accent transition-colors' />
+              ) : (
+                <Moon className='w-4 h-4 text-tw-base group-hover:text-tw-alt transition-colors' />
+              )}
+            </button>
+
             {isPending ? (
-              <div className='h-8 w-20 bg-[#111] rounded-lg animate-pulse' />
+              <div className='h-9 w-24 bg-tw-surface/50 border border-tw-border/50 rounded-lg animate-pulse' />
             ) : session ? (
               <div className='relative'>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className='flex items-center gap-2 px-2.5 py-2 border border-white/10 hover:border-white/18 hover:bg-white/4 rounded-lg transition-all cursor-pointer'>
-                  <div className='w-6 h-6 rounded-md bg-[#161616] border border-white/10 flex items-center justify-center font-mono text-[10px] font-bold text-zinc-400'>
+                  className='flex items-center gap-2 px-2.5 py-2 border border-tw-border/50 hover:border-tw-border bg-tw-surface/50 hover:bg-tw-surface rounded-lg transition-all cursor-pointer group'>
+                  <div className='w-6 h-6 rounded-md bg-tw-surface border border-tw-border/50 flex items-center justify-center font-mono text-[10px] font-bold text-tw-muted group-hover:text-tw-primary transition-colors'>
                     {session.user.name?.charAt(0).toUpperCase() || 'U'}
                   </div>
-                  <span className='font-mono text-[11px] text-zinc-500 hidden sm:block'>
+                  <span className='font-mono text-[11px] text-tw-muted group-hover:text-tw-primary hidden sm:block transition-colors'>
                     {session.user.name?.split(' ')[0] || session.user.email?.split('@')[0]}
                   </span>
-                  <ChevronDown className={`w-3 h-3 text-zinc-700 transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`} />
+                  <ChevronDown
+                    className={`w-3 h-3 text-tw-muted transition-transform duration-200 ${showUserMenu ? 'rotate-180' : ''}`}
+                  />
                 </button>
 
                 <AnimatePresence>
@@ -306,22 +343,24 @@ export function App() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 4, scale: 0.96 }}
                         transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
-                        className='absolute right-0 mt-2 w-52 bg-[#080808]/98 backdrop-blur-xl border border-[#222] rounded-xl shadow-2xl shadow-black/60 z-20 overflow-hidden'>
-                        <div className='px-4 py-3 border-b border-[#171717]'>
-                          <p className='font-mono text-[9px] text-zinc-700 uppercase tracking-widest'>Sesión activa</p>
-                          <p className='font-mono text-xs text-zinc-400 mt-0.5 truncate'>{session.user.email}</p>
+                        className='absolute right-0 mt-2 w-52 bg-tw-surface/98 backdrop-blur-xl border border-tw-border rounded-xl shadow-2xl shadow-black/40 z-20 overflow-hidden'>
+                        <div className='px-4 py-3 border-b border-tw-border/50'>
+                          <p className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest'>
+                            Sesión activa
+                          </p>
+                          <p className='font-mono text-xs text-tw-muted mt-0.5 truncate'>{session.user.email}</p>
                         </div>
                         <div className='p-1.5 space-y-0.5'>
                           <Link
                             to='/account'
                             onClick={() => setShowUserMenu(false)}
-                            className='flex items-center gap-2.5 px-3 py-2 font-mono text-xs text-zinc-500 hover:text-white hover:bg-white/5 rounded-lg transition-all'>
+                            className='flex items-center gap-2.5 px-3 py-2 font-mono text-xs text-tw-muted hover:text-tw-primary hover:bg-tw-base-highlight/5 rounded-lg transition-all'>
                             <User className='w-3.5 h-3.5' />
                             Configuración
                           </Link>
                           <button
                             onClick={handleLogout}
-                            className='w-full flex items-center gap-2.5 px-3 py-2 font-mono text-xs text-red-500/70 hover:text-red-400 hover:bg-red-500/5 rounded-lg transition-all cursor-pointer'>
+                            className='w-full flex items-center gap-2.5 px-3 py-2 font-mono text-xs text-tw-alert/70 hover:text-tw-alert-highlight hover:bg-tw-alert/5 rounded-lg transition-all cursor-pointer'>
                             <LogOut className='w-3.5 h-3.5' />
                             Cerrar sesión
                           </button>
@@ -334,7 +373,7 @@ export function App() {
             ) : (
               <Link
                 to='/login'
-                className='font-mono text-xs text-zinc-500 hover:text-white border border-white/10 hover:border-white/22 px-4 py-2 rounded-lg transition-all'>
+                className='font-mono text-xs text-tw-mute border text-tw-base border-tw-border-deep/50 hover:border-tw-accent/75 bg-tw-primary hover:bg-tw-primary-highlight hover:text-tw-accent px-4 py-2 rounded-lg transition-all'>
                 Iniciar sesión
               </Link>
             )}
@@ -343,26 +382,25 @@ export function App() {
       </header>
 
       <main className='max-w-7xl mx-auto px-6 py-8'>
-
         {/* ── TABS — Line minimal ── */}
-        <div className='flex gap-0 mb-8 border-b border-[#171717]'>
+        <div className='flex gap-0 mb-8 border-b border-tw-border-deep'>
           {(['search', 'build'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`relative pb-3 px-1 mr-6 font-mono text-[11px] uppercase tracking-widest transition-colors duration-200 cursor-pointer flex items-center gap-2 ${
-                activeTab === tab ? 'text-white' : 'text-zinc-700 hover:text-zinc-400'
+                activeTab === tab ? 'text-tw-primary' : 'text-tw-muted-deep hover:text-tw-muted-highlight'
               }`}>
               {activeTab === tab && (
                 <motion.div
                   layoutId='tab-indicator'
-                  className='absolute bottom-0 left-0 right-0 h-px bg-white'
+                  className='absolute bottom-0 left-0 right-0 h-px bg-tw-base-highlight'
                   transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
                 />
               )}
               {tab === 'search' ? 'Componentes' : 'Mi Build'}
               {tab === 'build' && buildComponents.length > 0 && (
-                <span className='font-mono text-[9px] text-zinc-700 border border-white/10 px-1.5 py-0.5 rounded tabular-nums'>
+                <span className='font-mono text-[9px] text-tw-muted-deep border border-tw-glass/10 px-1.5 py-0.5 rounded tabular-nums'>
                   {buildComponents.length}
                 </span>
               )}
@@ -373,20 +411,21 @@ export function App() {
         {/* ── TAB: BUSCAR ── */}
         {activeTab === 'search' && (
           <div>
-
             {/* Compare bar */}
             {compareList.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: -8 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
-                className='flex items-center justify-between border border-[#242424] bg-[#0A0A0A]/80 backdrop-blur-xl rounded-xl px-4 py-3 mb-4'>
+                className='flex items-center justify-between border border-tw-border bg-tw-base/80 backdrop-blur-xl rounded-xl px-4 py-3 mb-4'>
                 <div className='flex items-center gap-3 flex-wrap'>
-                  <span className='font-mono text-[9px] text-zinc-600 uppercase tracking-widest'>
+                  <span className='font-mono text-[9px] text-tw-muted uppercase tracking-widest'>
                     Comparando {compareList.length}/2
                   </span>
                   {compareList.map((c) => (
-                    <span key={c.id} className='font-mono text-[10px] text-zinc-400 border border-[#242424] px-2.5 py-1 rounded'>
+                    <span
+                      key={c.id}
+                      className='font-mono text-[10px] text-tw-muted-highlight border border-tw-border px-2.5 py-1 rounded'>
                       {c.name}
                     </span>
                   ))}
@@ -395,13 +434,13 @@ export function App() {
                   {compareList.length === 2 && (
                     <button
                       onClick={() => setShowCompareModal(true)}
-                      className='font-mono text-[10px] text-white border border-white/15 hover:border-white/28 hover:bg-white/5 px-3 py-1.5 rounded transition-all cursor-pointer uppercase tracking-widest'>
+                      className='font-mono text-[10px] text-tw-primary border border-tw-glass/15 hover:border-tw-glass/28 hover:bg-tw-base-highlight/5 px-3 py-1.5 rounded transition-all cursor-pointer uppercase tracking-widest'>
                       Ver comparación
                     </button>
                   )}
                   <button
                     onClick={() => setCompareList([])}
-                    className='font-mono text-[10px] text-zinc-700 hover:text-zinc-400 px-2 py-1.5 transition-colors cursor-pointer'>
+                    className='font-mono text-[10px] text-tw-muted-deep hover:text-tw-muted-highlight px-2 py-1.5 transition-colors cursor-pointer'>
                     Cancelar
                   </button>
                 </div>
@@ -409,71 +448,93 @@ export function App() {
             )}
 
             {/* ── FILTROS — GLASSMORPHISM REAL ── */}
-            <div className='relative mb-8 rounded-xl border border-[#1E1E1E] bg-[#080808]/80 backdrop-blur-xl p-4'>
+            <div className='relative mb-8 rounded-xl border border-tw-border-deep bg-tw-surface-deep/80 backdrop-blur-xl p-4'>
               {/* Top shimmer */}
-              <div className='absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent' />
+              <div className='absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-linear-to-r from-transparent via-tw-glass/8 to-transparent' />
 
               <div className='flex flex-col gap-3'>
                 {/* Row 1: Search + Type + Brand */}
                 <div className='flex flex-col sm:flex-row gap-2.5'>
                   <div className='relative flex-1'>
-                    <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-700' />
+                    <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tw-muted-deep' />
                     <input
                       type='text'
                       placeholder='Buscar componentes...'
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      className='w-full font-mono text-xs bg-[#0F0F0F] border border-[#1E1E1E] text-white placeholder-zinc-800 rounded-lg pl-9 pr-4 py-2.5 focus:outline-none focus:border-[#303030] transition-all'
+                      className='w-full font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-primary placeholder-tw-muted-deep rounded-lg pl-9 pr-4 py-2.5 focus:outline-none focus:border-tw-border-highlight transition-all'
                     />
                   </div>
                   <select
                     value={selectedType}
                     onChange={(e) => setSelectedType(e.target.value)}
-                    className='font-mono text-xs bg-[#0F0F0F] border border-[#1E1E1E] text-zinc-400 rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#303030] cursor-pointer appearance-none transition-all min-w-[140px]'>
+                    className='font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-muted-highlight rounded-lg px-3 py-2.5 focus:outline-none focus:border-tw-border-highlight cursor-pointer appearance-none transition-all min-w-35'>
                     <option value=''>Todos los tipos</option>
-                    {componentTypes.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+                    {componentTypes.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.name}
+                      </option>
+                    ))}
                   </select>
                   <select
                     value={selectedBrand}
                     onChange={(e) => setSelectedBrand(e.target.value)}
-                    className='font-mono text-xs bg-[#0F0F0F] border border-[#1E1E1E] text-zinc-400 rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#303030] cursor-pointer appearance-none transition-all min-w-[140px]'>
+                    className='font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-muted-highlight rounded-lg px-3 py-2.5 focus:outline-none focus:border-tw-border-highlight cursor-pointer appearance-none transition-all min-w-35'>
                     <option value=''>Todas las marcas</option>
-                    {brands.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                    {brands.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
                 {/* Row 2: Price + Sort + Clear */}
                 <div className='flex flex-col sm:flex-row gap-2.5 items-center'>
                   <div className='flex items-center gap-2 flex-1'>
-                    <span className='font-mono text-[9px] text-zinc-700 uppercase tracking-widest shrink-0'>Precio</span>
+                    <span className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest shrink-0'>
+                      Precio
+                    </span>
                     <input
-                      type='number' placeholder='Mín' value={minPrice}
+                      type='number'
+                      placeholder='Mín'
+                      value={minPrice}
                       onChange={(e) => setMinPrice(e.target.value)}
-                      className='flex-1 font-mono text-xs bg-[#0F0F0F] border border-[#1E1E1E] text-white placeholder-zinc-800 rounded-lg px-3 py-2 focus:outline-none focus:border-[#303030] transition-all'
+                      className='flex-1 font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-primary placeholder-tw-muted-deep rounded-lg px-3 py-2 focus:outline-none focus:border-tw-border-highlight transition-all'
                     />
-                    <span className='text-zinc-800 text-xs'>—</span>
+                    <span className='text-tw-muted-de text-xs'>—</span>
                     <input
-                      type='number' placeholder='Máx' value={maxPrice}
+                      type='number'
+                      placeholder='Máx'
+                      value={maxPrice}
                       onChange={(e) => setMaxPrice(e.target.value)}
-                      className='flex-1 font-mono text-xs bg-[#0F0F0F] border border-[#1E1E1E] text-white placeholder-zinc-800 rounded-lg px-3 py-2 focus:outline-none focus:border-[#303030] transition-all'
+                      className='flex-1 font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-primary placeholder-tw-muted-deep rounded-lg px-3 py-2 focus:outline-none focus:border-tw-border-highlight transition-all'
                     />
                     {(minPrice || maxPrice) && (
-                      <button onClick={() => { setMinPrice(''); setMaxPrice(''); }}
-                        className='font-mono text-xs text-zinc-700 hover:text-zinc-400 cursor-pointer transition-colors shrink-0'>✕</button>
+                      <button
+                        onClick={() => {
+                          setMinPrice('');
+                          setMaxPrice('');
+                        }}
+                        className='font-mono text-xs text-tw-muted-deep hover:text-tw-muted-highlight cursor-pointer transition-colors shrink-0'>
+                        ✕
+                      </button>
                     )}
                   </div>
                   <div className='flex items-center gap-2 shrink-0'>
                     <select
-                      value={sortBy} onChange={(e) => setSortBy(e.target.value)}
-                      className='font-mono text-xs bg-[#0F0F0F] border border-[#1E1E1E] text-zinc-400 rounded-lg px-3 py-2 focus:outline-none focus:border-[#303030] cursor-pointer appearance-none transition-all'>
+                      value={sortBy}
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className='font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-muted-highlight rounded-lg px-3 py-2 focus:outline-none focus:border-tw-border-highlight cursor-pointer appearance-none transition-all'>
                       <option value='default'>Ordenar: Defecto</option>
                       <option value='price_asc'>Precio ↑</option>
                       <option value='price_desc'>Precio ↓</option>
                       <option value='name'>Nombre A–Z</option>
                     </select>
                     {hasActiveFilters && (
-                      <button onClick={clearFilters}
-                        className='font-mono text-[9px] text-zinc-700 hover:text-zinc-400 border border-white/8 hover:border-white/15 px-3 py-2 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                      <button
+                        onClick={clearFilters}
+                        className='font-mono text-[9px] text-tw-muted-deep hover:text-tw-muted-highlight border border-tw-glass/8 hover:border-tw-glass/15 px-3 py-2 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
                         Limpiar
                       </button>
                     )}
@@ -486,7 +547,9 @@ export function App() {
             {loading ? (
               <div className='grid grid-cols-12 gap-3'>
                 {Array.from({ length: 8 }).map((_, i) => (
-                  <div key={i} className='col-span-12 sm:col-span-6 lg:col-span-3'><SkeletonCard /></div>
+                  <div key={i} className='col-span-12 sm:col-span-6 lg:col-span-3'>
+                    <SkeletonCard />
+                  </div>
                 ))}
               </div>
             ) : displayedComponents.length === 0 ? (
@@ -494,25 +557,26 @@ export function App() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className='flex flex-col items-center justify-center py-24 gap-4'>
-                <div className='w-10 h-10 border border-[#1E1E1E] rounded-xl flex items-center justify-center'>
-                  <Search className='w-4 h-4 text-zinc-800' />
+                <div className='w-10 h-10 border border-tw-border-deep rounded-xl flex items-center justify-center'>
+                  <Search className='w-4 h-4 text-tw-muted-de' />
                 </div>
                 <div className='text-center space-y-1'>
-                  <p className='text-zinc-400 text-sm'>Sin resultados</p>
-                  <p className='font-mono text-[9px] text-zinc-800 uppercase tracking-widest'>
+                  <p className='text-tw-muted-highlight text-sm'>Sin resultados</p>
+                  <p className='font-mono text-[9px] text-tw-muted-de uppercase tracking-widest'>
                     {hasActiveFilters ? 'Ajusta los filtros' : 'No hay componentes disponibles'}
                   </p>
                 </div>
                 {hasActiveFilters && (
-                  <button onClick={clearFilters}
-                    className='font-mono text-[9px] text-zinc-600 hover:text-zinc-400 border border-white/8 hover:border-white/15 px-4 py-2 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                  <button
+                    onClick={clearFilters}
+                    className='font-mono text-[9px] text-tw-muted hover:text-tw-muted-highlight border border-tw-glass/8 hover:border-tw-glass/15 px-4 py-2 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
                     Limpiar filtros
                   </button>
                 )}
               </motion.div>
             ) : (
               <motion.div variants={containerVariant} initial='hidden' animate='visible'>
-                <p className='font-mono text-[9px] text-zinc-800 uppercase tracking-widest mb-4'>
+                <p className='font-mono text-[9px] text-tw-muted-de uppercase tracking-widest mb-4'>
                   {displayedComponents.length} componentes
                 </p>
                 {/* ── BENTO GRID — Asimétrico ── */}
@@ -524,9 +588,8 @@ export function App() {
                         key={c.id}
                         custom={i}
                         variants={cardVariant}
-                        className={large
-                          ? 'col-span-12 sm:col-span-6 lg:col-span-6'
-                          : 'col-span-12 sm:col-span-6 lg:col-span-3'
+                        className={
+                          large ? 'col-span-12 sm:col-span-6 lg:col-span-6' : 'col-span-12 sm:col-span-6 lg:col-span-3'
                         }>
                         <ComponentCard
                           component={c}
@@ -549,8 +612,10 @@ export function App() {
             <div className='flex-1 flex flex-col gap-4'>
               <div className='flex items-center justify-between'>
                 <div>
-                  <p className='font-mono text-[9px] text-zinc-700 uppercase tracking-widest mb-1'>Configuración actual</p>
-                  <h2 className='text-white font-semibold text-base'>
+                  <p className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest mb-1'>
+                    Configuración actual
+                  </p>
+                  <h2 className='text-tw-primary font-semibold text-base'>
                     {buildComponents.length === 0
                       ? 'Agrega componentes'
                       : `${buildComponents.length} componente${buildComponents.length > 1 ? 's' : ''} seleccionado${buildComponents.length > 1 ? 's' : ''}`}
@@ -560,12 +625,12 @@ export function App() {
                   <div className='flex gap-2'>
                     <button
                       onClick={() => setShowSaveDialog(true)}
-                      className='font-mono text-[10px] text-zinc-500 hover:text-white border border-white/10 hover:border-white/20 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                      className='font-mono text-[10px] text-tw-muted-highlight hover:text-tw-primary border border-tw-glass/10 hover:border-tw-glass/20 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
                       Guardar
                     </button>
                     <button
                       onClick={handleClearBuild}
-                      className='font-mono text-[10px] text-red-500/50 hover:text-red-400 border border-red-500/15 hover:border-red-500/30 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                      className='font-mono text-[10px] text-tw-alert hover:text-tw-alert-highlight border border-tw-alert/15 hover:border-tw-alert/30 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
                       Limpiar
                     </button>
                   </div>
@@ -576,11 +641,13 @@ export function App() {
               {compatibilityIssues.length > 0 && (
                 <div className='flex flex-col gap-2'>
                   {compatibilityIssues.map((issue, i) => (
-                    <div key={i} className={`flex items-start gap-3 px-4 py-3 rounded-xl border font-mono text-xs ${
-                      issue.type === 'error'
-                        ? 'bg-red-500/5 border-red-500/15 text-red-400/80'
-                        : 'bg-amber-500/5 border-amber-500/15 text-amber-400/80'
-                    }`}>
+                    <div
+                      key={i}
+                      className={`flex items-start gap-3 px-4 py-3 rounded-xl border font-mono text-xs ${
+                        issue.type === 'error'
+                          ? 'bg-tw-alert/5 border-tw-alert/15 text-tw-alert-highlight/80'
+                          : 'bg-tw-warning/5 border-tw-warbg-tw-warning/15 text-tw-warning-highlight/80'
+                      }`}>
                       <span className='shrink-0 mt-px'>{issue.type === 'error' ? '✕' : '△'}</span>
                       <span>{issue.message}</span>
                     </div>
@@ -618,42 +685,54 @@ export function App() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-2xl'
-            onClick={(e) => { if (e.target === e.currentTarget) setShowSaveDialog(false); }}
-          >
+            className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-tw-base/80 backdrop-blur-2xl'
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowSaveDialog(false);
+            }}>
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className='relative w-full max-w-sm'
-            >
+              className='relative w-full max-w-sm'>
               {/* GlassCard Gradient Border */}
-              <div className='absolute -inset-[1px] rounded-2xl bg-gradient-to-br from-white/12 via-white/4 to-transparent pointer-events-none' />
+              <div className='absolute -inset-px rounded-2xl bg-linear-to-br from-tw-glass/12 via-tw-glass/4 to-transparent pointer-events-none' />
 
-              <div className='relative bg-[#0F0F0F]/90 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 flex flex-col gap-4'>
-                <div className='absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent' />
+              <div className='relative bg-tw-surface/90 backdrop-blur-2xl border border-tw-glass/10 rounded-2xl p-6 flex flex-col gap-4'>
+                <div className='absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-linear-to-r from-transparent via-tw-glass/8 to-transparent' />
 
                 <div>
-                  <p className='font-mono text-[9px] text-zinc-700 uppercase tracking-widest mb-1'>Guardar build</p>
-                  <h3 className='text-white font-semibold text-sm'>Dale un nombre a tu configuración</h3>
+                  <p className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest mb-1'>
+                    Guardar build
+                  </p>
+                  <h3 className='text-tw-primary font-semibold text-sm'>Dale un nombre a tu configuración</h3>
                 </div>
 
                 <input
-                  type='text' placeholder='Mi gaming build...' value={saveName}
+                  type='text'
+                  placeholder='Mi gaming build...'
+                  value={saveName}
                   onChange={(e) => setSaveName(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') handleSaveBuild(); }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSaveBuild();
+                  }}
                   autoFocus
-                  className='font-mono text-xs bg-[#0A0A0A] border border-white/10 text-white placeholder-zinc-700 rounded-lg px-4 py-2.5 focus:outline-none focus:border-white/20 transition-all'
+                  className='font-mono text-xs bg-tw-base border border-tw-glass/10 text-tw-primary placeholder-tw-muted-deep rounded-lg px-4 py-2.5 focus:outline-none focus:border-tw-glass/20 transition-all'
                 />
 
                 <div className='flex gap-2'>
-                  <button onClick={handleSaveBuild} disabled={!saveName.trim()}
-                    className='flex-1 font-mono text-[11px] text-white bg-white/8 border border-white/12 hover:border-white/25 hover:bg-white/12 disabled:opacity-25 disabled:cursor-not-allowed py-2.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                  <button
+                    onClick={handleSaveBuild}
+                    disabled={!saveName.trim()}
+                    className='flex-1 font-mono text-[11px] text-tw-primary bg-tw-base-highlight/8 border border-tw-glass/12 hover:border-tw-glass/25 hover:bg-tw-base-highlight/12 disabled:opacity-25 disabled:cursor-not-allowed py-2.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
                     Guardar
                   </button>
-                  <button onClick={() => { setShowSaveDialog(false); setSaveName(''); }}
-                    className='px-4 font-mono text-[11px] text-zinc-600 border border-white/8 hover:border-white/15 hover:text-zinc-400 py-2.5 rounded-lg transition-all cursor-pointer'>
+                  <button
+                    onClick={() => {
+                      setShowSaveDialog(false);
+                      setSaveName('');
+                    }}
+                    className='px-4 font-mono text-[11px] text-tw-muted border border-tw-glass/8 hover:border-tw-glass/15 hover:text-tw-muted-highlight hover:bg-tw-base-highlight/12 py-2.5 rounded-lg transition-all cursor-pointer'>
                     Cancelar
                   </button>
                 </div>
@@ -667,7 +746,10 @@ export function App() {
       {showCompareModal && compareList.length === 2 && (
         <CompareModal
           components={compareList}
-          onClose={() => { setShowCompareModal(false); setCompareList([]); }}
+          onClose={() => {
+            setShowCompareModal(false);
+            setCompareList([]);
+          }}
         />
       )}
 

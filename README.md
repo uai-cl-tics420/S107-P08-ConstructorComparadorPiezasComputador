@@ -18,7 +18,7 @@
 
 &emsp;Asegurarse de crear un archivo [.env](.env) en el directorio raíz a partir del archivo [.env.example](.env.example) proporcionado como template y **completar los campos `POSTGRES_PASSWORD` y `MONGO_PASSWORD`**.
 
-&emsp;Para montar el sistema de base de datos y la aplicación web ejecutar en terminal:
+&emsp;Para montar el sistema de base de datos y la aplicación web y script de scraping ejecutar en terminal:
 
 ```bash
 docker-compose up -d --build
@@ -34,15 +34,22 @@ docker-compose up -d --build
 
 #### Requisitos:
 
-&emsp;Necesita tener instalada la última verisón de docker, bun y python.
+&emsp;Además de haber montado los contenedores como se indicó en [Ejecución](#ejecución), necesita tener instalada la última verisón de bun y python.
 
-- [Docker](https://www.docker.com/get-started/)
 - [bun](https://bun.com/docs/installation)
 - [python](https://www.python.org/downloads/)
 
+#### Validación de [.env](.env):
+
+&emsp;Puede ejecutar un script de validación del archivo .env ejecutando en terminal:
+
+```bash
+bun run validate-env
+```
+
 #### Base de datos:
 
-&emsp;Para insertar datos scrapeados a la base de datos ejecutar en terminal:
+&emsp;Para insertar manualmente datos scrapeados a la base de datos ejecutar en terminal:
 
 ```bash
 bun run scrape

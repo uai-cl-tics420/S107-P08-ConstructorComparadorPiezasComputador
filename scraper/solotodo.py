@@ -92,7 +92,7 @@ def browse_category(
     category_id = CATEGORY_CPU,
     page: int    = 1,
     page_size: int = 10,
-    exclude_refurbished: bool = False,
+    exclude_refurbished: bool = True,
 ) -> dict:
     '''
     { product_id: { name, slug, picture_url, last_updated, normal_price, offer_price, ...specs }, ... }
@@ -113,7 +113,7 @@ def browse_category(
     return process_json_response(resp.json())
 
 
-def browse_cpus        (page=1, page_size=10, **kw): return browse_category(CATEGORY_CPU,        page, page_size, **kw)
+def browse_cpus        (page=1, page_size=20, **kw): return browse_category(CATEGORY_CPU,        page, page_size, **kw)
 def browse_ram         (page=1, page_size=20, **kw): return browse_category(CATEGORY_RAM,        page, page_size, **kw)
 def browse_motherboards(page=1, page_size=20, **kw): return browse_category(CATEGORY_MB,         page, page_size, **kw)
 def browse_gpus        (page=1, page_size=20, **kw): return browse_category(CATEGORY_GPU,        page, page_size, **kw)

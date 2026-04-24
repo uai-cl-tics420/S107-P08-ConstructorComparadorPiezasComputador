@@ -1,0 +1,4 @@
+python-dotenv
+pymongo
+psycopg2-binary
+requests

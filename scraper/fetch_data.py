@@ -1,11 +1,5 @@
-#!/usr/bin/env python3
-"""
-Scrape SoloTodo for real components and prices per store.
-Populates MongoDB (components, brands, component_types) and PostgreSQL (prices).
-Uses only solotodo.py for all API calls.
-"""
-
 import os
+import sys
 import uuid
 from datetime import datetime
 from dotenv import load_dotenv
@@ -22,6 +16,7 @@ from solotodo import (
     browse_fans,
     browse_pc_cases,
     get_product_prices,
+    get_stores,
 )
 
 load_dotenv()
@@ -29,26 +24,26 @@ load_dotenv()
 # MongoDB
 MONGO_USER     = os.getenv("MONGO_USER")
 MONGO_PASSWORD = os.getenv("MONGO_PASSWORD")
-MONGO_HOST     = 'localhost'#os.getenv("MONGO_HOST")
+MONGO_HOST     = os.getenv("MONGO_HOST")
 MONGO_PORT     = int(os.getenv("MONGO_PORT"))
 MONGO_DB       = os.getenv("MONGO_DB")
 
 # PostgreSQL
-PG_HOST     = 'localhost'#os.getenv("POSTGRES_HOST")
+PG_HOST     = os.getenv("POSTGRES_HOST")
 PG_PORT     = int(os.getenv("POSTGRES_PORT"))
 PG_DB       = os.getenv("POSTGRES_DB")
 PG_USER     = os.getenv("POSTGRES_USER")
 PG_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 
 CATEGORIES = [
-    ("CPU",         browse_cpus,         10),
-    ("GPU",         browse_gpus,         10),
-    ("RAM",         browse_ram,           8),
-    ("Motherboard", browse_motherboards,  8),
-    ("PSU",         browse_psu,           6),
-    ("Case",        browse_pc_cases,      6),
-    ("CPU Cooler",  browse_cpu_coolers,   4),
-    ("Fans",        browse_fans,          4),
+    ("CPU",         browse_cpus,         200),
+    ("GPU",         browse_gpus,         200),
+    ("RAM",         browse_ram,          200),
+    ("Motherboard", browse_motherboards, 200),
+    ("PSU",         browse_psu,          200),
+    ("Case",        browse_pc_cases,     200),
+    ("CPU Cooler",  browse_cpu_coolers,  200),
+    ("Fans",        browse_fans,         200),
 ]
 
 DISPLAY_SPECS = {
@@ -103,9 +98,25 @@ def clean_specs(product: dict) -> dict:
     return {k: v for k, v in product.items() if k in DISPLAY_SPECS and v is not None}
 
 
+def clear_database(mongo_db, pg_cursor, pg_conn):
+    """Clears existing components, prices, brands, and types from the databases."""
+    pg_cursor.execute("DELETE FROM public.prices;")
+    pg_cursor.execute("DELETE FROM public.components_mirror;")
+    pg_conn.commit()
+    mongo_db["components"].delete_many({})
+    mongo_db["brands"].delete_many({})
+    mongo_db["component_types"].delete_many({})
+    print("Cleared existing data from both databases.\n")
+
+
 def main():
+    sync_start_time = datetime.now()
+    
     print("SoloTodo Scraper - Components + Store Prices")
     print("=" * 60)
+
+    # Fetch store info
+    stores = get_stores()
 
     # Connect to MongoDB
     mongo_url = (
@@ -129,14 +140,11 @@ def main():
     except Exception:
         pg_conn.rollback()
 
-    # Clear existing data
-    pg_cursor.execute("DELETE FROM public.prices;")
-    pg_cursor.execute("DELETE FROM public.components_mirror;")
-    pg_conn.commit()
-    mongo_db["components"].delete_many({})
-    mongo_db["brands"].delete_many({})
-    mongo_db["component_types"].delete_many({})
-    print("Cleared existing data\n")
+    # Option to clear existing data via command line arg
+    if "--clear" in sys.argv:
+        clear_database(mongo_db, pg_cursor, pg_conn)
+    else:
+        print("Appending to existing data (use --clear to flush databases).\n")
 
     brands_cache = {}
     types_cache  = {}
@@ -150,7 +158,10 @@ def main():
         if type_name not in types_cache:
             type_id = deterministic_uuid("type", type_name)
             types_cache[type_name] = type_id
-            mongo_db["component_types"].insert_one({"_id": type_id, "name": type_name})
+            
+            if not mongo_db["component_types"].find_one({"_id": type_id}):
+                mongo_db["component_types"].insert_one({"_id": type_id, "name": type_name})
+                
         type_id = types_cache[type_name]
 
         products = browse_fn(page=1, page_size=count)
@@ -167,7 +178,10 @@ def main():
             if brand_name not in brands_cache:
                 brand_id = deterministic_uuid("brand", brand_name)
                 brands_cache[brand_name] = brand_id
-                mongo_db["brands"].insert_one({"_id": brand_id, "name": brand_name})
+                
+                if not mongo_db["brands"].find_one({"_id": brand_id}):
+                    mongo_db["brands"].insert_one({"_id": brand_id, "name": brand_name})
+                    
             brand_id = brands_cache[brand_name]
 
             # Upsert component into Mongo keyed on name_model (has unique index)
@@ -209,10 +223,18 @@ def main():
             store_prices = get_product_prices(solotodo_id)
 
             if store_prices:
+                seen_stores = set()
                 for sp in store_prices:
                     offer_price = sp.get("offer_price")
-                    if not offer_price:
+                    store_id = sp.get("store_id")
+                    if not offer_price or not store_id:
                         continue
+                    if store_id in seen_stores:
+                        continue
+                    seen_stores.add(store_id)
+                    
+                    store_name = stores.get(store_id, f"Store {store_id}")
+                    
                     pg_cursor.execute(
                         "INSERT INTO public.prices "
                         "  (id, component_id, vendor_id, price, vendor_name, recorded_at) "
@@ -224,20 +246,21 @@ def main():
                         (
                             sp["entity_id"],
                             comp_id,
-                            deterministic_uuid("entity", str(sp["entity_id"])),
+                            deterministic_uuid("store", str(store_id)),
                             int(offer_price),
-                            sp.get("name"),
+                            store_name,
                             datetime.now(),
                         ),
                     )
                     total_prices += 1
 
                 best = store_prices[0]
+                best_store_name = stores.get(best.get("store_id"), "?")
                 print(
                     f"  {clean_name:<45} "
                     f"${best['offer_price']:>10,.0f} "
-                    f"({best.get('name', '?')}) "
-                    f"[{len(store_prices)} tiendas]"
+                    f"({best_store_name}) "
+                    f"[{len(seen_stores)} tiendas]"
                 )
             else:
                 # Fallback: use the browse-level price
@@ -268,7 +291,16 @@ def main():
                     print(f"  {clean_name:<45}    sin precio")
 
             total_components += 1
+            pg_conn.commit() # Commit instantly after processing each individual component
 
+    # Cleanup any prices that weren't updated in this scraping run
+    print("\nCleaning up sold-out items...")
+    pg_cursor.execute(
+        "DELETE FROM public.prices WHERE recorded_at < %s",
+        (sync_start_time,)
+    )
+    removed_prices = pg_cursor.rowcount
+    
     pg_conn.commit()
     pg_cursor.close()
     pg_conn.close()
@@ -279,6 +311,7 @@ def main():
     print(f"Prices     : {total_prices}")
     print(f"Brands     : {len(brands_cache)}")
     print(f"Types      : {len(types_cache)}")
+    print(f"Sold Out   : {removed_prices} outdated prices removed")
     print(f"{'='*60}")
 
 

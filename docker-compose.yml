@@ -58,6 +58,24 @@ services:
       mongo:
         condition: service_healthy
 
+  scraper:
+    build:
+      context: ./scraper
+      dockerfile: Dockerfile
+    container_name: scraper
+    env_file:
+      - ./.env
+    environment:
+      - POSTGRES_HOST=postgres
+      - MONGO_HOST=mongo
+      # How often to run the script (in seconds). 43200 = 12 hours, 86400 = 24 hours
+      - UPDATE_INTERVAL=43200 
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+
 volumes:
   postgres_data:
   mongo_data:

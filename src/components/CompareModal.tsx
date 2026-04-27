@@ -1,4 +1,4 @@
-import type { Component } from '../types';
+import type { Component } from '../types/Frontend_types';
 
 interface Props {
   components: Component[];

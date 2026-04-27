@@ -1,6 +1,6 @@
 import { Db } from 'mongodb';
 import { v4 as uuidv4 } from 'uuid';
-import type { BuildComponent } from '@/types';
+import type { BuildComponent } from '@/types/Frontend_types';
 
 export interface SavedBuildDB {
   _id: string;

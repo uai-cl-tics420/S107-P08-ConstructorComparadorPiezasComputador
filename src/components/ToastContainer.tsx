@@ -1,4 +1,4 @@
-import type { Toast } from '../types';
+import type { Toast } from '../types/Frontend_types';
 
 interface Props {
   toasts: Toast[];

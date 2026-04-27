@@ -1,4 +1,4 @@
-import type { BuildComponent } from '../types';
+import type { BuildComponent } from '../types/Frontend_types';
 
 interface Props {
   build: BuildComponent[];

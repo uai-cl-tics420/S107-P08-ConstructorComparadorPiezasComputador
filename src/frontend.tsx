@@ -11,6 +11,7 @@ import { useEffect, useState, createContext } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { App } from '@/views/App';
 import { LogIn } from '@/views/LogIn';
+import { UserConfig } from '@/views/UserConfig';
 
 export const ThemeContext = createContext({
   theme: 'dark',
@@ -34,7 +35,7 @@ function AnimatedRoutes() {
         <Routes location={location} key={location.pathname}>
           <Route path='/' element={<App />} />
           <Route path='/login' element={<LogIn />} />
-          <Route path='/account' element={<App />} /> {/*PLACEHOLDER*/}
+          <Route path='/account' element={<UserConfig />} /> {/*PLACEHOLDER*/}
         </Routes>
       </AnimatePresence>
     </ThemeContext.Provider>

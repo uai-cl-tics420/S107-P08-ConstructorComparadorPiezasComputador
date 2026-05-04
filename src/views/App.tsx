@@ -10,6 +10,7 @@ import { SkeletonCard } from '@/components/SkeletonCard';
 import { BuildChecklist } from '@/components/BuildChecklist';
 import { CompareModal } from '@/components/CompareModal';
 import { SavedBuildsPanel } from '@/components/SavedBuildsPanel';
+import { Pagination } from '@/components/Pagination';
 import { useToast } from '@/hooks/useToast';
 import { useSavedBuilds } from '@/hooks/useSavedBuilds';
 import { checkCompatibility } from '@/utils/compatibility';
@@ -33,6 +34,8 @@ export function App() {
   const [sortBy, setSortBy] = useState('default');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'search' | 'build'>('search');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
 
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
@@ -63,6 +66,7 @@ export function App() {
   // Fetch components when search/type/brand changes
   useEffect(() => {
     setLoading(true);
+    setCurrentPage(1); // Reset to first page when filters change
     const params = new URLSearchParams();
     if (search) params.set('search', search);
     if (selectedType) params.set('type_id', selectedType);
@@ -77,7 +81,7 @@ export function App() {
   }, [search, selectedType, selectedBrand]);
 
   // Client-side price filter + sort
-  const displayedComponents = useMemo(() => {
+  const filteredComponents = useMemo(() => {
     let result = [...components];
     const min = minPrice ? parseInt(minPrice) : 0;
     const max = maxPrice ? parseInt(maxPrice) : Infinity;
@@ -96,6 +100,16 @@ export function App() {
     }
     return result;
   }, [components, minPrice, maxPrice, sortBy]);
+
+  // Paginate filtered components
+  const displayedComponents = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredComponents.slice(startIndex, endIndex);
+  }, [filteredComponents, currentPage, itemsPerPage]);
+
+  // Calculate total pages
+  const totalPages = Math.ceil(filteredComponents.length / itemsPerPage);
 
   const handleAdd = (component: Component) => {
     setBuildComponents((prev) => {
@@ -190,6 +204,7 @@ export function App() {
     setMinPrice('');
     setMaxPrice('');
     setSortBy('default');
+    setCurrentPage(1);
   };
 
   const hasActiveFilters = search || selectedType || selectedBrand || minPrice || maxPrice;
@@ -552,57 +567,71 @@ export function App() {
                   </div>
                 ))}
               </div>
-            ) : displayedComponents.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className='flex flex-col items-center justify-center py-24 gap-4'>
-                <div className='w-10 h-10 border border-tw-border-deep rounded-xl flex items-center justify-center'>
-                  <Search className='w-4 h-4 text-tw-muted-de' />
-                </div>
-                <div className='text-center space-y-1'>
-                  <p className='text-tw-muted-highlight text-sm'>Sin resultados</p>
-                  <p className='font-mono text-[9px] text-tw-muted-de uppercase tracking-widest'>
-                    {hasActiveFilters ? 'Ajusta los filtros' : 'No hay componentes disponibles'}
-                  </p>
-                </div>
-                {hasActiveFilters && (
-                  <button
-                    onClick={clearFilters}
-                    className='font-mono text-[9px] text-tw-muted hover:text-tw-muted-highlight border border-tw-glass/8 hover:border-tw-glass/15 px-4 py-2 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
-                    Limpiar filtros
-                  </button>
-                )}
-              </motion.div>
-            ) : (
-              <motion.div variants={containerVariant} initial='hidden' animate='visible'>
-                <p className='font-mono text-[9px] text-tw-muted-de uppercase tracking-widest mb-4'>
-                  {displayedComponents.length} componentes
-                </p>
-                {/* ── BENTO GRID — Asimétrico ── */}
-                <div className='grid grid-cols-12 gap-3'>
-                  {displayedComponents.map((c, i) => {
-                    const large = isLargeCard(c);
-                    return (
-                      <motion.div
-                        key={c.id}
-                        custom={i}
-                        variants={cardVariant}
-                        className={
-                          large ? 'col-span-12 sm:col-span-6 lg:col-span-6' : 'col-span-12 sm:col-span-6 lg:col-span-3'
-                        }>
-                        <ComponentCard
-                          component={c}
-                          onAdd={handleAdd}
-                          onCompare={handleCompare}
-                          isSelectedForCompare={compareList.some((x) => x.id === c.id)}
-                        />
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </motion.div>
-            )}
+            ) : filteredComponents.length === 0 ? (
+               <motion.div
+                 initial={{ opacity: 0 }}
+                 animate={{ opacity: 1 }}
+                 className='flex flex-col items-center justify-center py-24 gap-4'>
+                 <div className='w-10 h-10 border border-tw-border-deep rounded-xl flex items-center justify-center'>
+                   <Search className='w-4 h-4 text-tw-muted-de' />
+                 </div>
+                 <div className='text-center space-y-1'>
+                   <p className='text-tw-muted-highlight text-sm'>Sin resultados</p>
+                   <p className='font-mono text-[9px] text-tw-muted-de uppercase tracking-widest'>
+                     {hasActiveFilters ? 'Ajusta los filtros' : 'No hay componentes disponibles'}
+                   </p>
+                 </div>
+                 {hasActiveFilters && (
+                   <button
+                     onClick={clearFilters}
+                     className='font-mono text-[9px] text-tw-muted hover:text-tw-muted-highlight border border-tw-glass/8 hover:border-tw-glass/15 px-4 py-2 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                     Limpiar filtros
+                   </button>
+                 )}
+               </motion.div>
+             ) : (
+               <>
+                 <motion.div variants={containerVariant} initial='hidden' animate='visible'>
+                   <p className='font-mono text-[9px] text-tw-muted-de uppercase tracking-widest mb-4'>
+                     {filteredComponents.length} componentes
+                   </p>
+                   {/* ── BENTO GRID — Asimétrico ── */}
+                   <div className='grid grid-cols-12 gap-3'>
+                     {displayedComponents.map((c, i) => {
+                       const large = isLargeCard(c);
+                       return (
+                         <motion.div
+                           key={c.id}
+                           custom={i}
+                           variants={cardVariant}
+                           className={
+                             large ? 'col-span-12 sm:col-span-6 lg:col-span-6' : 'col-span-12 sm:col-span-6 lg:col-span-3'
+                           }>
+                           <ComponentCard
+                             component={c}
+                             onAdd={handleAdd}
+                             onCompare={handleCompare}
+                             isSelectedForCompare={compareList.some((x) => x.id === c.id)}
+                           />
+                         </motion.div>
+                       );
+                     })}
+                   </div>
+                 </motion.div>
+
+                 {/* ── PAGINATION ── */}
+                 {totalPages > 1 && (
+                   <Pagination
+                     currentPage={currentPage}
+                     totalPages={totalPages}
+                     itemsPerPage={itemsPerPage}
+                     totalItems={filteredComponents.length}
+                     onPageChange={setCurrentPage}
+                     onItemsPerPageChange={setItemsPerPage}
+                   />
+                 )}
+               </>
+             )}
           </div>
         )}
 

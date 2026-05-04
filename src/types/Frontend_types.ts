@@ -1,3 +1,5 @@
+// Frontend interface types
+
 export interface Brand {
   id: number;
   name: string;
@@ -23,14 +25,13 @@ export interface Price {
   recorded_at: string;
 }
 
-// Specs para verificación de compatibilidad y display
 export interface ComponentSpecs {
-  socket?: string;         // CPU/Motherboard: AM5, LGA1700
-  ram_type?: string;       // CPU/Motherboard/RAM: DDR4, DDR5
-  tdp?: number;            // CPU/GPU: consumo en watts
-  form_factor?: string;    // Motherboard/Case: ATX, mATX, ITX
-  storage_type?: string;   // Storage: NVMe, SATA
-  wattage?: number;        // PSU: potencia
+  socket?: string;
+  ram_type?: string;
+  tdp?: number;
+  form_factor?: string;
+  storage_type?: string;
+  wattage?: number;
   [key: string]: string | number | boolean | null | undefined;
 }
 

@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { X, Plus, TrendingDown } from 'lucide-react';
-import type { BuildComponent } from '../types';
+import type { BuildComponent } from '../types/Frontend_types';
 
 const ALL_TYPES = ['CPU', 'Motherboard', 'RAM', 'GPU', 'Storage', 'CPU Cooler', 'PSU', 'Case'];
 

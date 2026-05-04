@@ -14,7 +14,7 @@ import { Pagination } from '@/components/Pagination';
 import { useToast } from '@/hooks/useToast';
 import { useSavedBuilds } from '@/hooks/useSavedBuilds';
 import { checkCompatibility } from '@/utils/compatibility';
-import type { Component, ComponentType, Brand, BuildComponent, SavedBuild } from '@/types';
+import type { Component, ComponentType, Brand, BuildComponent, SavedBuild } from '@/types/Frontend_types';
 import { ThemeContext } from '@/frontend';
 import '@/index.css';
 

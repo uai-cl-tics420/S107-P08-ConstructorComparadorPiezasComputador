@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, ArrowLeftRight, ChevronDown } from 'lucide-react';
-import type { Component } from '../types';
+import type { Component } from '../types/Frontend_types';
 
 const SPEC_LABELS: Record<string, string> = {
   core_count: 'Cores',

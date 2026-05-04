@@ -1,4 +1,4 @@
-import type { SavedBuild } from '../types';
+import type { SavedBuild } from '../types/Frontend_types';
 
 interface Props {
   savedBuilds: SavedBuild[];

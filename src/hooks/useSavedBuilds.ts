@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSession } from '@/lib/auth/auth-client';
-import type { SavedBuild, BuildComponent } from '../types';
+import type { SavedBuild, BuildComponent } from '../types/Frontend_types';
 
 const STORAGE_KEY = 'pc-builder-saved-builds';
 

@@ -1,4 +1,4 @@
-import type { BuildComponent, CompatibilityIssue } from "../types";
+import type { BuildComponent, CompatibilityIssue } from "../types/Frontend_types";
 
 // ─────────────────────────────────────────────────────────────────
 // Jerarquía de form factors (mayor número = más grande)

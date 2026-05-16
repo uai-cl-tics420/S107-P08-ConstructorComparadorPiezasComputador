@@ -67,3 +67,26 @@ export async function getVendorById(id: string): Promise<Vendor | null> {
   const doc = await db.collection<Vendor>('vendors').findOne({ _id: id });
   return doc;
 }
+
+export async function getComponentsByTypeName(typeName: string, limit = 60) {
+  const typeDoc = await db.collection('component_types').findOne({ name: typeName });
+  if (!typeDoc) return [];
+
+  const docs = await db.collection('components')
+    .find({ type_id: typeDoc._id })
+    .limit(limit)
+    .toArray();
+
+  const transformed = await Promise.all(docs.map(transformComponent));
+  return transformed.filter((comp) => comp.prices.length > 0);
+}
+
+export async function getComponentByStringId(id: string) {
+  try {
+    const doc = await db.collection('components').findOne({ _id: new ObjectId(id) });
+    if (!doc) return null;
+    return transformComponent(doc);
+  } catch {
+    return null;
+  }
+}

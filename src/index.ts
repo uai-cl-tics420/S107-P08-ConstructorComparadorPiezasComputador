@@ -3,6 +3,7 @@ import { serve } from 'bun';
 import { auth } from '@/lib/auth/auth';
 import { getComponents, getComponentById, getBrands, getComponentTypes } from '@/lib/db/mongo';
 import { getUserBuilds, createUserBuild, deleteUserBuild } from '@/lib/db/DBS_buildsManager';
+import { getRecommendationsForBuild, getRecommendationsForComponent } from '@/lib/db/recommendationsManager';
 import index from './index.html';
 import { MongoClient } from 'mongodb';
 import { Pool } from 'pg';
@@ -123,6 +124,40 @@ const server = serve({
         const success = await deleteUserBuild(db, req.params.id, session.user.id);
         if (!success) return Response.json({ error: 'Build no encontrado' }, { status: 404 });
         return Response.json({ success: true });
+      },
+    },
+
+    // POST /api/recommendations/build — recomendaciones para un build
+    '/api/recommendations/build': {
+      async POST(req) {
+        try {
+          const body = await req.json();
+          const { components } = body;
+          if (!Array.isArray(components)) {
+            return Response.json({ error: 'Invalid components format' }, { status: 400 });
+          }
+          const recommendations = await getRecommendationsForBuild(components);
+          return Response.json(recommendations);
+        } catch (error) {
+          console.error('Recommendation error:', error);
+          return Response.json({ error: 'Failed to generate recommendations' }, { status: 500 });
+        }
+      },
+    },
+
+    // GET /api/recommendations/component/:id — recomendaciones para un componente
+    '/api/recommendations/component/:id': {
+      async GET(req) {
+        try {
+          const recommendations = await getRecommendationsForComponent(req.params.id);
+          if (!recommendations) {
+            return Response.json({ error: 'Component not found' }, { status: 404 });
+          }
+          return Response.json(recommendations);
+        } catch (error) {
+          console.error('Recommendation error:', error);
+          return Response.json({ error: 'Failed to generate recommendations' }, { status: 500 });
+        }
       },
     },
   },

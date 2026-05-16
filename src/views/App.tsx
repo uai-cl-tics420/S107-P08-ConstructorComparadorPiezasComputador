@@ -11,9 +11,12 @@ import { BuildChecklist } from '@/components/BuildChecklist';
 import { CompareModal } from '@/components/CompareModal';
 import { SavedBuildsPanel } from '@/components/SavedBuildsPanel';
 import { Pagination } from '@/components/Pagination';
+import { RecommendationsPanel } from '@/components/RecommendationsPanel';
 import { useToast } from '@/hooks/useToast';
 import { useSavedBuilds } from '@/hooks/useSavedBuilds';
+import { useRecommendations } from '@/hooks/useRecommendations';
 import { checkCompatibility } from '@/utils/compatibility';
+import { scoreCompatibility } from '@/utils/recommendations';
 import type { Component, ComponentType, Brand, BuildComponent, SavedBuild } from '@/types/Frontend_types';
 import { ThemeContext } from '@/frontend';
 import '@/index.css';
@@ -52,6 +55,7 @@ export function App() {
   const { toasts, addToast, removeToast } = useToast();
   const { savedBuilds, saveBuild, deleteBuild } = useSavedBuilds();
   const compatibilityIssues = checkCompatibility(buildComponents);
+  const { recommendations, loading: recsLoading } = useRecommendations(buildComponents);
 
   // Load filter options on mount
   useEffect(() => {
@@ -110,6 +114,19 @@ export function App() {
 
   // Calculate total pages
   const totalPages = Math.ceil(filteredComponents.length / itemsPerPage);
+
+  // Compute compatibility for search results
+  const componentCompatibility = useMemo(() => {
+    const map = new Map<number, { isCompatible: boolean; reasons: string[] }>();
+    for (const component of displayedComponents) {
+      const compatibility = scoreCompatibility(component, buildComponents);
+      map.set(component.id, {
+        isCompatible: compatibility.isCompatible,
+        reasons: compatibility.reasons,
+      });
+    }
+    return map;
+  }, [displayedComponents, buildComponents]);
 
   const handleAdd = (component: Component) => {
     setBuildComponents((prev) => {
@@ -612,6 +629,7 @@ export function App() {
                              onAdd={handleAdd}
                              onCompare={handleCompare}
                              isSelectedForCompare={compareList.some((x) => x.id === c.id)}
+                             buildCompatibility={buildComponents.length > 0 ? componentCompatibility.get(c.id) : null}
                            />
                          </motion.div>
                        );
@@ -685,6 +703,14 @@ export function App() {
               )}
 
               <BuildList buildComponents={buildComponents} onRemove={handleRemove} onSearchType={handleSearchType} />
+
+              {buildComponents.length > 0 && (
+                <RecommendationsPanel
+                  recommendations={recommendations}
+                  loading={recsLoading}
+                  onAdd={handleAdd}
+                />
+              )}
             </div>
 
             <div className='lg:w-64 flex flex-col gap-4'>

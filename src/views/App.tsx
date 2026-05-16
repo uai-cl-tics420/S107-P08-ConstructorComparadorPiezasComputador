@@ -9,6 +9,7 @@ import { ToastContainer } from '@/components/ToastContainer';
 import { SkeletonCard } from '@/components/SkeletonCard';
 import { BuildChecklist } from '@/components/BuildChecklist';
 import { CompareModal } from '@/components/CompareModal';
+import { ComponentDetailModal } from '@/components/ComponentDetailModal';
 import { SavedBuildsPanel } from '@/components/SavedBuildsPanel';
 import { Pagination } from '@/components/Pagination';
 import { RecommendationsPanel } from '@/components/RecommendationsPanel';
@@ -47,6 +48,9 @@ export function App() {
   // Compare mode
   const [compareList, setCompareList] = useState<Component[]>([]);
   const [showCompareModal, setShowCompareModal] = useState(false);
+
+  // Detail/specs modal
+  const [detailComponent, setDetailComponent] = useState<Component | null>(null);
 
   // Save build dialog
   const [showSaveDialog, setShowSaveDialog] = useState(false);
@@ -628,6 +632,7 @@ export function App() {
                              component={c}
                              onAdd={handleAdd}
                              onCompare={handleCompare}
+                             onViewSpecs={setDetailComponent}
                              isSelectedForCompare={compareList.some((x) => x.id === c.id)}
                              buildCompatibility={buildComponents.length > 0 ? componentCompatibility.get(c.id) : null}
                            />
@@ -807,6 +812,13 @@ export function App() {
           }}
         />
       )}
+
+      {/* Component detail/specs modal */}
+      <ComponentDetailModal
+        component={detailComponent}
+        onClose={() => setDetailComponent(null)}
+        onAdd={handleAdd}
+      />
 
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </motion.div>

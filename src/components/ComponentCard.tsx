@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, ArrowLeftRight, ChevronDown } from 'lucide-react';
+import { Plus, ArrowLeftRight, ChevronDown, FileText } from 'lucide-react';
 import type { Component } from '../types/Frontend_types';
 
 const SPEC_LABELS: Record<string, string> = {
@@ -75,11 +75,12 @@ interface Props {
   component: Component;
   onAdd: (component: Component) => void;
   onCompare?: (component: Component) => void;
+  onViewSpecs?: (component: Component) => void;
   isSelectedForCompare?: boolean;
   buildCompatibility?: BuildCompatibility | null;
 }
 
-export function ComponentCard({ component, onAdd, onCompare, isSelectedForCompare, buildCompatibility }: Props) {
+export function ComponentCard({ component, onAdd, onCompare, onViewSpecs, isSelectedForCompare, buildCompatibility }: Props) {
   const [showAllPrices, setShowAllPrices] = useState(false);
 
   const minPrice = Math.min(...component.prices.map((p) => p.price));
@@ -236,6 +237,17 @@ export function ComponentCard({ component, onAdd, onCompare, isSelectedForCompar
             <Plus className='w-3.5 h-3.5 transition-transform duration-150 group-hover:scale-110' />
             Agregar
           </motion.button>
+          {onViewSpecs && (
+            <motion.button
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              transition={{ duration: 0.15 }}
+              onClick={() => onViewSpecs(component)}
+              className='px-3 py-2.5 border border-tw-glass/10 hover:border-tw-glass/40 hover:bg-tw-glass/6 text-tw-muted hover:text-tw-muted-highlight rounded-lg transition-all duration-200 cursor-pointer'
+              title='Ver especificaciones'>
+              <FileText className='w-3.5 h-3.5' />
+            </motion.button>
+          )}
           {onCompare && (
             <motion.button
               whileHover={{ scale: 1.04 }}

@@ -1,4 +1,4 @@
-import { User, Palette, Settings, LogOut, Home } from 'lucide-react';
+import { User, Palette, Settings, LogOut, Home, Save, Trash } from 'lucide-react';
 import { Appearance } from '../components/UserConfig/Appearance';
 import { UserSettings } from '../components/UserConfig/UserSettings';
 import { UserData } from '../components/UserConfig/UserData';
@@ -40,20 +40,6 @@ export function UserConfig() {
               Compara · Arma · Ahorra
             </span>
           </Link>
-          <div className='p-1.5 space-y-0.5 flex flex-row gap-3'>
-            <Link
-              to='/'
-              className='flex items-center gap-2.5 px-3 py-2 font-mono text-xs bg-tw-surface/98 backdrop-blur-xl border border-tw-border text-tw-muted hover:text-tw-primary hover:bg-tw-base-highlight/5 rounded-lg transition-all cursor-pointer mb-0'>
-              <Home className='w-3.5 h-3.5' />
-              Regresar
-            </Link>
-            <button
-              onClick={handleLogout}
-              className='flex items-center gap-2.5 px-3 py-2 font-mono text-xs bg-tw-surface/98 backdrop-blur-xl border border-tw-border text-tw-alert/70 hover:text-tw-alert-highlight hover:bg-tw-alert/5 rounded-lg transition-all cursor-pointer'>
-              <LogOut className='w-3.5 h-3.5' />
-              Cerrar sesión
-            </button>
-          </div>
         </div>
       </header>
       <main className='grid grid-cols-[24%_76%] mx-auto max-w-7xl h-auto px-6 py-8'>
@@ -75,8 +61,36 @@ export function UserConfig() {
             );
           })}
         </div>
-        <div className='flex flex-row bg-tw-surface-deep ml-8 px-4 py-4 overflow-y-auto rounded-xl border border-tw-border backdrop-blur-xl'>
-          <CurrentView />
+        <div className='grid grid-cols-[76%_24%] gap-2'>
+          <div className='flex flex-row bg-tw-surface-deep ml-8 px-4 py-4 overflow-y-auto rounded-xl border border-tw-border backdrop-blur-xl'>
+            <CurrentView />
+          </div>
+          <div className='flex flex-col gap-3'>
+            <button
+              onClick={handleLogout}
+              className='flex items-center gap-2.5 px-3 py-2 font-mono text-xs bg-tw-surface-deep backdrop-blur-xl border border-tw-border text-tw-muted-deep/75 rounded-lg transition-all cursor-pointer'>
+              <Save className='w-3.5 h-3.5' />
+              Guardar cambios
+            </button>
+            <button
+              onClick={handleLogout}
+              className='flex items-center gap-2.5 px-3 py-2 font-mono text-xs bg-tw-surface-deep backdrop-blur-xl border border-tw-border text-tw-muted-deep/75 rounded-lg transition-all cursor-pointer'>
+              <Trash className='w-3.5 h-3.5' />
+              Descartar cambios
+            </button>
+            <Link
+              to='/'
+              className='flex items-center gap-2.5 px-3 py-2 font-mono text-xs bg-tw-surface-deep backdrop-blur-xl border border-tw-border text-tw-muted hover:text-tw-primary hover:bg-tw-base-highlight/5 rounded-lg transition-all cursor-pointer mb-0'>
+              <Home className='w-3.5 h-3.5' />
+              Regresar
+            </Link>
+            <button
+              onClick={handleLogout}
+              className='flex items-center gap-2.5 px-3 py-2 font-mono text-xs bg-tw-surface-deep backdrop-blur-xl border border-tw-border text-tw-alert/70 hover:text-tw-alert-highlight hover:bg-tw-alert/5 rounded-lg transition-all cursor-pointer'>
+              <LogOut className='w-3.5 h-3.5' />
+              Cerrar sesión
+            </button>
+          </div>
         </div>
       </main>
     </div>

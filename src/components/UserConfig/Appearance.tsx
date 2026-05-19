@@ -1,3 +1,7 @@
 export function Appearance() {
-  return <>APPEARANCE</>;
+  return (
+    <div>
+      <p>Appearance</p>
+    </div>
+  );
 }

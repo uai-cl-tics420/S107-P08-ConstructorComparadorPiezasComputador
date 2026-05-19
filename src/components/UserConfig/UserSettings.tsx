@@ -1,3 +1,7 @@
 export function UserSettings() {
-  return <>USERSETTINGS</>;
+  return (
+    <div>
+      <p>UserSettings</p>
+    </div>
+  );
 }

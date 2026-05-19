@@ -1,11 +1,22 @@
-import { User, Palette, Settings, LogOut, Home, Save, Trash } from 'lucide-react';
+import { User, Palette, Settings, LogOut, Home, Save, Trash, CarTaxiFront } from 'lucide-react';
 import { Appearance } from '../components/UserConfig/Appearance';
 import { UserSettings } from '../components/UserConfig/UserSettings';
 import { UserData } from '../components/UserConfig/UserData';
-import { useState } from 'react';
+import { useState, createContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { signOut } from '@/lib/auth/auth-client';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/useToast';
+import { ToastContainer } from '@/components/ToastContainer';
+import { authClient } from '@/lib/auth/auth-client';
+import { validatePassword } from '@/lib/auth/validators';
+import { auth } from '@/lib/auth/auth';
+import { set } from 'better-auth';
+
+export const ConfigContext = createContext<{
+  pendingChanges: Record<string, any>;
+  setPendingChanges: React.Dispatch<React.SetStateAction<Record<string, any>>> | null;
+}>({ pendingChanges: {}, setPendingChanges: null });
 
 const viewList = [
   { view: UserData, name: 'Cuenta', icon: User },
@@ -15,7 +26,11 @@ const viewList = [
 
 export function UserConfig() {
   const [CurrentView, setView] = useState(() => viewList[0]!.view);
+  const [pendingChanges, setPendingChanges] = useState<Record<string, any>>({});
+  const [isPending, setIsPending] = useState(false);
   const [activeView, setActiveView] = useState(viewList[0]!.name);
+  const { toasts, addToast, removeToast } = useToast();
+
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -27,6 +42,101 @@ export function UserConfig() {
       },
     });
   };
+
+  const handleSaveChanges = async () => {
+    for (const key in pendingChanges) {
+      try {
+        switch (key) {
+          case 'name':
+            await authClient.updateUser(
+              { name: pendingChanges.name },
+              {
+                onSuccess: () => {
+                  addToast('Nombre actualizado correctamente', 'success');
+                  setPendingChanges((prev) => {
+                    const { name, ...rest } = prev;
+                    return rest;
+                  });
+                },
+                onError: (ctx) => addToast(ctx.error.message || 'Error al actualizar el nombre', 'error'),
+              },
+            );
+            break;
+          case 'password':
+            const { isValid, message } = validatePassword(pendingChanges.password);
+            if (!isValid) {
+              addToast('Contraseña no válida', 'error');
+              break;
+            }
+
+            if (pendingChanges.password !== pendingChanges.confirmPassword) {
+              addToast('Las contraseñas no coinciden', 'error');
+              break;
+            }
+
+            if (pendingChanges.currentPassword) {
+              await authClient.changePassword(
+                { newPassword: pendingChanges.password, currentPassword: pendingChanges.currentPassword },
+                {
+                  onSuccess: () => {
+                    addToast('Contraseña actualizada correctamente', 'success');
+                    setPendingChanges((prev) => {
+                      const { password, confirmPassword, currentPassword, ...rest } = prev;
+                      return rest;
+                    });
+                  },
+                  onError: (ctx) => addToast(ctx.error.message || 'Error al actualizar la contraseña', 'error'),
+                },
+              );
+            } else {
+              try {
+                const response = await fetch('/api/users/set-password', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    newPassword: pendingChanges.password,
+                  }),
+                });
+                if (response.ok) {
+                  addToast('Contraseña establecida correctamente', 'success');
+                  setPendingChanges((prev) => {
+                    const { password, confirmPassword, ...rest } = prev;
+                    return rest;
+                  });
+                } else {
+                  const errorData = await response.json().catch(() => ({}));
+                  addToast(errorData.error || 'Error al establecer la contraseña', 'error');
+                }
+              } catch (error) {
+                addToast('Error de conexión al servidor', 'error');
+              }
+            }
+            break;
+          default:
+            break;
+        }
+      } catch (error) {
+        console.error(`Error actualizando ${key}:`, error);
+      }
+    }
+  };
+
+  const handleDiscardChanges = () => {
+    if (window.confirm('¿Estás seguro de que deseas descartar los cambios?')) {
+      setPendingChanges({});
+    }
+  };
+
+  useEffect(() => {
+    if (Object.keys(pendingChanges).length > 0) {
+      setIsPending(true);
+    } else {
+      setIsPending(false);
+    }
+  }, [pendingChanges]);
+
   return (
     <div className='h-screen w-screen'>
       <header className='sticky top-0 z-20 border-b border-tw-border-deep bg-tw-base/85 backdrop-blur-xl px-6 py-4'>
@@ -62,19 +172,23 @@ export function UserConfig() {
           })}
         </div>
         <div className='grid grid-cols-[76%_24%] gap-2'>
-          <div className='flex flex-row bg-tw-surface-deep ml-8 px-4 py-4 overflow-y-auto rounded-xl border border-tw-border backdrop-blur-xl'>
-            <CurrentView />
+          <div className='flex flex-col bg-tw-surface-deep ml-8 px-4 py-4 overflow-y-auto rounded-xl border border-tw-border backdrop-blur-xl gap-6'>
+            <ConfigContext.Provider value={{ pendingChanges, setPendingChanges }}>
+              <UserData />
+              <Appearance />
+              <UserSettings />
+            </ConfigContext.Provider>
           </div>
           <div className='flex flex-col gap-3'>
             <button
-              onClick={handleLogout}
-              className='flex items-center gap-2.5 px-3 py-2 font-mono text-xs bg-tw-surface-deep backdrop-blur-xl border border-tw-border text-tw-muted-deep/75 rounded-lg transition-all cursor-pointer'>
+              onClick={handleSaveChanges}
+              className={`flex items-center gap-2.5 px-3 py-2 font-mono text-xs backdrop-blur-xl border rounded-lg transition-all bg-tw-surface-deep ${isPending ? 'border-tw-success/70 text-tw-success cursor-pointer hover:border-tw-success-highlight/80 hover:bg-tw-success-highlight/5' : ' border-tw-border text-tw-muted-deep/75'}`}>
               <Save className='w-3.5 h-3.5' />
               Guardar cambios
             </button>
             <button
-              onClick={handleLogout}
-              className='flex items-center gap-2.5 px-3 py-2 font-mono text-xs bg-tw-surface-deep backdrop-blur-xl border border-tw-border text-tw-muted-deep/75 rounded-lg transition-all cursor-pointer'>
+              onClick={handleDiscardChanges}
+              className={`flex items-center gap-2.5 px-3 py-2 font-mono text-xs backdrop-blur-xl border rounded-lg transition-all bg-tw-surface-deep ${isPending ? 'border-tw-alert/70 text-tw-alert cursor-pointer hover:border-tw-alert-highlight/80 hover:bg-tw-alert-highlight/5' : ' border-tw-border text-tw-muted-deep/75'}`}>
               <Trash className='w-3.5 h-3.5' />
               Descartar cambios
             </button>
@@ -93,6 +207,7 @@ export function UserConfig() {
           </div>
         </div>
       </main>
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </div>
   );
 }

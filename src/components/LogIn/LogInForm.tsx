@@ -48,7 +48,7 @@ export default function LogInForm() {
         <motion.div
           initial={{ opacity: 0, y: -6 }}
           animate={{ opacity: 1, y: 0 }}
-          className='bg-tw-alert/8 border border-tw-alert/20 text-tw-alert-highlight font-mono text-[10px] px-3 py-2.5 rounded-lg'>
+          className='bg-tw-alert/8 border border-tw-alert/20 text-tw-alert-highlight font-mono text-xs px-3 py-2.5 rounded-lg'>
           {error}
         </motion.div>
       )}

@@ -76,8 +76,8 @@ export function App() {
     const shareParam = urlParams.get('share');
     if (shareParam) {
       fetch(`/api/shared-builds/${shareParam}`)
-        .then(res => res.json())
-        .then(data => {
+        .then((res) => res.json())
+        .then((data) => {
           if (data && data.components) {
             setBuildComponents(data.components);
             setCurrentBuildId(data.id);
@@ -88,7 +88,7 @@ export function App() {
           }
         })
         .catch(() => addToast('Error al cargar build compartido', 'error'));
-      
+
       // Remove share param from URL without reloading
       const url = new URL(window.location.href);
       url.searchParams.delete('share');
@@ -146,7 +146,7 @@ export function App() {
 
   // Compute compatibility for search results
   const componentCompatibility = useMemo(() => {
-    const map = new Map<number, { isCompatible: boolean; reasons: string[] }>();
+    const map = new Map<string, { isCompatible: boolean; reasons: string[] }>();
     for (const component of displayedComponents) {
       const compatibility = scoreCompatibility(component, buildComponents);
       map.set(component.id, {
@@ -176,9 +176,7 @@ export function App() {
       const sameType = prev.find((b) => b.component.type_id === component.type_id);
       if (sameType && type && type.max_quantity === 1) {
         addToast(`${sameType.component.name} reemplazado por ${component.name}`, 'success');
-        return prev.map((b) =>
-          b.component.type_id === component.type_id ? { component, quantity: 1 } : b,
-        );
+        return prev.map((b) => (b.component.type_id === component.type_id ? { component, quantity: 1 } : b));
       }
 
       addToast(`${component.name} agregado al build`, 'success');
@@ -187,7 +185,7 @@ export function App() {
     setActiveTab('build');
   };
 
-  const handleRemove = (componentId: number) => {
+  const handleRemove = (componentId: string) => {
     const found = buildComponents.find((b) => b.component.id === componentId);
     setBuildComponents((prev) => prev.filter((b) => b.component.id !== componentId));
     if (found) addToast(`${found.component.name} eliminado`, 'warning');
@@ -217,9 +215,9 @@ export function App() {
     if (!saveName.trim()) return;
     try {
       const saved = await saveBuild(saveName.trim(), buildComponents);
-      
+
       if (saved && typeof saved === 'object' && 'id' in saved) {
-          setCurrentBuildId(saved.id as string);
+        setCurrentBuildId(saved.id as string);
       }
 
       addToast(`Build "${saveName.trim()}" guardado`, 'success');
@@ -613,68 +611,65 @@ export function App() {
                 ))}
               </div>
             ) : filteredComponents.length === 0 ? (
-               <motion.div
-                 initial={{ opacity: 0 }}
-                 animate={{ opacity: 1 }}
-                 className='flex flex-col items-center justify-center py-24 gap-4'>
-                 <div className='w-10 h-10 border border-tw-border-deep rounded-xl flex items-center justify-center'>
-                   <Search className='w-4 h-4 text-tw-muted-de' />
-                 </div>
-                 <div className='text-center space-y-1'>
-                   <p className='text-tw-muted-highlight text-sm'>Sin resultados</p>
-                   <p className='font-mono text-[9px] text-tw-muted-de uppercase tracking-widest'>
-                     {hasActiveFilters ? 'Ajusta los filtros' : 'No hay componentes disponibles'}
-                   </p>
-                 </div>
-                 {hasActiveFilters && (
-                   <button
-                     onClick={clearFilters}
-                     className='font-mono text-[9px] text-tw-muted hover:text-tw-muted-highlight border border-tw-glass/8 hover:border-tw-glass/15 px-4 py-2 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
-                     Limpiar filtros
-                   </button>
-                 )}
-               </motion.div>
-             ) : (
-               <>
-                 <motion.div variants={containerVariant} initial='hidden' animate='visible'>
-                   <p className='font-mono text-[9px] text-tw-muted-de uppercase tracking-widest mb-4'>
-                     {filteredComponents.length} componentes
-                   </p>
-                   {/* ── GRID UNIFORME — 4 por fila ── */}
-                   <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
-                     {displayedComponents.map((c, i) => {
-                       return (
-                         <motion.div
-                           key={c.id}
-                           custom={i}
-                           variants={cardVariant}>
-                           <ComponentCard
-                             component={c}
-                             onAdd={handleAdd}
-                             onCompare={handleCompare}
-                             onViewSpecs={setDetailComponent}
-                             isSelectedForCompare={compareList.some((x) => x.id === c.id)}
-                             buildCompatibility={buildComponents.length > 0 ? componentCompatibility.get(c.id) : null}
-                           />
-                         </motion.div>
-                       );
-                     })}
-                   </div>
-                 </motion.div>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className='flex flex-col items-center justify-center py-24 gap-4'>
+                <div className='w-10 h-10 border border-tw-border-deep rounded-xl flex items-center justify-center'>
+                  <Search className='w-4 h-4 text-tw-muted-de' />
+                </div>
+                <div className='text-center space-y-1'>
+                  <p className='text-tw-muted-highlight text-sm'>Sin resultados</p>
+                  <p className='font-mono text-[9px] text-tw-muted-de uppercase tracking-widest'>
+                    {hasActiveFilters ? 'Ajusta los filtros' : 'No hay componentes disponibles'}
+                  </p>
+                </div>
+                {hasActiveFilters && (
+                  <button
+                    onClick={clearFilters}
+                    className='font-mono text-[9px] text-tw-muted hover:text-tw-muted-highlight border border-tw-glass/8 hover:border-tw-glass/15 px-4 py-2 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                    Limpiar filtros
+                  </button>
+                )}
+              </motion.div>
+            ) : (
+              <>
+                <motion.div variants={containerVariant} initial='hidden' animate='visible'>
+                  <p className='font-mono text-[9px] text-tw-muted-de uppercase tracking-widest mb-4'>
+                    {filteredComponents.length} componentes
+                  </p>
+                  {/* ── GRID UNIFORME — 4 por fila ── */}
+                  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
+                    {displayedComponents.map((c, i) => {
+                      return (
+                        <motion.div key={c.id} custom={i} variants={cardVariant}>
+                          <ComponentCard
+                            component={c}
+                            onAdd={handleAdd}
+                            onCompare={handleCompare}
+                            onViewSpecs={setDetailComponent}
+                            isSelectedForCompare={compareList.some((x) => x.id === c.id)}
+                            buildCompatibility={buildComponents.length > 0 ? componentCompatibility.get(c.id) : null}
+                          />
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </motion.div>
 
-                 {/* ── PAGINATION ── */}
-                 {totalPages > 1 && (
-                   <Pagination
-                     currentPage={currentPage}
-                     totalPages={totalPages}
-                     itemsPerPage={itemsPerPage}
-                     totalItems={filteredComponents.length}
-                     onPageChange={setCurrentPage}
-                     onItemsPerPageChange={setItemsPerPage}
-                   />
-                 )}
-               </>
-             )}
+                {/* ── PAGINATION ── */}
+                {totalPages > 1 && (
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    itemsPerPage={itemsPerPage}
+                    totalItems={filteredComponents.length}
+                    onPageChange={setCurrentPage}
+                    onItemsPerPageChange={setItemsPerPage}
+                  />
+                )}
+              </>
+            )}
           </div>
         )}
 
@@ -700,7 +695,8 @@ export function App() {
                         const baseUrl = window.location.origin;
                         if (currentBuildId) {
                           const shareUrl = `${baseUrl}/?share=${currentBuildId}`;
-                          navigator.clipboard.writeText(shareUrl)
+                          navigator.clipboard
+                            .writeText(shareUrl)
                             .then(() => addToast('Enlace copiado al portapapeles', 'success'))
                             .catch(() => addToast('Error al copiar el enlace', 'error'));
                         } else {
@@ -708,13 +704,14 @@ export function App() {
                             const res = await fetch('/api/shared-builds', {
                               method: 'POST',
                               headers: { 'Content-Type': 'application/json' },
-                              body: JSON.stringify({ name: 'Shared Build', components: buildComponents })
+                              body: JSON.stringify({ name: 'Shared Build', components: buildComponents }),
                             });
                             const data = await res.json();
                             if (data.id) {
                               setCurrentBuildId(data.id);
                               const shareUrl = `${baseUrl}/?share=${data.id}`;
-                              navigator.clipboard.writeText(shareUrl)
+                              navigator.clipboard
+                                .writeText(shareUrl)
                                 .then(() => addToast('Enlace copiado al portapapeles', 'success'))
                                 .catch(() => addToast('Error al copiar el enlace', 'error'));
                             }
@@ -724,7 +721,7 @@ export function App() {
                         }
                       }}
                       className='font-mono flex items-center gap-1.5 text-[10px] text-tw-muted-highlight hover:text-tw-primary border border-tw-glass/10 hover:border-tw-glass/20 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
-                      <Share2 className="w-3.5 h-3.5" />
+                      <Share2 className='w-3.5 h-3.5' />
                       Compartir
                     </button>
                     <button
@@ -762,11 +759,7 @@ export function App() {
               <BuildList buildComponents={buildComponents} onRemove={handleRemove} onSearchType={handleSearchType} />
 
               {buildComponents.length > 0 && (
-                <RecommendationsPanel
-                  recommendations={recommendations}
-                  loading={recsLoading}
-                  onAdd={handleAdd}
-                />
+                <RecommendationsPanel recommendations={recommendations} loading={recsLoading} onAdd={handleAdd} />
               )}
             </div>
 
@@ -866,11 +859,7 @@ export function App() {
       )}
 
       {/* Component detail/specs modal */}
-      <ComponentDetailModal
-        component={detailComponent}
-        onClose={() => setDetailComponent(null)}
-        onAdd={handleAdd}
-      />
+      <ComponentDetailModal component={detailComponent} onClose={() => setDetailComponent(null)} onAdd={handleAdd} />
 
       <ToastContainer toasts={toasts} onRemove={removeToast} />
     </motion.div>

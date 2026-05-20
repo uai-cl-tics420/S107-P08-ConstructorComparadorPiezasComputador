@@ -18,7 +18,7 @@ const TYPE_CONFIG: Record<string, { color: string; dot: string }> = {
 
 interface Props {
   buildComponents: BuildComponent[];
-  onRemove: (componentId: number) => void;
+  onRemove: (componentId: string) => void;
   onSearchType?: (typeName: string) => void;
 }
 

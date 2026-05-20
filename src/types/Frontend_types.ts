@@ -1,25 +1,25 @@
 // Frontend interface types
 
 export interface Brand {
-  id: number;
+  id: string;
   name: string;
 }
 
 export interface ComponentType {
-  id: number;
+  id: string;
   name: string;
   max_quantity: number;
 }
 
 export interface Vendor {
-  id: number;
+  id: string;
   name: string;
 }
 
 export interface Price {
   id: number;
-  component_id: number;
-  vendor_id: number;
+  component_id: string;
+  vendor_id: string;
   vendor_name: string;
   price: number;
   recorded_at: string;
@@ -36,10 +36,10 @@ export interface ComponentSpecs {
 }
 
 export interface Component {
-  id: number;
-  type_id: number;
+  id: string;
+  type_id: string;
   type_name: string;
-  brand_id: number;
+  brand_id: string;
   brand_name: string;
   name: string;
   model: string;
@@ -60,12 +60,12 @@ export interface SavedBuild {
 }
 
 export interface CompatibilityIssue {
-  type: "error" | "warning";
+  type: 'error' | 'warning';
   message: string;
 }
 
 export interface Toast {
   id: string;
   message: string;
-  type: "success" | "error" | "warning";
+  type: 'success' | 'error' | 'warning';
 }

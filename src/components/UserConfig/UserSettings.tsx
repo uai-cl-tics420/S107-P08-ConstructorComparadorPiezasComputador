@@ -1,7 +1,3 @@
 export function UserSettings() {
-  return (
-    <div>
-      <p>UserSettings</p>
-    </div>
-  );
+  return <div>{/* Eventually add application configurations here */}</div>;
 }

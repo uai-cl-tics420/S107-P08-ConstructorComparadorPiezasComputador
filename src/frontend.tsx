@@ -7,38 +7,55 @@
 
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
-import { useEffect, useState, createContext } from 'react';
+import React, { useEffect, useState, createContext } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { App } from '@/views/App';
 import { LogIn } from '@/views/LogIn';
 import { UserConfig } from '@/views/UserConfig';
 
-export const ThemeContext = createContext({
-  theme: 'dark',
-  setTheme: (theme: string) => {},
+interface ConfigContextType {
+  config: { theme: string; language: string };
+  setConfig: React.Dispatch<React.SetStateAction<{ theme: string; language: string }>>;
+}
+
+export const ConfigContext = createContext<ConfigContextType>({
+  config: { theme: 'dark', language: 'en' },
+  setConfig: () => {},
 });
 
 function AnimatedRoutes() {
   const location = useLocation();
-  const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('theme') || 'dark';
+  const [config, setConfig] = useState(() => {
+    const themeConfig =
+      localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    const languageConfig =
+      ['en', 'es'].find((l) => l === (localStorage.getItem('language') || navigator.language.split('-')[0])) || 'en';
+    return {
+      theme: themeConfig,
+      language: languageConfig,
+    };
   });
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-  }, [theme]);
+    document.documentElement.lang = config.language;
+    localStorage.setItem('language', config.language);
+  }, [config.language]);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', config.theme);
+    localStorage.setItem('theme', config.theme);
+  }, [config.theme]);
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme }}>
+    <ConfigContext.Provider value={{ config, setConfig }}>
       <AnimatePresence mode='wait'>
         <Routes location={location} key={location.pathname}>
           <Route path='/' element={<App />} />
           <Route path='/login' element={<LogIn />} />
-          <Route path='/account' element={<UserConfig />} /> {/*PLACEHOLDER*/}
+          <Route path='/account' element={<UserConfig />} />
         </Routes>
       </AnimatePresence>
-    </ThemeContext.Provider>
+    </ConfigContext.Provider>
   );
 }
 

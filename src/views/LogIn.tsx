@@ -3,21 +3,27 @@ import { motion } from 'framer-motion';
 import { LogInSignOn } from '@/components/LogIn/LogIn_SignOn';
 import { Sun, Moon } from 'lucide-react';
 import { useContext } from 'react';
-import { ThemeContext } from '@/frontend';
+import { ConfigContext } from '@/frontend';
 import '../index.css';
 
 export function LogIn() {
   const navigate = useNavigate();
-  const { theme, setTheme } = useContext(ThemeContext);
+  const { config, setConfig } = useContext(ConfigContext);
 
   const toggleTheme = () => {
     if (!document.startViewTransition) {
-      setTheme(theme === 'dark' ? 'light' : 'dark');
+      setConfig((prev) => ({
+        ...prev,
+        theme: prev.theme === 'dark' ? 'light' : 'dark',
+      }));
       return;
     }
 
     document.startViewTransition(() => {
-      setTheme(theme === 'dark' ? 'light' : 'dark');
+      setConfig((prev) => ({
+        ...prev,
+        theme: prev.theme === 'dark' ? 'light' : 'dark',
+      }));
     });
   };
 
@@ -39,8 +45,8 @@ export function LogIn() {
         <button
           onClick={toggleTheme}
           className='p-2 border border-tw-border-deep/50 hover:border-tw-border bg-tw-primary hover:bg-tw-primary-highlight rounded-lg transition-all cursor-pointer group'
-          title={`Cambiar a modo ${theme === 'dark' ? 'claro' : 'oscuro'}`}>
-          {theme === 'dark' ? (
+          title={`Cambiar a modo ${config.theme === 'dark' ? 'claro' : 'oscuro'}`}>
+          {config.theme === 'dark' ? (
             <Sun className='w-4 h-4 text-tw-base group-hover:text-tw-accent transition-colors' />
           ) : (
             <Moon className='w-4 h-4 text-tw-base group-hover:text-tw-alt transition-colors' />

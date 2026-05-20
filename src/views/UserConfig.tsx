@@ -10,8 +10,6 @@ import { useToast } from '@/hooks/useToast';
 import { ToastContainer } from '@/components/ToastContainer';
 import { authClient } from '@/lib/auth/auth-client';
 import { validatePassword } from '@/lib/auth/validators';
-import { auth } from '@/lib/auth/auth';
-import { set } from 'better-auth';
 
 export const ConfigContext = createContext<{
   pendingChanges: Record<string, any>;
@@ -58,7 +56,7 @@ export function UserConfig() {
                     return rest;
                   });
                 },
-                onError: (ctx) => addToast(ctx.error.message || 'Error al actualizar el nombre', 'error'),
+                onError: () => addToast('Error al actualizar el nombre', 'error'),
               },
             );
             break;
@@ -85,7 +83,7 @@ export function UserConfig() {
                       return rest;
                     });
                   },
-                  onError: (ctx) => addToast(ctx.error.message || 'Error al actualizar la contraseña', 'error'),
+                  onError: () => addToast('Error al actualizar la contraseña', 'error'),
                 },
               );
             } else {
@@ -100,14 +98,13 @@ export function UserConfig() {
                   }),
                 });
                 if (response.ok) {
-                  addToast('Contraseña establecida correctamente', 'success');
+                  addToast('Contraseña configurada correctamente', 'success');
                   setPendingChanges((prev) => {
                     const { password, confirmPassword, ...rest } = prev;
                     return rest;
                   });
                 } else {
-                  const errorData = await response.json().catch(() => ({}));
-                  addToast(errorData.error || 'Error al establecer la contraseña', 'error');
+                  addToast('Error al establecer la contraseña', 'error');
                 }
               } catch (error) {
                 addToast('Error de conexión al servidor', 'error');

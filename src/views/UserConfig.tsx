@@ -11,7 +11,7 @@ import { ToastContainer } from '@/components/ToastContainer';
 import { authClient } from '@/lib/auth/auth-client';
 import { validatePassword } from '@/lib/auth/validators';
 
-export const ConfigContext = createContext<{
+export const PendingContext = createContext<{
   pendingChanges: Record<string, any>;
   setPendingChanges: React.Dispatch<React.SetStateAction<Record<string, any>>> | null;
 }>({ pendingChanges: {}, setPendingChanges: null });
@@ -170,11 +170,11 @@ export function UserConfig() {
         </div>
         <div className='grid grid-cols-[76%_24%] gap-2'>
           <div className='flex flex-col bg-tw-surface-deep ml-8 px-4 py-4 overflow-y-auto rounded-xl border border-tw-border backdrop-blur-xl gap-6'>
-            <ConfigContext.Provider value={{ pendingChanges, setPendingChanges }}>
+            <PendingContext.Provider value={{ pendingChanges, setPendingChanges }}>
               <UserData />
               <Appearance />
               <UserSettings />
-            </ConfigContext.Provider>
+            </PendingContext.Provider>
           </div>
           <div className='flex flex-col gap-3'>
             <button

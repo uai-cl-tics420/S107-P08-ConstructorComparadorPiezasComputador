@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { authClient, useSession } from '@/lib/auth/auth-client';
 import { motion } from 'framer-motion';
 import { validatePassword } from '@/lib/auth/validators';
-import { ConfigContext } from '@/views/UserConfig';
-import { set } from 'better-auth';
+import { PendingContext } from '@/views/UserConfig';
 
 export function UserData() {
   const { data: sessionData, isPending } = useSession();
@@ -21,7 +20,7 @@ export function UserData() {
   const [passwordModified, setPasswordModified] = useState(false);
   const navigate = useNavigate();
 
-  const { pendingChanges, setPendingChanges } = useContext(ConfigContext);
+  const { pendingChanges, setPendingChanges } = useContext(PendingContext);
 
   useEffect(() => {
     if (!isPending && !sessionData) {

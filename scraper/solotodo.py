@@ -98,17 +98,14 @@ def browse_category(
     { product_id: { name, slug, picture_url, last_updated, normal_price, offer_price, ...specs }, ... }
     '''
     url = f"{_BASE}/categories/{category_id}/browse/"
-    resp = _SESSION.get(
-        url,
-        params={
-            "exclude_refurbished": str(exclude_refurbished).lower(),
-            "page": page,
-            "page_size": page_size,
-        },
-    )
-    _STORES_PARAMS = "&".join(f"stores={s}" for s in get_stores().keys())
-    full_url = resp.request.url + "&" + _STORES_PARAMS
-    resp = _SESSION.get(full_url)
+    # Limitar a las primeras 50 tiendas para evitar URL demasiado larga (HTTP 400)
+    store_ids = list(get_stores().keys())[:50]
+    params = [
+        ("exclude_refurbished", str(exclude_refurbished).lower()),
+        ("page", page),
+        ("page_size", page_size),
+    ] + [("stores", s) for s in store_ids]
+    resp = _SESSION.get(url, params=params)
     resp.raise_for_status()
     return process_json_response(resp.json())
 

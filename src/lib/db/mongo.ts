@@ -58,9 +58,15 @@ export async function getBrands() {
   return docs.map((b) => ({ id: b._id, name: b.name }));
 }
 
+const SINGLE_UNIT_TYPES = new Set(['CPU', 'GPU', 'Motherboard', 'PSU', 'CPU Cooler', 'Case']);
+
 export async function getComponentTypes() {
   const docs = await db.collection('component_types').find({}).toArray();
-  return docs.map((t) => ({ id: t._id, name: t.name, max_quantity: 10 }));
+  return docs.map((t) => ({
+    id: t._id,
+    name: t.name,
+    max_quantity: SINGLE_UNIT_TYPES.has(t.name) ? 1 : 4,
+  }));
 }
 
 export async function getVendorById(id: string): Promise<Vendor | null> {

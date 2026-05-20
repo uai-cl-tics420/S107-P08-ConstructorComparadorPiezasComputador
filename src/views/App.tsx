@@ -134,6 +134,7 @@ export function App() {
 
   const handleAdd = (component: Component) => {
     setBuildComponents((prev) => {
+      // Si el mismo componente (mismo id) ya está, intenta subir cantidad
       const existing = prev.find((b) => b.component.id === component.id);
       if (existing) {
         const type = componentTypes.find((t) => t.id === component.type_id);
@@ -144,6 +145,17 @@ export function App() {
         addToast(`${component.name} actualizado`, 'success');
         return prev.map((b) => (b.component.id === component.id ? { ...b, quantity: b.quantity + 1 } : b));
       }
+
+      // Si ya hay otro componente del mismo tipo con max_quantity = 1, reemplazar
+      const type = componentTypes.find((t) => t.id === component.type_id);
+      const sameType = prev.find((b) => b.component.type_id === component.type_id);
+      if (sameType && type && type.max_quantity === 1) {
+        addToast(`${sameType.component.name} reemplazado por ${component.name}`, 'success');
+        return prev.map((b) =>
+          b.component.type_id === component.type_id ? { component, quantity: 1 } : b,
+        );
+      }
+
       addToast(`${component.name} agregado al build`, 'success');
       return [...prev, { component, quantity: 1 }];
     });
@@ -230,32 +242,8 @@ export function App() {
 
   const hasActiveFilters = search || selectedType || selectedBrand || minPrice || maxPrice;
 
-  // Bento Grid: large card for high-end CPUs and GPUs
-  function isLargeCard(component: Component): boolean {
-    const name = component.name.toLowerCase();
-    if (component.type_name === 'CPU') {
-      if (
-        name.includes('ryzen 9') ||
-        name.includes('core i9') ||
-        name.includes('threadripper') ||
-        name.includes('7950') ||
-        name.includes('7900x') ||
-        name.includes('9950')
-      )
-        return true;
-      if (component.specs?.core_count && Number(component.specs.core_count) >= 12) return true;
-    }
-    if (component.type_name === 'GPU') {
-      if (
-        name.includes('4090') ||
-        name.includes('4080') ||
-        name.includes('7900 xtx') ||
-        name.includes('4070 ti') ||
-        name.includes('w7900')
-      )
-        return true;
-      if (component.specs?.vram_quantity && Number(component.specs.vram_quantity) >= 20) return true;
-    }
+  // Grid uniforme: todas las cards del mismo tamaño (4 por fila)
+  function isLargeCard(_component: Component): boolean {
     return false;
   }
 
@@ -616,18 +604,14 @@ export function App() {
                    <p className='font-mono text-[9px] text-tw-muted-de uppercase tracking-widest mb-4'>
                      {filteredComponents.length} componentes
                    </p>
-                   {/* ── BENTO GRID — Asimétrico ── */}
-                   <div className='grid grid-cols-12 gap-3'>
+                   {/* ── GRID UNIFORME — 4 por fila ── */}
+                   <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
                      {displayedComponents.map((c, i) => {
-                       const large = isLargeCard(c);
                        return (
                          <motion.div
                            key={c.id}
                            custom={i}
-                           variants={cardVariant}
-                           className={
-                             large ? 'col-span-12 sm:col-span-6 lg:col-span-6' : 'col-span-12 sm:col-span-6 lg:col-span-3'
-                           }>
+                           variants={cardVariant}>
                            <ComponentCard
                              component={c}
                              onAdd={handleAdd}

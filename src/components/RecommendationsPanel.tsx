@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Plus, ChevronDown, ChevronRight, Loader2, TrendingUp, Zap, DollarSign } from 'lucide-react';
+import { Sparkles, Plus, ChevronDown, ChevronRight, Loader2, Zap } from 'lucide-react';
 import type { Component } from '../types/Frontend_types';
 import type { BuildRecommendations, ScoredComponent } from '../utils/recommendations';
 import { bestPrice } from '../utils/recommendations';
@@ -223,8 +223,7 @@ interface Props {
 
 export function RecommendationsPanel({ recommendations, loading, onAdd }: Props) {
   const hasMissing = (recommendations?.missing.length ?? 0) > 0;
-  const hasUpgrades = (recommendations?.upgrades.length ?? 0) > 0;
-  const isEmpty = !loading && !hasMissing && !hasUpgrades;
+  const isEmpty = !loading && !hasMissing;
 
   return (
     <div className='relative rounded-xl border border-tw-border-deep bg-tw-surface-deep/80 backdrop-blur-xl p-4 flex flex-col gap-4'>
@@ -285,39 +284,7 @@ export function RecommendationsPanel({ recommendations, loading, onAdd }: Props)
         </CollapsibleSection>
       )}
 
-      {!loading && hasMissing && hasUpgrades && (
-        <div className='h-px bg-tw-border-deep' />
-      )}
-
-      {!loading && hasUpgrades && (
-        <CollapsibleSection
-          title='Considera mejorar'
-          subtitle='Alternativas compatibles para componentes actuales'
-          icon={<TrendingUp className='w-3.5 h-3.5' />}
-          defaultOpen={false}>
-          <div className='flex flex-col gap-4'>
-            {recommendations!.upgrades.map((group) => (
-              <div key={group.current.id} className='flex flex-col gap-2'>
-                <div className='flex items-center gap-2 px-2 py-1 rounded bg-tw-base border border-tw-border-deep'>
-                  <DollarSign className='w-2.5 h-2.5 text-tw-muted-deep shrink-0' />
-                  <span className='font-mono text-[8px] text-tw-muted-deep'>
-                    Alternativas a{' '}
-                    <span className='text-tw-muted'>{group.current.name}</span>
-                  </span>
-                </div>
-                <TypeGroup
-                  typeName={group.type_name}
-                  reason='Opciones compatibles con mejor relación precio/rendimiento'
-                  suggestions={group.alternatives}
-                  onAdd={onAdd}
-                />
-              </div>
-            ))}
-          </div>
-        </CollapsibleSection>
-      )}
-
-      {!loading && (hasMissing || hasUpgrades) && (
+      {!loading && hasMissing && (
         <div className='flex items-center gap-3 pt-1 border-t border-tw-border-deep'>
           <div className='flex items-center gap-1'>
             <div className='w-2 h-0.5 bg-tw-cpu rounded' />

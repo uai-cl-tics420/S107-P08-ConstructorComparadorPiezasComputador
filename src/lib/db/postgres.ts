@@ -1,20 +1,19 @@
-import { Client } from 'pg';
+import { Pool } from 'pg';
 import { getVendorById } from './mongo';
 
-const client = new Client({
+const pool = new Pool({
   host: process.env.POSTGRES_HOST,
   port: parseInt(process.env.POSTGRES_PORT!),
   database: process.env.POSTGRES_DB,
   user: process.env.POSTGRES_USER,
   password: process.env.POSTGRES_PASSWORD,
+  max: 10,
+  idleTimeoutMillis: 30000,
 });
-
-// Initialize connection
-await client.connect();
 
 export async function getPricesByComponentId(componentId: string) {
   try {
-    const result = await client.query(
+    const result = await pool.query(
       `SELECT id, vendor_id, vendor_name, price, discount_price, recorded_at
        FROM public.prices
        WHERE component_id = $1

@@ -5,7 +5,6 @@ import {
   scoreCandidates,
   getMissingTypes,
   getMissingTypeReason,
-  bestPrice,
 } from '@/utils/recommendations';
 import type { BuildComponent, Component } from '@/types/Frontend_types';
 import type { BuildRecommendations, ComponentRecommendations } from '@/utils/recommendations';
@@ -13,64 +12,22 @@ import type { BuildRecommendations, ComponentRecommendations } from '@/utils/rec
 export async function getRecommendationsForBuild(
   buildComponents: BuildComponent[],
 ): Promise<BuildRecommendations> {
-  const buildComps: BuildComponent[] = [];
-  const componentMap = new Map<string, Component>();
+  // Usar directamente los buildComponents del frontend — ya tienen type_name correcto
+  const missingTypeNames = getMissingTypes(buildComponents);
 
-  for (const bc of buildComponents) {
-    const comp = await getComponentByStringId(String(bc.component.id));
-    if (comp) {
-      buildComps.push(bc);
-      componentMap.set(String(bc.component.id), comp);
-    }
-  }
+  const missingResults = await Promise.all(
+    missingTypeNames.map(async (typeName) => {
+      const candidates = await getComponentsByTypeName(typeName, 20);
+      if (candidates.length === 0) return null;
+      const scored = scoreCandidates(candidates, buildComponents);
+      const suggestions = scored.slice(0, 5);
+      const reason = getMissingTypeReason(typeName, buildComponents);
+      return { type_name: typeName, reason, suggestions };
+    }),
+  );
+  const missing = missingResults.filter((r) => r !== null);
 
-  const missingTypeNames = getMissingTypes(buildComps);
-  const missing = [];
-
-  for (const typeName of missingTypeNames) {
-    const candidates = await getComponentsByTypeName(typeName, 60);
-    if (candidates.length === 0) continue;
-
-    const scored = scoreCandidates(candidates, buildComps);
-    const suggestions = scored.slice(0, 5);
-    const reason = getMissingTypeReason(typeName, buildComps);
-
-    missing.push({
-      type_name: typeName,
-      reason,
-      suggestions,
-    });
-  }
-
-  const upgrades = [];
-  for (const bc of buildComps) {
-    const comp = componentMap.get(String(bc.component.id));
-    if (!comp) continue;
-
-    const candidates = await getComponentsByTypeName(comp.type_name, 60);
-    if (candidates.length <= 1) continue;
-
-    const currentPrice = bestPrice(comp);
-    const scored = scoreCandidates(candidates, buildComps, currentPrice);
-    const filtered = scored
-      .filter((s) => s.component.id !== comp.id)
-      .filter(
-        (s) =>
-          (s.performanceScore - scorePerformance(comp) >= 0.05) ||
-          (bestPrice(s.component) < currentPrice * 0.8),
-      )
-      .slice(0, 3);
-
-    if (filtered.length > 0) {
-      upgrades.push({
-        current: comp,
-        type_name: comp.type_name,
-        alternatives: filtered,
-      });
-    }
-  }
-
-  return { missing, upgrades };
+  return { missing, upgrades: [] };
 }
 
 export async function getRecommendationsForComponent(
@@ -79,7 +36,7 @@ export async function getRecommendationsForComponent(
   const component = await getComponentByStringId(componentId);
   if (!component) return null;
 
-  const candidates = await getComponentsByTypeName(component.type_name, 60);
+  const candidates = await getComponentsByTypeName(component.type_name, 20);
 
   const similar = candidates
     .filter((c) => c.id !== component.id)

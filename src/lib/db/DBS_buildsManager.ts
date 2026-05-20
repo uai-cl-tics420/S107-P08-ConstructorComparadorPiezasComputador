@@ -44,3 +44,25 @@ export async function deleteUserBuild(db: Db, buildId: string, userId: string): 
     .deleteOne({ _id: buildId, user_id: userId });
   return result.deletedCount > 0;
 }
+
+// Obtener un build (por share id, o normal id, es publico para leer)
+export async function getSharedBuild(db: Db, buildId: string): Promise<SavedBuildDB | null> {
+  return db.collection<SavedBuildDB>('saved_builds').findOne({ _id: buildId });
+}
+
+// Crear un build compartido (sin user_id)
+export async function createSharedBuild(
+  db: Db,
+  name: string,
+  components: BuildComponent[],
+): Promise<SavedBuildDB> {
+  const build: SavedBuildDB = {
+    _id: Math.random().toString(36).slice(2, 12),
+    user_id: 'shared',
+    name,
+    components,
+    created_at: new Date(),
+  };
+  await db.collection<SavedBuildDB>('saved_builds').insertOne(build);
+  return build;
+}

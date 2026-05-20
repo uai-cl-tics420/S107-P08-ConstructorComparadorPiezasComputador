@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useContext } from 'react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ChevronDown, User, LogOut, Loader2, Sun, Moon } from 'lucide-react';
+import { Search, ChevronDown, User, LogOut, Loader2, Sun, Moon, Share2 } from 'lucide-react';
 import { useSession, signOut } from '@/lib/auth/auth-client';
 import { ComponentCard } from '@/components/ComponentCard';
 import { BuildList } from '@/components/BuildList';
@@ -32,6 +32,7 @@ export function App() {
 
   const [search, setSearch] = useState('');
   const [selectedType, setSelectedType] = useState('');
+  const [currentBuildId, setCurrentBuildId] = useState<string | null>(null);
   const [selectedBrand, setSelectedBrand] = useState('');
   const [minPrice, setMinPrice] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
@@ -69,7 +70,31 @@ export function App() {
     fetch('/api/brands')
       .then((r) => r.json())
       .then(setBrands);
-  }, []);
+
+    // Initial check for shared build via URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const shareParam = urlParams.get('share');
+    if (shareParam) {
+      fetch(`/api/shared-builds/${shareParam}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.components) {
+            setBuildComponents(data.components);
+            setCurrentBuildId(data.id);
+            setActiveTab('build');
+            addToast('Build compartido cargado', 'success');
+          } else {
+            addToast('Build compartido no encontrado', 'error');
+          }
+        })
+        .catch(() => addToast('Error al cargar build compartido', 'error'));
+      
+      // Remove share param from URL without reloading
+      const url = new URL(window.location.href);
+      url.searchParams.delete('share');
+      window.history.replaceState({}, document.title, url.pathname + url.search);
+    }
+  }, []); // Only run once on mount
 
   // Fetch components when search/type/brand changes
   useEffect(() => {
@@ -191,7 +216,12 @@ export function App() {
   const handleSaveBuild = async () => {
     if (!saveName.trim()) return;
     try {
-      await saveBuild(saveName.trim(), buildComponents);
+      const saved = await saveBuild(saveName.trim(), buildComponents);
+      
+      if (saved && typeof saved === 'object' && 'id' in saved) {
+          setCurrentBuildId(saved.id as string);
+      }
+
       addToast(`Build "${saveName.trim()}" guardado`, 'success');
       setSaveName('');
       setShowSaveDialog(false);
@@ -665,6 +695,38 @@ export function App() {
                 </div>
                 {buildComponents.length > 0 && (
                   <div className='flex gap-2'>
+                    <button
+                      onClick={async () => {
+                        const baseUrl = window.location.origin;
+                        if (currentBuildId) {
+                          const shareUrl = `${baseUrl}/?share=${currentBuildId}`;
+                          navigator.clipboard.writeText(shareUrl)
+                            .then(() => addToast('Enlace copiado al portapapeles', 'success'))
+                            .catch(() => addToast('Error al copiar el enlace', 'error'));
+                        } else {
+                          try {
+                            const res = await fetch('/api/shared-builds', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ name: 'Shared Build', components: buildComponents })
+                            });
+                            const data = await res.json();
+                            if (data.id) {
+                              setCurrentBuildId(data.id);
+                              const shareUrl = `${baseUrl}/?share=${data.id}`;
+                              navigator.clipboard.writeText(shareUrl)
+                                .then(() => addToast('Enlace copiado al portapapeles', 'success'))
+                                .catch(() => addToast('Error al copiar el enlace', 'error'));
+                            }
+                          } catch (err) {
+                            addToast('Error al generar build compartido', 'error');
+                          }
+                        }
+                      }}
+                      className='font-mono flex items-center gap-1.5 text-[10px] text-tw-muted-highlight hover:text-tw-primary border border-tw-glass/10 hover:border-tw-glass/20 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                      <Share2 className="w-3.5 h-3.5" />
+                      Compartir
+                    </button>
                     <button
                       onClick={() => setShowSaveDialog(true)}
                       className='font-mono text-[10px] text-tw-muted-highlight hover:text-tw-primary border border-tw-glass/10 hover:border-tw-glass/20 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>

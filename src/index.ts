@@ -2,7 +2,7 @@ import '@/lib/config'; // Validates env variables on app start
 import { serve } from 'bun';
 import { auth } from '@/lib/auth/auth';
 import { getComponents, getComponentById, getBrands, getComponentTypes } from '@/lib/db/mongo';
-import { getUserBuilds, createUserBuild, deleteUserBuild } from '@/lib/db/DBS_buildsManager';
+import { getUserBuilds, createUserBuild, deleteUserBuild, getSharedBuild, createSharedBuild } from '@/lib/db/DBS_buildsManager';
 import { getRecommendationsForBuild, getRecommendationsForComponent } from '@/lib/db/recommendationsManager';
 import { setUserPassword } from '@/lib/auth/serverRequests';
 import index from './index.html';
@@ -125,6 +125,46 @@ const server = serve({
         const success = await deleteUserBuild(db, req.params.id, session.user.id);
         if (!success) return Response.json({ error: 'Build no encontrado' }, { status: 404 });
         return Response.json({ success: true });
+      },
+    },
+
+    // GET /api/shared-builds/:id
+    '/api/shared-builds/:id': {
+      async GET(req) {
+        const build = await getSharedBuild(db, req.params.id);
+        if (!build) return Response.json({ error: 'Build no encontrado' }, { status: 404 });
+        return Response.json({
+          id: build._id,
+          name: build.name,
+          components: build.components,
+          created_at: build.created_at.toISOString(),
+        });
+      },
+    },
+
+    // POST /api/shared-builds
+    '/api/shared-builds': {
+      async POST(req) {
+        try {
+          const body = await req.json();
+          const { components, name } = body;
+          if (!Array.isArray(components)) {
+            return Response.json({ error: 'Datos inválidos' }, { status: 400 });
+          }
+          const build = await createSharedBuild(db, name || 'Shared Build', components);
+          return Response.json(
+            {
+              id: build._id,
+              name: build.name,
+              components: build.components,
+              created_at: build.created_at.toISOString(),
+            },
+            { status: 201 },
+          );
+        } catch (error) {
+          console.error('Error creating shared build:', error);
+          return Response.json({ error: 'Failed to create shared build' }, { status: 500 });
+        }
       },
     },
 

@@ -178,14 +178,18 @@ def get_product_prices(product_id: int) -> list[dict]:
     '''
     [{ entity_id, store_id, store_url, name, sku, external_url, condition, is_visible, normal_price, offer_price, is_available, last_updated, picture_urls[], best_coupon }, ...]
     '''
-    data = _get(
-        f"{_BASE}/products/available_entities/",
-        ids=product_id,
-        exclude_with_monthly_payment=1,
-    )
-    results = data.get("results", [])
-    entities = results[0].get("entities", []) if results else []
-    return process_product_prices(entities)
+    try:
+        data = _get(
+            f"{_BASE}/products/available_entities/",
+            ids=product_id,
+            exclude_with_monthly_payment=1,
+        )
+        results = data.get("results", [])
+        entities = results[0].get("entities", []) if results else []
+        return process_product_prices(entities)
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching prices for product {product_id}: {e}")
+        return []
 
 def get_stores() -> dict:
     '''

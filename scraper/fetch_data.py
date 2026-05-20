@@ -15,6 +15,7 @@ from solotodo import (
     browse_cpu_coolers,
     browse_fans,
     browse_pc_cases,
+    browse_storage,
     get_product_prices,
     get_stores,
 )
@@ -44,6 +45,7 @@ CATEGORIES = [
     ("Case",        browse_pc_cases,     200),
     ("CPU Cooler",  browse_cpu_coolers,  200),
     ("Fans",        browse_fans,         200),
+    ("Storage",     browse_storage,      200),
 ]
 
 DISPLAY_SPECS = {

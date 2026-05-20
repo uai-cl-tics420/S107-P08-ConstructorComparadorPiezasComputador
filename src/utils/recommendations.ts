@@ -351,7 +351,7 @@ export function scoreCandidates(
 // ─────────────────────────────────────────────────────────────────
 
 const ESSENTIAL_TYPES = [
-  'CPU', 'Motherboard', 'RAM', 'GPU', 'Storage', 'PSU', 'CPU Cooler', 'Case',
+  'CPU', 'Motherboard', 'RAM', 'GPU', 'Storage', 'Fans', 'PSU', 'CPU Cooler', 'Case',
 ] as const;
 
 export function getMissingTypes(build: BuildComponent[]): string[] {
@@ -391,7 +391,9 @@ export function getMissingTypeReason(typeName: string, build: BuildComponent[]):
     case 'GPU':
       return 'Tarjeta gráfica para tu build';
     case 'Storage':
-      return 'Almacenamiento para el sistema';
+      return 'Almacenamiento para el sistema operativo y datos';
+    case 'Fans':
+      return 'Ventiladores para refrigeración del gabinete';
     case 'Case':
       return mb
         ? `Soporta ${str(mb.specs, 'form_factor') ?? 'el Form Factor de tu Motherboard'}`

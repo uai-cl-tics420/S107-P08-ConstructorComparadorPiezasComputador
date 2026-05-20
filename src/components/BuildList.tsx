@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { X, Plus, TrendingDown } from 'lucide-react';
 import type { BuildComponent } from '../types/Frontend_types';
 
-const ALL_TYPES = ['CPU', 'Motherboard', 'RAM', 'GPU', 'Storage', 'CPU Cooler', 'PSU', 'Case'];
+const ALL_TYPES = ['CPU', 'Motherboard', 'RAM', 'GPU', 'Storage', 'Fans', 'CPU Cooler', 'PSU', 'Case'];
 
 const TYPE_CONFIG: Record<string, { color: string; dot: string }> = {
   CPU: { color: 'bg-tw-cpu-deep', dot: 'bg-tw-cpu' },
@@ -10,6 +10,7 @@ const TYPE_CONFIG: Record<string, { color: string; dot: string }> = {
   RAM: { color: 'bg-tw-ram-deep', dot: 'bg-tw-ram' },
   GPU: { color: 'bg-tw-gpu-deep', dot: 'bg-tw-gpu' },
   Storage: { color: 'bg-tw-storage-deep', dot: 'bg-tw-storage' },
+  Fans: { color: 'bg-tw-cooler-deep', dot: 'bg-tw-cooler' },
   'CPU Cooler': { color: 'bg-tw-cooler-deep', dot: 'bg-tw-cooler' },
   PSU: { color: 'bg-tw-psu-deep', dot: 'bg-tw-psu' },
   Case: { color: 'bg-tw-case-deep', dot: 'bg-tw-case' },
@@ -48,14 +49,14 @@ export function BuildList({ buildComponents, onRemove, onSearchType }: Props) {
         className='flex items-center justify-between'>
         <div>
           <h2 className='text-sm font-black uppercase tracking-widest text-tw-muted mb-1'>Tu Build</h2>
-          <p className='text-3xl font-black text-tw-primary'>{addedCount}/8 componentes</p>
+          <p className='text-3xl font-black text-tw-primary'>{addedCount}/9 componentes</p>
         </div>
         {addedCount > 0 && (
           <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className='text-right'>
             <div className='text-[11px] font-bold uppercase tracking-widest text-tw-muted mb-2'>Completitud</div>
             <div className='w-12 h-12 rounded-full border-2 border-tw-border flex items-center justify-center bg-tw-base-highlight'>
               <span className='text-lg font-black text-tw-success-highlight'>
-                {Math.round((addedCount / 8) * 100)}%
+                {Math.round((addedCount / 9) * 100)}%
               </span>
             </div>
           </motion.div>

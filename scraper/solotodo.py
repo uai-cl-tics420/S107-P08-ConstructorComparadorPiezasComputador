@@ -9,6 +9,7 @@ CATEGORY_PSU        = 9
 CATEGORY_CPU_COOLER = 12
 CATEGORY_FANS       = 87
 CATEGORY_PC_CASE    = 10
+CATEGORY_STORAGE    = 8
 
 _SKIP_SPEC_KEYS = frozenset({"id", "unicode", "default_bucket", "total_core_count", "picture"})
 _NULL_STRINGS   = frozenset({"No posee", "no posee", "N/A", ""})
@@ -118,6 +119,7 @@ def browse_psu         (page=1, page_size=20, **kw): return browse_category(CATE
 def browse_cpu_coolers (page=1, page_size=20, **kw): return browse_category(CATEGORY_CPU_COOLER, page, page_size, **kw)
 def browse_fans        (page=1, page_size=20, **kw): return browse_category(CATEGORY_FANS,       page, page_size, **kw)
 def browse_pc_cases    (page=1, page_size=20, **kw): return browse_category(CATEGORY_PC_CASE,    page, page_size, **kw)
+def browse_storage     (page=1, page_size=20, **kw): return browse_category(CATEGORY_STORAGE,    page, page_size, **kw)
 
 
 def process_json_response(json_response: dict) -> dict:

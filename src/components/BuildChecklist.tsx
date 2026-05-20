@@ -8,7 +8,7 @@ interface Props {
 // CPU define socket y DDR → Motherboard se elige según CPU → RAM según motherboard →
 // GPU independiente → Storage independiente → Cooler depende del CPU →
 // PSU depende del consumo total → Case depende del form factor de la motherboard
-const ALL_TYPES = ['CPU', 'Motherboard', 'RAM', 'GPU', 'Storage', 'CPU Cooler', 'PSU', 'Case'];
+const ALL_TYPES = ['CPU', 'Motherboard', 'RAM', 'GPU', 'Storage', 'Fans', 'CPU Cooler', 'PSU', 'Case'];
 
 const TYPE_DOT_COLOR: Record<string, string> = {
   CPU: 'bg-tw-cpu',
@@ -16,6 +16,7 @@ const TYPE_DOT_COLOR: Record<string, string> = {
   RAM: 'bg-tw-ram',
   GPU: 'bg-tw-gpu',
   Storage: 'bg-tw-storage',
+  Fans: 'bg-tw-cooler',
   'CPU Cooler': 'bg-tw-cooler',
   PSU: 'bg-tw-psu',
   Case: 'bg-tw-case',

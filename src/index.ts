@@ -4,6 +4,7 @@ import { auth } from '@/lib/auth/auth';
 import { getComponents, getComponentById, getBrands, getComponentTypes } from '@/lib/db/mongo';
 import { getUserBuilds, createUserBuild, deleteUserBuild } from '@/lib/db/DBS_buildsManager';
 import { getRecommendationsForBuild, getRecommendationsForComponent } from '@/lib/db/recommendationsManager';
+import { setUserPassword } from '@/lib/auth/serverRequests';
 import index from './index.html';
 import { MongoClient } from 'mongodb';
 import { Pool } from 'pg';
@@ -158,6 +159,14 @@ const server = serve({
           console.error('Recommendation error:', error);
           return Response.json({ error: 'Failed to generate recommendations' }, { status: 500 });
         }
+      },
+    },
+
+    '/api/users/set-password': {
+      async POST(req) {
+        const body = await req.json();
+        console.log('Received set-password request with body:', body);
+        return setUserPassword(body.newPassword, req.headers);
       },
     },
   },

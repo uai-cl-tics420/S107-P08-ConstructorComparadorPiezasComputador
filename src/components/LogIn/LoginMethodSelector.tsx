@@ -95,7 +95,7 @@ export default function LoginMethodSelector() {
         variants={itemVariant}
         whileTap={{ scale: 0.98 }}
         onClick={() => setView('signon')}
-        className='w-full font-mono text-[10px] text-tw-muted hover:text-tw-muted-highlight py-2 transition-colors duration-200 cursor-pointer'>
+        className='w-full font-mono text-xs text-tw-muted hover:text-tw-muted-highlight py-2 transition-colors duration-200 cursor-pointer'>
         ¿Primera vez? Crear cuenta
       </motion.button>
     </motion.div>

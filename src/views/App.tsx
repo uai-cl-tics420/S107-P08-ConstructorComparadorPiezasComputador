@@ -19,11 +19,11 @@ import { useRecommendations } from '@/hooks/useRecommendations';
 import { checkCompatibility } from '@/utils/compatibility';
 import { scoreCompatibility } from '@/utils/recommendations';
 import type { Component, ComponentType, Brand, BuildComponent, SavedBuild } from '@/types/Frontend_types';
-import { ThemeContext } from '@/frontend';
+import { ConfigContext } from '@/frontend';
 import '@/index.css';
 
 export function App() {
-  const { theme, setTheme } = useContext(ThemeContext);
+  const { config, setConfig } = useContext(ConfigContext);
 
   const [components, setComponents] = useState<Component[]>([]);
   const [componentTypes, setComponentTypes] = useState<ComponentType[]>([]);
@@ -263,12 +263,18 @@ export function App() {
 
   const toggleTheme = () => {
     if (!document.startViewTransition) {
-      setTheme(theme === 'dark' ? 'light' : 'dark');
+      setConfig((prev) => ({
+        ...prev,
+        theme: prev.theme === 'dark' ? 'light' : 'dark',
+      }));
       return;
     }
 
     document.startViewTransition(() => {
-      setTheme(theme === 'dark' ? 'light' : 'dark');
+      setConfig((prev) => ({
+        ...prev,
+        theme: prev.theme === 'dark' ? 'light' : 'dark',
+      }));
     });
   };
 
@@ -332,8 +338,8 @@ export function App() {
             <button
               onClick={toggleTheme}
               className='p-2 border border-tw-border-deep/50 hover:border-tw-border bg-tw-primary hover:bg-tw-primary-highlight rounded-lg transition-all cursor-pointer group'
-              title={`Cambiar a modo ${theme === 'dark' ? 'claro' : 'oscuro'}`}>
-              {theme === 'dark' ? (
+              title={`Cambiar a modo ${config.theme === 'dark' ? 'claro' : 'oscuro'}`}>
+              {config.theme === 'dark' ? (
                 <Sun className='w-4 h-4 text-tw-base group-hover:text-tw-accent transition-colors' />
               ) : (
                 <Moon className='w-4 h-4 text-tw-base group-hover:text-tw-alt transition-colors' />

@@ -39,7 +39,7 @@ describe('Password Validators', () => {
   });
 
   test('Admite contraseña válida', () => {
-    const result = validatePassword('Contra123!');
+    const result = validatePassword('P@ss1234');
     expect(result.isValid).toBe(true);
     expect(result.message).toBeNull();
   });

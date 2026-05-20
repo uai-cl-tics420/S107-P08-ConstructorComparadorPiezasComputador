@@ -9,4 +9,4 @@ RUN bun install
 
 COPY . .
 EXPOSE 3000/tcp
-ENTRYPOINT [ "bun", "run", "dev" ]
+ENTRYPOINT [ "bun", "run", "src/index.ts" ]

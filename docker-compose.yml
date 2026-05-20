@@ -44,11 +44,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: bun
-    init: true
     ports:
       - '3000:3000'
-    volumes:
-      - ./src:/app/src
     env_file:
       - ./.env
     environment:
@@ -71,7 +68,7 @@ services:
       - POSTGRES_HOST=postgres
       - MONGO_HOST=mongo
       # How often to run the script (in seconds). 43200 = 12 hours, 86400 = 24 hours
-      - UPDATE_INTERVAL=43200 
+      - UPDATE_INTERVAL=43200
     depends_on:
       postgres:
         condition: service_healthy

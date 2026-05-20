@@ -35,12 +35,13 @@ export async function getComponents(search?: string, typeId?: string, brandId?: 
   if (typeId) query.type_id = typeId;
   if (brandId) query.brand_id = brandId;
 
-  // [HOTFIX] Limit to 56 results REVERT WHEN FULLY FIXED
-  // [HOTFIX] Limit to 56 results REVERT WHEN FULLY FIXED
-  // [HOTFIX] Limit to 56 results REVERT WHEN FULLY FIXED
-  // [HOTFIX] Limit to 56 results REVERT WHEN FULLY FIXED
-  // [HOTFIX] Limit to 56 results REVERT WHEN FULLY FIXED
-  const docs = await db.collection('components').find(query).limit(56).toArray();
+  // Sin type/brand filter, mezclar componentes de todos los tipos para variedad en "Todos"
+  const docs = typeId || brandId
+    ? await db.collection('components').find(query).limit(500).toArray()
+    : await db.collection('components').aggregate([
+        { $match: query },
+        { $sample: { size: 500 } },
+      ]).toArray();
   const transformed = await Promise.all(docs.map(transformComponent));
 
   // Filter to only show components with prices

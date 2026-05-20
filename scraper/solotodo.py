@@ -99,8 +99,8 @@ def browse_category(
     { product_id: { name, slug, picture_url, last_updated, normal_price, offer_price, ...specs }, ... }
     '''
     url = f"{_BASE}/categories/{category_id}/browse/"
-    # Limitar a las primeras 50 tiendas para evitar URL demasiado larga (HTTP 400)
-    store_ids = list(get_stores().keys())[:50]
+    # Limitar a las primeras 200 tiendas: balance entre cobertura (RAM, etc.) y largo URL (<2400 chars)
+    store_ids = list(get_stores().keys())[:200]
     params = [
         ("exclude_refurbished", str(exclude_refurbished).lower()),
         ("page", page),

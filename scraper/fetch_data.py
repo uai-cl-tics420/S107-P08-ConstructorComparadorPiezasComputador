@@ -2,6 +2,7 @@ import os
 import sys
 import uuid
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from pymongo import MongoClient
 import psycopg2
@@ -37,16 +38,19 @@ PG_USER     = os.getenv("POSTGRES_USER")
 PG_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 
 CATEGORIES = [
-    ("CPU",         browse_cpus,         200),
-    ("GPU",         browse_gpus,         200),
-    ("RAM",         browse_ram,          200),
-    ("Motherboard", browse_motherboards, 200),
-    ("PSU",         browse_psu,          200),
-    ("Case",        browse_pc_cases,     200),
-    ("CPU Cooler",  browse_cpu_coolers,  200),
-    ("Fans",        browse_fans,         200),
-    ("Storage",     browse_storage,      200),
+    ("CPU",         browse_cpus,         80),
+    ("GPU",         browse_gpus,         80),
+    ("RAM",         browse_ram,          80),
+    ("Motherboard", browse_motherboards, 80),
+    ("PSU",         browse_psu,          80),
+    ("Case",        browse_pc_cases,     80),
+    ("CPU Cooler",  browse_cpu_coolers,  80),
+    ("Fans",        browse_fans,         80),
+    ("Storage",     browse_storage,      80),
 ]
+
+# Workers paralelos para fetch de precios. Más workers = más rápido pero más carga al servidor.
+PRICE_WORKERS = 16
 
 DISPLAY_SPECS = {
     # CPU
@@ -154,20 +158,28 @@ def main():
     total_prices     = 0
 
     for type_name, browse_fn, count in CATEGORIES:
-        print(f"\n[{type_name}]")
+        cat_start = datetime.now()
+        print(f"\n[{type_name}] fetching catalog...")
 
         # Upsert component type into Mongo
         if type_name not in types_cache:
             type_id = deterministic_uuid("type", type_name)
             types_cache[type_name] = type_id
-            
+
             if not mongo_db["component_types"].find_one({"_id": type_id}):
                 mongo_db["component_types"].insert_one({"_id": type_id, "name": type_name})
-                
+
         type_id = types_cache[type_name]
 
         products = browse_fn(page=1, page_size=count)
+        product_ids = list(products.keys())
+        print(f"  {len(product_ids)} productos. Pidiendo precios en paralelo ({PRICE_WORKERS} workers)...")
 
+        # Paralelizar la llamada lenta: get_product_prices por cada componente
+        with ThreadPoolExecutor(max_workers=PRICE_WORKERS) as pool:
+            price_map = dict(zip(product_ids, pool.map(get_product_prices, product_ids)))
+
+        # Ahora hacer todos los inserts secuencialmente (rápido, no es el bottleneck)
         for solotodo_id, product in products.items():
             name = product.get("name", "")
             if not name:
@@ -180,10 +192,10 @@ def main():
             if brand_name not in brands_cache:
                 brand_id = deterministic_uuid("brand", brand_name)
                 brands_cache[brand_name] = brand_id
-                
+
                 if not mongo_db["brands"].find_one({"_id": brand_id}):
                     mongo_db["brands"].insert_one({"_id": brand_id, "name": brand_name})
-                    
+
             brand_id = brands_cache[brand_name]
 
             # Upsert component into Mongo keyed on name_model (has unique index)
@@ -191,7 +203,7 @@ def main():
             now = datetime.now()
             existing = mongo_db["components"].find_one({"name_model": clean_name}, {"_id": 1})
             if existing:
-                comp_id = existing["_id"]  # reuse existing _id to keep FK consistency
+                comp_id = existing["_id"]
                 mongo_db["components"].update_one(
                     {"_id": comp_id},
                     {"$set": {
@@ -214,15 +226,13 @@ def main():
                     "updated_at":   now,
                 })
 
-            # Mirror component into PostgreSQL
             pg_cursor.execute(
                 "INSERT INTO public.components_mirror (component_id, type_id, brand_id) "
                 "VALUES (%s, %s, %s) ON CONFLICT (component_id) DO NOTHING",
                 (comp_id, type_id, brand_id),
             )
 
-            # Fetch per-store prices via solotodo.get_product_prices
-            store_prices = get_product_prices(solotodo_id)
+            store_prices = price_map.get(solotodo_id) or []
 
             if store_prices:
                 seen_stores = set()
@@ -234,9 +244,9 @@ def main():
                     if store_id in seen_stores:
                         continue
                     seen_stores.add(store_id)
-                    
+
                     store_name = stores.get(store_id, f"Store {store_id}")
-                    
+
                     pg_cursor.execute(
                         "INSERT INTO public.prices "
                         "  (id, component_id, vendor_id, price, vendor_name, recorded_at) "
@@ -255,17 +265,7 @@ def main():
                         ),
                     )
                     total_prices += 1
-
-                best = store_prices[0]
-                best_store_name = stores.get(best.get("store_id"), "?")
-                print(
-                    f"  {clean_name:<45} "
-                    f"${best['offer_price']:>10,.0f} "
-                    f"({best_store_name}) "
-                    f"[{len(seen_stores)} tiendas]"
-                )
             else:
-                # Fallback: use the browse-level price
                 fallback = int(float(
                     product.get("offer_price") or product.get("normal_price") or 0
                 ))
@@ -288,12 +288,13 @@ def main():
                         ),
                     )
                     total_prices += 1
-                    print(f"  {clean_name:<45} ${fallback:>10,} (SoloTodo) [sin tiendas]")
-                else:
-                    print(f"  {clean_name:<45}    sin precio")
 
             total_components += 1
-            pg_conn.commit() # Commit instantly after processing each individual component
+
+        # Commit por categoría en vez de por componente — mucho más rápido
+        pg_conn.commit()
+        cat_elapsed = (datetime.now() - cat_start).total_seconds()
+        print(f"  {type_name}: {len(product_ids)} componentes en {cat_elapsed:.1f}s")
 
     # Cleanup any prices that weren't updated in this scraping run
     print("\nCleaning up sold-out items...")

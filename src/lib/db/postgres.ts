@@ -1,5 +1,4 @@
 import { Pool } from 'pg';
-import { getVendorById } from './mongo';
 
 const pool = new Pool({
   host: process.env.POSTGRES_HOST,

@@ -1,4 +1,4 @@
-import { MongoClient, Db } from 'mongodb';
+import { MongoClient } from 'mongodb';
 import { Pool } from 'pg';
 import * as userManager from './DBS_userManager';
 import * as componentManager from './DBS_componentAndPricesManager';

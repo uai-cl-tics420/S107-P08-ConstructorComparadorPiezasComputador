@@ -1,4 +1,3 @@
-import { email, type User } from 'better-auth';
 import { auth } from '@/lib/auth/auth';
 
 // Type interfaces for user operations

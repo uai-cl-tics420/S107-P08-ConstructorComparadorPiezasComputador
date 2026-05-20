@@ -42,7 +42,6 @@ export interface Build {
 // PostgreSQL schema interface types
 
 export interface ComponentMirror {
-  id: number;
   component_id: string; // UUID
   type_id: string; // UUID
   brand_id: string | null; // optional UUID

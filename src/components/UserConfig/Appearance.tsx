@@ -39,14 +39,14 @@ export function Appearance() {
               whileTap={config.theme === 'light' ? { scale: 1 } : { scale: 0.96 }}
               className={`border rounded-lg px-3 py-2 w-22 transition-all duration-150 ${
                 config.theme === 'light'
-                  ? 'bg-tw-alt/10 border-tw-alt shadow-[0_0_15px_rgba(124,58,237,0.1)]'
+                  ? 'bg-tw-accent/10 border-tw-accent shadow-[0_0_15px_rgba(16,185,129,0.1)]'
                   : 'bg-tw-surface border-tw-border hover:border-tw-border-highlight cursor-pointer'
               }`}
               onClick={() => handleThemeChange('light')}
               disabled={config.theme === 'light'}>
               <div className='flex flex-col gap-1 items-center px-2'>
                 <Sun
-                  className={`w-6 h-6 transition-colors duration-300 ${config.theme === 'light' ? 'text-tw-alt' : 'text-tw-muted-deep'}`}
+                  className={`w-6 h-6 transition-colors duration-300 ${config.theme === 'light' ? 'text-tw-accent' : 'text-tw-muted-deep'}`}
                 />
                 <span className={`uppercase ${config.theme === 'light' ? 'text-tw-primary' : 'text-tw-muted-deep'}`}>
                   Claro
@@ -59,14 +59,14 @@ export function Appearance() {
               whileTap={config.theme === 'dark' ? { scale: 1 } : { scale: 0.96 }}
               className={`border rounded-lg px-3 py-2 w-22 transition-all duration-150 ${
                 config.theme === 'dark'
-                  ? 'bg-tw-accent/10 border-tw-accent shadow-[0_0_15px_rgba(16,185,129,0.1)]'
+                  ? 'bg-tw-alt/10 border-tw-alt shadow-[0_0_15px_rgba(124,58,237,0.1)]'
                   : 'bg-tw-surface border-tw-border hover:border-tw-border-highlight cursor-pointer'
               }`}
               onClick={() => handleThemeChange('dark')}
               disabled={config.theme === 'dark'}>
               <div className='flex flex-col gap-1 items-center px-2'>
                 <Moon
-                  className={`w-6 h-6 transition-colors duration-300 ${config.theme === 'dark' ? 'text-tw-accent' : 'text-tw-muted-deep'}`}
+                  className={`w-6 h-6 transition-colors duration-300 ${config.theme === 'dark' ? 'text-tw-alt' : 'text-tw-muted-deep'}`}
                 />
                 <span className={`uppercase ${config.theme === 'dark' ? 'text-tw-primary' : 'text-tw-muted-deep'}`}>
                   Oscuro

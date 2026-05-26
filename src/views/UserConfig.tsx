@@ -135,8 +135,8 @@ export function UserConfig() {
   }, [pendingChanges]);
 
   return (
-    <div className='h-screen w-screen'>
-      <header className='sticky top-0 z-20 border-b border-tw-border-deep bg-tw-base/85 backdrop-blur-xl px-6 py-4'>
+    <div className='flex flex-col h-screen w-screen overflow-hidden'>
+      <header className='sticky top-0 z-20 border-b border-tw-border-deep bg-tw-base/85 backdrop-blur-xl px-6 py-4 mb-4'>
         <div className='max-w-7xl mx-auto flex items-center justify-between'>
           {/* Logo — Mono engineering */}
           <Link to='/' className='group flex flex-col gap-0.5'>
@@ -149,7 +149,7 @@ export function UserConfig() {
           </Link>
         </div>
       </header>
-      <main className='grid grid-cols-[24%_76%] mx-auto max-w-7xl h-auto px-6 py-8'>
+      <main className='flex-1 min-h-0 grid grid-cols-[24%_76%] mx-auto max-w-7xl h-full px-6 py-8'>
         <div className='flex flex-col gap-4'>
           {viewList.map((item) => {
             const Icon = item.icon;
@@ -168,8 +168,8 @@ export function UserConfig() {
             );
           })}
         </div>
-        <div className='grid grid-cols-[76%_24%] gap-2'>
-          <div className='flex flex-col bg-tw-surface-deep ml-8 px-4 py-4 overflow-y-auto rounded-xl border border-tw-border backdrop-blur-xl gap-6'>
+        <div className='grid grid-cols-[76%_24%] gap-2 min-h-0'>
+          <div className='flex flex-col h-full bg-tw-surface-deep ml-8 px-4 py-4 overflow-y-auto rounded-xl border border-tw-border backdrop-blur-xl gap-6'>
             <PendingContext.Provider value={{ pendingChanges, setPendingChanges }}>
               <UserData />
               <Appearance />

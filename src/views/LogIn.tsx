@@ -70,7 +70,11 @@ export function LogIn() {
         <div className='relative rounded-2xl border border-tw-border bg-tw-surface-deep/95 backdrop-blur-xl z-10 overflow-hidden'>
           <div className='absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-linear-to-r from-transparent via-tw-glass/10 to-transparent' />
 
-          <LogInSignOn onAuthSuccess={() => navigate('/')} />
+          <LogInSignOn onAuthSuccess={() => {
+            // Marcar que venimos de login para que App restaure el build local
+            sessionStorage.setItem('from_login', 'true');
+            navigate('/');
+          }} />
         </div>
       </div>
 

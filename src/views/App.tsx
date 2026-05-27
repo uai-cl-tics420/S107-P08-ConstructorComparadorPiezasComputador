@@ -41,6 +41,7 @@ export function App() {
   const [activeTab, setActiveTab] = useState<'search' | 'build'>('search');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(12);
+  const [totalCount, setTotalCount] = useState(0);
 
   const [showUserMenu, setShowUserMenu] = useState(false);
   const navigate = useNavigate();
@@ -99,50 +100,37 @@ export function App() {
   // Fetch components when search/type/brand changes
   useEffect(() => {
     setLoading(true);
-    setCurrentPage(1); // Reset to first page when filters change
     const params = new URLSearchParams();
     if (search) params.set('search', search);
     if (selectedType) params.set('type_id', selectedType);
     if (selectedBrand) params.set('brand_id', selectedBrand);
+    if (minPrice) params.set('minPrice', minPrice);
+    if (maxPrice) params.set('maxPrice', maxPrice);
+
+    params.set('page', String(currentPage));
+    params.set('limit', String(itemsPerPage));
+    params.set('sortBy', sortBy === 'default' ? 'updated_at' : sortBy);
 
     fetch(`/api/components?${params}`)
       .then((r) => r.json())
       .then((data) => {
-        setComponents(data);
+        setComponents(data.components || []);
+        setTotalCount(data.total || 0);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Error fetching components:', err);
+        setComponents([]);
+        setTotalCount(0);
         setLoading(false);
       });
-  }, [search, selectedType, selectedBrand]);
-
-  // Client-side price filter + sort
-  const filteredComponents = useMemo(() => {
-    let result = [...components];
-    const min = minPrice ? parseInt(minPrice) : 0;
-    const max = maxPrice ? parseInt(maxPrice) : Infinity;
-    if (min > 0 || max < Infinity) {
-      result = result.filter((c) => {
-        const best = Math.min(...c.prices.map((p) => p.price));
-        return best >= min && best <= max;
-      });
-    }
-    if (sortBy === 'price_asc') {
-      result.sort((a, b) => Math.min(...a.prices.map((p) => p.price)) - Math.min(...b.prices.map((p) => p.price)));
-    } else if (sortBy === 'price_desc') {
-      result.sort((a, b) => Math.min(...b.prices.map((p) => p.price)) - Math.min(...a.prices.map((p) => p.price)));
-    } else if (sortBy === 'name') {
-      result.sort((a, b) => a.name.localeCompare(b.name));
-    }
-    return result;
-  }, [components, minPrice, maxPrice, sortBy]);
+  }, [search, selectedType, selectedBrand, minPrice, maxPrice, currentPage, itemsPerPage, sortBy]);
 
   // Paginate filtered components
-  const displayedComponents = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredComponents.slice(startIndex, endIndex);
-  }, [filteredComponents, currentPage, itemsPerPage]);
+  const displayedComponents = components;
 
   // Calculate total pages
-  const totalPages = Math.ceil(filteredComponents.length / itemsPerPage);
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
 
   // Compute compatibility for search results
   const componentCompatibility = useMemo(() => {
@@ -610,7 +598,7 @@ export function App() {
                   </div>
                 ))}
               </div>
-            ) : filteredComponents.length === 0 ? (
+            ) : components.length === 0 ? (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -636,7 +624,7 @@ export function App() {
               <>
                 <motion.div variants={containerVariant} initial='hidden' animate='visible'>
                   <p className='font-mono text-[9px] text-tw-muted-de uppercase tracking-widest mb-4'>
-                    {filteredComponents.length} componentes
+                    {totalCount} componentes
                   </p>
                   {/* ── GRID UNIFORME — 4 por fila ── */}
                   <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
@@ -663,7 +651,7 @@ export function App() {
                     currentPage={currentPage}
                     totalPages={totalPages}
                     itemsPerPage={itemsPerPage}
-                    totalItems={filteredComponents.length}
+                    totalItems={totalCount}
                     onPageChange={setCurrentPage}
                     onItemsPerPageChange={setItemsPerPage}
                   />

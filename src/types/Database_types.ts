@@ -43,6 +43,7 @@ export interface Build {
 
 export interface ComponentMirror {
   component_id: string; // UUID
+  name_model: string;
   type_id: string; // UUID
   brand_id: string | null; // optional UUID
   synced_at: Date;

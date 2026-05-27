@@ -2,6 +2,7 @@ CREATE SCHEMA IF NOT EXISTS public;
 
 CREATE TABLE public.components_mirror ( -- mirror of the components collection in Mongo for type and brand related queries
   component_id UUID PRIMARY KEY, -- mirrored UUID from Mongo
+  name_model VARCHAR(160) NOT NULL, -- mirrored name from Mongo
   type_id UUID NOT NULL, -- mirrored UUID from Mongo
   brand_id UUID, -- mirrored UUID from Mongo
   synced_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -29,4 +30,6 @@ CREATE INDEX idx_prices_recorded_brin
 
 CREATE INDEX idx_components_mirror_type_component
   ON public.components_mirror (type_id, component_id);
-  
+
+CREATE INDEX idx_components_mirror_name_model 
+  ON public.components_mirror (name_model);

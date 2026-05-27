@@ -125,6 +125,7 @@ export async function createComponent(
     const mirrorData: ComponentMirror = {
       // Cast data into mirror type
       component_id: componentId,
+      name_model: componentData.name_model,
       type_id: componentData.type_id,
       brand_id: componentData.brand_id || null,
       synced_at: now,
@@ -132,8 +133,8 @@ export async function createComponent(
 
     await pgPool.query(
       // Insert into PostgreSQL mirror table
-      `INSERT INTO public.components_mirror (component_id, type_id, brand_id, synced_at)
-       VALUES ($1, $2, $3, $4)`,
+      `INSERT INTO public.components_mirror (component_id, name_model, type_id, brand_id, synced_at)
+       VALUES ($1, $2, $3, $4, $5)`,
       Object.values(mirrorData),
     );
 
@@ -188,6 +189,7 @@ export async function updateComponent(
     const pgUpdateFields: Record<string, any> = {}; // Object for field recognition
     if (updateFields.type_id) pgUpdateFields.type_id = updateFields.type_id; // only allows non null value update
     if ('brand_id' in updateFields) pgUpdateFields.brand_id = updateFields.brand_id; // allows null update
+    if (updateFields.name_model) pgUpdateFields.name_model = updateFields.name_model;
     pgUpdateFields.synced_at = now;
 
     const setClause = Object.keys(pgUpdateFields) // set of fields to be updated and their position in the array

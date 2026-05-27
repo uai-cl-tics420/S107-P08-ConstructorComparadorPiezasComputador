@@ -2,7 +2,14 @@ import '@/lib/config'; // Validates env variables on app start
 import { serve } from 'bun';
 import { auth } from '@/lib/auth/auth';
 import { getComponents, getComponentById, getBrands, getComponentTypes } from '@/lib/db/mongo';
-import { getUserBuilds, createUserBuild, deleteUserBuild, getSharedBuild, createSharedBuild } from '@/lib/db/DBS_buildsManager';
+import { getComponentCountByFilters } from '@/lib/db/postgres';
+import {
+  getUserBuilds,
+  createUserBuild,
+  deleteUserBuild,
+  getSharedBuild,
+  createSharedBuild,
+} from '@/lib/db/DBS_buildsManager';
 import { getRecommendationsForBuild, getRecommendationsForComponent } from '@/lib/db/recommendationsManager';
 import { setUserPassword } from '@/lib/auth/serverRequests';
 import index from './index.html';
@@ -35,12 +42,38 @@ const server = serve({
     // GET /api/components?search=&type_id=&brand_id=
     '/api/components': {
       async GET(req) {
+        // Obtain query parameters
         const url = new URL(req.url);
         const search = url.searchParams.get('search') ?? '';
         const typeId = url.searchParams.get('type_id');
         const brandId = url.searchParams.get('brand_id');
-        const result = await getComponents(search || undefined, typeId || undefined, brandId || undefined);
-        return Response.json(result);
+        const minPrice = url.searchParams.get('minPrice') ? parseInt(url.searchParams.get('minPrice')!) : undefined;
+        const maxPrice = url.searchParams.get('maxPrice') ? parseInt(url.searchParams.get('maxPrice')!) : undefined;
+        const page = url.searchParams.get('page') ? parseInt(url.searchParams.get('page')!) : 1;
+        const limit = url.searchParams.get('limit') ? parseInt(url.searchParams.get('limit')!) : 16;
+        const sortBy = url.searchParams.get('sortBy') ?? 'updated_at';
+        const sortOrder = url.searchParams.get('sortOrder') === 'desc' ? -1 : 1;
+
+        const components = await getComponents(
+          search || undefined,
+          typeId || undefined,
+          brandId || undefined,
+          page,
+          limit,
+          sortBy,
+          sortOrder as -1 | 1,
+        );
+
+        // Calcula el total de componentes con esos filtros
+        const total = await getComponentCountByFilters(
+          search || undefined,
+          typeId || undefined,
+          brandId || undefined,
+          minPrice,
+          maxPrice,
+        );
+
+        return Response.json({ components, total });
       },
     },
 

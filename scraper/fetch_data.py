@@ -107,7 +107,7 @@ def clean_specs(product: dict) -> dict:
 def clear_database(mongo_db, pg_cursor, pg_conn):
     """Clears existing components, prices, brands, and types from the databases."""
     pg_cursor.execute("DELETE FROM public.prices;")
-    pg_cursor.execute("DELETE FROM public.components_mirror;")
+    pg_cursor.execute("DELETE FROM public.;")
     pg_conn.commit()
     mongo_db["components"].delete_many({})
     mongo_db["brands"].delete_many({})
@@ -201,7 +201,12 @@ def main():
             # Upsert component into Mongo keyed on name_model (has unique index)
             comp_id = deterministic_uuid("component", str(solotodo_id))
             now = datetime.now()
-            existing = mongo_db["components"].find_one({"name_model": clean_name}, {"_id": 1})
+            existing = mongo_db["components"].find_one({
+                "$or": [
+                    {"name_model": clean_name},
+                    {"_id": comp_id}
+                ]
+            }, {"_id": 1})
             if existing:
                 comp_id = existing["_id"]
                 mongo_db["components"].update_one(
@@ -227,9 +232,9 @@ def main():
                 })
 
             pg_cursor.execute(
-                "INSERT INTO public.components_mirror (component_id, type_id, brand_id) "
-                "VALUES (%s, %s, %s) ON CONFLICT (component_id) DO NOTHING",
-                (comp_id, type_id, brand_id),
+                "INSERT INTO public.components_mirror (component_id, name_model, type_id, brand_id) "
+                "VALUES (%s, %s, %s, %s) ON CONFLICT (component_id) DO NOTHING",
+                (comp_id, clean_name, type_id, brand_id),
             )
 
             store_prices = price_map.get(solotodo_id) or []

@@ -28,7 +28,26 @@ export function App() {
   const [components, setComponents] = useState<Component[]>([]);
   const [componentTypes, setComponentTypes] = useState<ComponentType[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
-  const [buildComponents, setBuildComponents] = useState<BuildComponent[]>([]);
+
+  // Restaurar build local desde localStorage al montar (persiste a través de login/logout)
+  const [buildComponents, setBuildComponents] = useState<BuildComponent[]>(() => {
+    try {
+      const saved = localStorage.getItem('local_build');
+      return saved ? (JSON.parse(saved) as BuildComponent[]) : [];
+    } catch {
+      return [];
+    }
+  });
+
+  // Cuántos componentes se restauraron desde localStorage (para el toast de bienvenida)
+  const [restoredCount] = useState<number>(() => {
+    try {
+      const saved = localStorage.getItem('local_build');
+      return saved ? (JSON.parse(saved) as BuildComponent[]).length : 0;
+    } catch {
+      return 0;
+    }
+  });
 
   const [search, setSearch] = useState('');
   const [selectedType, setSelectedType] = useState('');
@@ -63,6 +82,15 @@ export function App() {
   const compatibilityIssues = checkCompatibility(buildComponents);
   const { recommendations, loading: recsLoading } = useRecommendations(buildComponents);
 
+  // Persistir build local en localStorage cada vez que cambia
+  useEffect(() => {
+    if (buildComponents.length > 0) {
+      localStorage.setItem('local_build', JSON.stringify(buildComponents));
+    } else {
+      localStorage.removeItem('local_build');
+    }
+  }, [buildComponents]);
+
   // Load filter options on mount
   useEffect(() => {
     fetch('/api/component-types')
@@ -71,6 +99,19 @@ export function App() {
     fetch('/api/brands')
       .then((r) => r.json())
       .then(setBrands);
+
+    // Si el usuario acaba de hacer login y tenía un build local, mostrárselo
+    const fromLogin = sessionStorage.getItem('from_login');
+    if (fromLogin) {
+      sessionStorage.removeItem('from_login');
+      if (restoredCount > 0) {
+        setActiveTab('build');
+        addToast(
+          `Tu build fue restaurado — ${restoredCount} componente${restoredCount !== 1 ? 's' : ''} guardado${restoredCount !== 1 ? 's' : ''}`,
+          'success',
+        );
+      }
+    }
 
     // Initial check for shared build via URL
     const urlParams = new URLSearchParams(window.location.search);

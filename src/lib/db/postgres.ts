@@ -10,7 +10,7 @@ const pool = new Pool({
   idleTimeoutMillis: 30000,
 });
 
-export async function getComponentIdsByFilters(
+export async function getComponentIdsByFilters( // Retrieves a list of Mongo component IDs to match search parameters
   search?: string,
   typeId?: string,
   brandId?: string,
@@ -21,12 +21,15 @@ export async function getComponentIdsByFilters(
   sortBy: string = 'synced_at',
   sortOrder: -1 | 1 = -1,
 ) {
+  // Obtain implicit parameters
   const offset = (page - 1) * limit;
   const direction = sortOrder === 1 ? 'ASC' : 'DESC';
 
-  const params: any[] = [];
-  const conditions: string[] = [];
+  // Build dynamic query sections
+  const params: any[] = []; // Array to hold parameter values to be passed to the final query
 
+  // Filters
+  const conditions: string[] = [];
   if (search) {
     params.push(search);
     conditions.push(`cm.name_model ILIKE '%' || $${params.length} || '%'`);
@@ -44,6 +47,7 @@ export async function getComponentIdsByFilters(
   params.push(maxPrice);
   conditions.push(`LEAST(p.price, p.discount_price) <= $${params.length}`);
 
+  // Construct query clauses
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
 
   const orderByClause = `${sortBy} ${direction}`;
@@ -71,9 +75,7 @@ export async function getComponentIdsByFilters(
   ${limitOffsetClause}  
   `;
 
-  console.log(query, params);
   const result = await pool.query(query, params);
-  console.log(query, params);
   return result.rows.map((row) => row.component_id);
 }
 

@@ -1,11 +1,12 @@
 import { useState, createContext, useContext } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import LogInForm from './LogInForm';
 import SignOnForm from './SignOnForm';
 import LoginMethodSelector from './LoginMethodSelector';
 import OTPSignOn from './OTPSignOn';
 
-type ViewType = 'selection' | 'login' | 'signon' | 'OTP';
+export type ViewType = 'selection' | 'login' | 'signon' | 'OTP';
 
 interface LoginContextType {
   setView: (view: ViewType) => void;
@@ -16,29 +17,14 @@ const LoginContext = createContext<LoginContextType | undefined>(undefined);
 
 export const useLoginView = () => {
   const context = useContext(LoginContext);
-  if (!context) throw new Error('useLoginView debe usarse dentro de LogInSignOn');
+  if (!context) throw new Error('useLoginView must be used inside LogInSignOn');
   return context;
-};
-
-const VIEW_META: Record<ViewType, { title: string; sub: string }> = {
-  selection: { title: 'PC Builder', sub: 'Elige cómo quieres continuar' },
-  login: { title: 'Inicia sesión', sub: 'Ingresa tus credenciales' },
-  signon: { title: 'Crea tu cuenta', sub: 'Completa el formulario' },
-  OTP: { title: 'Clave de acceso', sub: 'Acceso sin contraseña' },
 };
 
 const viewVariant = {
   hidden: { opacity: 0, y: 12 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] as const },
-  },
-  exit: {
-    opacity: 0,
-    y: -10,
-    transition: { duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] as const },
-  },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] as const } },
+  exit: { opacity: 0, y: -10, transition: { duration: 0.2, ease: [0.25, 0.46, 0.45, 0.94] as const } },
 };
 
 interface Props {
@@ -46,13 +32,17 @@ interface Props {
 }
 
 const LogInSignOnContent = ({ onAuthSuccess }: Props) => {
+  const { t } = useTranslation();
   const [view, setView] = useState<ViewType>('selection');
-  const meta = VIEW_META[view];
+
+  const meta = {
+    title: t(`login.views.${view}.title`),
+    sub: t(`login.views.${view}.sub`),
+  };
 
   return (
     <LoginContext.Provider value={{ setView, onAuthSuccess }}>
       <div className='p-8 flex flex-col gap-6'>
-        {/* Header — tipografía de contraste extremo */}
         <AnimatePresence mode='wait'>
           <motion.div
             key={view + '-header'}
@@ -66,7 +56,6 @@ const LogInSignOnContent = ({ onAuthSuccess }: Props) => {
           </motion.div>
         </AnimatePresence>
 
-        {/* Contenido — transición suave entre vistas */}
         <AnimatePresence mode='wait'>
           <motion.div key={view} variants={viewVariant} initial='hidden' animate='visible' exit='exit'>
             {view === 'selection' && <LoginMethodSelector />}
@@ -76,7 +65,6 @@ const LogInSignOnContent = ({ onAuthSuccess }: Props) => {
           </motion.div>
         </AnimatePresence>
 
-        {/* Volver — solo en sub-vistas */}
         <AnimatePresence>
           {view !== 'selection' && (
             <motion.div
@@ -87,7 +75,7 @@ const LogInSignOnContent = ({ onAuthSuccess }: Props) => {
               <button
                 onClick={() => setView('selection')}
                 className='font-mono text-[9px] text-tw-muted-deep hover:text-tw-muted-highlight uppercase tracking-widest transition-colors duration-200 cursor-pointer'>
-                ← Volver a métodos
+                {t('login.backToMethods')}
               </button>
             </motion.div>
           )}

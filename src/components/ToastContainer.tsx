@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import type { Toast } from '../types/Frontend_types';
 
 interface Props {
@@ -12,6 +13,7 @@ const TYPE_STYLES: Record<Toast['type'], { bar: string; icon: string; label: str
 };
 
 export function ToastContainer({ toasts, onRemove }: Props) {
+  const { t } = useTranslation();
   if (toasts.length === 0) return null;
 
   return (
@@ -22,20 +24,13 @@ export function ToastContainer({ toasts, onRemove }: Props) {
           <div
             key={toast.id}
             className='pointer-events-auto flex items-center gap-3 bg-tw-surface-highlight border border-tw-glass/10 rounded-xl px-4 py-3 shadow-2xl min-w-70 max-w-sm animate-in slide-in-from-right-4 fade-in duration-200'>
-            {/* Colored left bar */}
             <div className={`w-1 self-stretch rounded-full shrink-0 ${style.bar}`} />
-
-            {/* Icon */}
             <span className={`text-sm font-bold shrink-0 ${style.icon}`}>{style.label}</span>
-
-            {/* Message */}
             <p className='text-tw-primary text-sm flex-1 leading-snug'>{toast.message}</p>
-
-            {/* Close button */}
             <button
               onClick={() => onRemove(toast.id)}
               className='shrink-0 text-tw-muted hover:text-tw-primary transition-colors duration-150 text-lg leading-none cursor-pointer'
-              aria-label='Cerrar'>
+              aria-label={t('common.close')}>
               ×
             </button>
           </div>

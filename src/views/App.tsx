@@ -171,7 +171,7 @@ export function App() {
         filters.sortOrder = -1;
         break;
       case 'alphabetical':
-        filters.sortBy = 'alphabetical';
+        filters.sortBy = 'name_model';
         filters.sortOrder = 1;
         break;
     }

@@ -21,7 +21,7 @@
     "price": "Price",
     "minPlaceholder": "Min",
     "maxPlaceholder": "Max",
-    "sortDefault": "Sort: Default",
+    "sortDefault": "Latest",
     "sortPriceAsc": "Price ↑",
     "sortPriceDesc": "Price ↓",
     "sortName": "Name A–Z",

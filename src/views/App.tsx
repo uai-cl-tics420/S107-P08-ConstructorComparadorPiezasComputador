@@ -645,10 +645,10 @@ export function App() {
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
                       className='font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-muted-highlight rounded-lg px-3 py-2 focus:outline-none focus:border-tw-border-highlight cursor-pointer appearance-none transition-all'>
-                      <option value='latest'>Nuevo</option>
-                      <option value='price_asc'>Precio ↑</option>
-                      <option value='price_desc'>Precio ↓</option>
-                      <option value='alphabetical'>Nombre A–Z</option>
+                      <option value='latest'>{t('filters.sortDefault')}</option>
+                      <option value='price_asc'>{t('filters.sortPriceAsc')}</option>
+                      <option value='price_desc'>{t('filters.sortPriceDesc')}</option>
+                      <option value='alphabetical'>{t('filters.sortName')}</option>
                     </select>
                     {hasActiveFilters && (
                       <button

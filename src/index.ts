@@ -41,18 +41,10 @@ const server = serve({
 
     // GET /api/components?search=&type_id=&brand_id=
     '/api/components': {
-      async GET(req) {
+      async POST(req) {
         // Obtain query parameters
-        const url = new URL(req.url);
-        const search = url.searchParams.get('search') ?? '';
-        const typeId = url.searchParams.get('type_id');
-        const brandId = url.searchParams.get('brand_id');
-        const minPrice = url.searchParams.get('minPrice') ? parseInt(url.searchParams.get('minPrice')!) : undefined;
-        const maxPrice = url.searchParams.get('maxPrice') ? parseInt(url.searchParams.get('maxPrice')!) : undefined;
-        const page = url.searchParams.get('page') ? parseInt(url.searchParams.get('page')!) : 1;
-        const limit = url.searchParams.get('limit') ? parseInt(url.searchParams.get('limit')!) : 16;
-        const sortBy = url.searchParams.get('sortBy') ?? 'updated_at';
-        const sortOrder = url.searchParams.get('sortOrder') === 'desc' ? -1 : 1;
+        const body = await req.json();
+        const { search, typeId, brandId, minPrice, maxPrice, page, limit, sortBy, sortOrder } = body;
 
         const components = await getComponents(
           search || undefined,
@@ -62,6 +54,8 @@ const server = serve({
           limit,
           sortBy,
           sortOrder as -1 | 1,
+          minPrice,
+          maxPrice,
         );
 
         // Calcula el total de componentes con esos filtros

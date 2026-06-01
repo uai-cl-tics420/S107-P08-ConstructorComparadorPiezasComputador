@@ -14,77 +14,66 @@ export async function getComponentIdsByFilters(
   search?: string,
   typeId?: string,
   brandId?: string,
-  minPrice?: number,
-  maxPrice?: number,
+  minPrice: number = 0,
+  maxPrice: number = Number.MAX_SAFE_INTEGER,
   page: number = 1,
   limit: number = 16,
-  sortBy: string = 'updated_at',
+  sortBy: string = 'synced_at',
   sortOrder: -1 | 1 = -1,
 ) {
   const offset = (page - 1) * limit;
-  const min = minPrice ?? 0;
-  const max = maxPrice ?? Number.MAX_SAFE_INTEGER;
   const direction = sortOrder === 1 ? 'ASC' : 'DESC';
 
-  let subquery = `
-    SELECT DISTINCT ON (cm.component_id) 
-      cm.component_id, 
-      cm.synced_at, 
-      cm.name_model, 
-      COALESCE(p.discount_price, p.price) as price
-    FROM public.components_mirror cm
-    LEFT JOIN public.prices p ON cm.component_id = p.component_id
-    WHERE 1=1
+  const params: any[] = [];
+  const conditions: string[] = [];
+
+  if (search) {
+    params.push(search);
+    conditions.push(`cm.name_model ILIKE '%' || $${params.length} || '%'`);
+  }
+  if (typeId) {
+    params.push(typeId);
+    conditions.push(`cm.type_id = $${params.length}`);
+  }
+  if (brandId) {
+    params.push(brandId);
+    conditions.push(`cm.brand_id = $${params.length}`);
+  }
+  params.push(minPrice);
+  conditions.push(`LEAST(p.price, p.discount_price) >= $${params.length}`);
+  params.push(maxPrice);
+  conditions.push(`LEAST(p.price, p.discount_price) <= $${params.length}`);
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+
+  const orderByClause = `${sortBy} ${direction}`;
+
+  params.push(limit, offset);
+  const limitOffsetClause = `LIMIT $${params.length - 1} OFFSET $${params.length}`;
+
+  const query = `
+  SELECT * FROM (
+    SELECT DISTINCT ON (p.component_id)
+      p.component_id,
+	    cm.name_model,
+    	cm.type_id,
+    	cm.brand_id,
+    	cm.synced_at,
+    	p.vendor_id,
+    	LEAST(p.price, p.discount_price) AS final_price
+    FROM public.prices p
+    INNER JOIN public.components_mirror cm
+      ON p.component_id = cm.component_id
+    ${whereClause}
+    ORDER BY p.component_id ASC, ${orderByClause}
+  ) sub
+  ORDER BY ${orderByClause}, component_id ASC
+  ${limitOffsetClause}  
   `;
 
-  const params: any[] = [];
-  let paramIndex = 1;
-
-  // Aplicar todos los filtros en la subconsulta
-  if (search) {
-    subquery += ` AND cm.name_model ILIKE $${paramIndex}`;
-    params.push(`%${search}%`);
-    paramIndex++;
-  }
-
-  if (typeId) {
-    subquery += ` AND cm.type_id = $${paramIndex}`;
-    params.push(typeId);
-    paramIndex++;
-  }
-
-  if (brandId) {
-    subquery += ` AND cm.brand_id = $${paramIndex}`;
-    params.push(brandId);
-    paramIndex++;
-  }
-
-  // Filtro de precio
-  if (minPrice !== undefined || maxPrice !== undefined) {
-    subquery += ` AND COALESCE(p.discount_price, p.price) BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
-    params.push(min, max);
-    paramIndex += 2;
-  }
-
-  // DISTINCT ON requiere ORDER BY con el mismo campo primero
-  subquery += ` ORDER BY cm.component_id, p.recorded_at DESC NULLS LAST`;
-
-  // Query principal: ORDER BY y LIMIT/OFFSET finales
-  let query = `SELECT component_id FROM (${subquery}) sub ORDER BY `;
-
-  if (sortBy === 'name') {
-    query += `sub.name_model ${direction}`;
-  } else if (sortBy === 'price') {
-    query += `sub.price ${direction}`;
-  } else {
-    // Default: updated_at (synced_at)
-    query += `sub.synced_at ${direction}`;
-  }
-
-  query += ` LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
-  params.push(limit, offset);
-
+  console.log(query, params);
   const result = await pool.query(query, params);
+  console.log(query, params);
   return result.rows.map((row) => row.component_id);
 }
 

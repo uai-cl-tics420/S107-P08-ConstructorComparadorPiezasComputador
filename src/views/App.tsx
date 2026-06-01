@@ -144,18 +144,45 @@ export function App() {
   // Fetch components when search/type/brand changes
   useEffect(() => {
     setLoading(true);
-    const params = new URLSearchParams();
-    if (search) params.set('search', search);
-    if (selectedType) params.set('type_id', selectedType);
-    if (selectedBrand) params.set('brand_id', selectedBrand);
-    if (minPrice) params.set('minPrice', minPrice);
-    if (maxPrice) params.set('maxPrice', maxPrice);
 
-    params.set('page', String(currentPage));
-    params.set('limit', String(itemsPerPage));
-    params.set('sortBy', sortBy === 'default' ? 'updated_at' : sortBy);
+    const filters = {
+      search: search || undefined,
+      typeId: selectedType || undefined,
+      brandId: selectedBrand || undefined,
+      minPrice: minPrice ? parseFloat(minPrice) : undefined,
+      maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+      page: currentPage,
+      limit: itemsPerPage,
+      sortBy: 'synced_at',
+      sortOrder: -1 as -1 | 1,
+    };
 
-    fetch(`/api/components?${params}`)
+    switch (sortBy) {
+      case 'latest':
+        filters.sortBy = 'synced_at';
+        filters.sortOrder = -1;
+        break;
+      case 'price_asc':
+        filters.sortBy = 'final_price';
+        filters.sortOrder = 1;
+        break;
+      case 'price_desc':
+        filters.sortBy = 'final_price';
+        filters.sortOrder = -1;
+        break;
+      case 'alphabetical':
+        filters.sortBy = 'alphabetical';
+        filters.sortOrder = 1;
+        break;
+    }
+
+    fetch(`/api/components`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(filters),
+    })
       .then((r) => r.json())
       .then((data) => {
         setComponents(data.components || []);
@@ -618,10 +645,10 @@ export function App() {
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
                       className='font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-muted-highlight rounded-lg px-3 py-2 focus:outline-none focus:border-tw-border-highlight cursor-pointer appearance-none transition-all'>
-                      <option value='default'>{t('filters.sortDefault')}</option>
-                      <option value='price_asc'>{t('filters.sortPriceAsc')}</option>
-                      <option value='price_desc'>{t('filters.sortPriceDesc')}</option>
-                      <option value='name'>{t('filters.sortName')}</option>
+                      <option value='latest'>Nuevo</option>
+                      <option value='price_asc'>Precio ↑</option>
+                      <option value='price_desc'>Precio ↓</option>
+                      <option value='alphabetical'>Nombre A–Z</option>
                     </select>
                     {hasActiveFilters && (
                       <button
@@ -719,7 +746,12 @@ export function App() {
                   <h2 className='text-tw-primary font-semibold text-base'>
                     {buildComponents.length === 0
                       ? t('build.addComponents')
-                      : t(buildComponents.length === 1 ? 'build.componentSelected_one' : 'build.componentSelected_other', { count: buildComponents.length })}
+                      : t(
+                          buildComponents.length === 1
+                            ? 'build.componentSelected_one'
+                            : 'build.componentSelected_other',
+                          { count: buildComponents.length },
+                        )}
                   </h2>
                 </div>
                 {buildComponents.length > 0 && (

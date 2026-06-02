@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { signIn } from '@/lib/auth/auth-client';
 import { useLoginView } from './LogIn_SignOn';
 
@@ -9,6 +10,7 @@ const inputClass =
 const labelClass = 'font-mono text-[9px] text-tw-muted uppercase tracking-[0.15em]';
 
 export default function LogInForm() {
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -28,13 +30,13 @@ export default function LogInForm() {
         onError: (ctx) => {
           switch (ctx.error.message) {
             case 'Invalid email':
-              setError('El email no es válido');
+              setError(t('login.errorInvalidEmail'));
               break;
             case 'Invalid email or password':
-              setError('Email o contraseña incorrectos');
+              setError(t('login.errorInvalidCredentials'));
               break;
             default:
-              setError('Error al iniciar sesión');
+              setError(t('login.errorDefault'));
           }
         },
         onSuccess: () => onAuthSuccess(),
@@ -54,24 +56,20 @@ export default function LogInForm() {
       )}
 
       <div className='flex flex-col gap-2'>
-        <label className={labelClass} htmlFor='email'>
-          Email
-        </label>
+        <label className={labelClass} htmlFor='email'>{t('login.emailLabel')}</label>
         <input
           id='email'
           type='email'
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder='tu@email.com'
+          placeholder={t('login.emailPlaceholder')}
           className={inputClass}
           required
         />
       </div>
 
       <div className='flex flex-col gap-2'>
-        <label className={labelClass} htmlFor='password'>
-          Contraseña
-        </label>
+        <label className={labelClass} htmlFor='password'>{t('login.passwordLabel')}</label>
         <input
           id='password'
           type='password'
@@ -83,28 +81,20 @@ export default function LogInForm() {
         />
       </div>
 
-      {/* CTA primario — blanco sólido con glow + spinner */}
       <motion.button
         type='submit'
         disabled={loading}
-        whileHover={
-          !loading
-            ? {
-                scale: 1.015,
-                boxShadow: '0 0 20px var(--color-tw-btn-glow), 0 4px 16px var(--color-tw-btn-shadow)',
-              }
-            : {}
-        }
+        whileHover={!loading ? { scale: 1.015, boxShadow: '0 0 20px var(--color-tw-btn-glow), 0 4px 16px var(--color-tw-btn-shadow)' } : {}}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
         className='mt-1 w-full flex items-center justify-center gap-2 bg-tw-primary hover:bg-tw-primary-highlight disabled:bg-tw-primary-deep text-tw-base font-bold font-mono text-xs py-3 rounded-lg transition-colors duration-150 cursor-pointer disabled:cursor-not-allowed'>
         {loading ? (
           <>
             <Loader2 className='w-3.5 h-3.5 animate-spin' />
-            Verificando...
+            {t('login.verifying')}
           </>
         ) : (
-          'Iniciar sesión'
+          t('login.signingIn')
         )}
       </motion.button>
     </form>

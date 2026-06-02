@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Plus, ChevronDown, ChevronRight, Loader2, Zap } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import type { Component } from '../types/Frontend_types';
 import type { BuildRecommendations, ScoredComponent } from '../utils/recommendations';
 import { bestPrice } from '../utils/recommendations';
@@ -19,14 +20,9 @@ function ScoreBar({ value, color }: { value: number; color: string }) {
 }
 
 const TYPE_ACCENT: Record<string, string> = {
-  CPU: 'tw-cpu',
-  GPU: 'tw-gpu',
-  RAM: 'tw-ram',
-  Motherboard: 'tw-motherboard',
-  Storage: 'tw-storage',
-  PSU: 'tw-psu',
-  Case: 'tw-case',
-  'CPU Cooler': 'tw-cooler',
+  CPU: 'tw-cpu', GPU: 'tw-gpu', RAM: 'tw-ram',
+  Motherboard: 'tw-motherboard', Storage: 'tw-storage',
+  PSU: 'tw-psu', Case: 'tw-case', 'CPU Cooler': 'tw-cooler',
 };
 
 interface RecommendationCardProps {
@@ -36,6 +32,7 @@ interface RecommendationCardProps {
 }
 
 function RecommendationCard({ scored, onAdd, rank }: RecommendationCardProps) {
+  const { t } = useTranslation();
   const { component, totalScore, compatibilityScore, performanceScore, valueScore, reasons } = scored;
   const price = bestPrice(component);
   const accent = TYPE_ACCENT[component.type_name] ?? 'tw-case';
@@ -52,18 +49,14 @@ function RecommendationCard({ scored, onAdd, rank }: RecommendationCardProps) {
       <div className='flex items-start justify-between gap-2'>
         <div className='flex items-center gap-1.5 min-w-0'>
           <span className={`w-1.5 h-1.5 rounded-full shrink-0 bg-${accent}`} />
-          <p className='font-semibold text-xs text-tw-primary leading-tight line-clamp-2'>
-            {component.name}
-          </p>
+          <p className='font-semibold text-xs text-tw-primary leading-tight line-clamp-2'>{component.name}</p>
         </div>
         <span className='font-mono text-[9px] text-tw-muted-deep border border-tw-glass/8 px-1.5 py-0.5 rounded shrink-0'>
           #{rank + 1}
         </span>
       </div>
 
-      <p className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest -mt-1'>
-        {component.brand_name}
-      </p>
+      <p className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest -mt-1'>{component.brand_name}</p>
 
       {topReasons.length > 0 && (
         <div className='flex flex-col gap-1'>
@@ -78,34 +71,26 @@ function RecommendationCard({ scored, onAdd, rank }: RecommendationCardProps) {
 
       <div className='space-y-1.5 pt-1'>
         <div className='flex items-center gap-2'>
-          <span className='font-mono text-[8px] text-tw-muted-deep w-14 shrink-0'>Compat.</span>
+          <span className='font-mono text-[8px] text-tw-muted-deep w-14 shrink-0'>{t('recommendations.compat')}</span>
           <ScoreBar value={compatibilityScore} color='bg-tw-cpu' />
-          <span className='font-mono text-[8px] text-tw-muted-deep tabular-nums w-6 text-right'>
-            {Math.round(compatibilityScore * 100)}
-          </span>
+          <span className='font-mono text-[8px] text-tw-muted-deep tabular-nums w-6 text-right'>{Math.round(compatibilityScore * 100)}</span>
         </div>
         <div className='flex items-center gap-2'>
-          <span className='font-mono text-[8px] text-tw-muted-deep w-14 shrink-0'>Rend.</span>
+          <span className='font-mono text-[8px] text-tw-muted-deep w-14 shrink-0'>{t('recommendations.perf')}</span>
           <ScoreBar value={performanceScore} color='bg-tw-gpu' />
-          <span className='font-mono text-[8px] text-tw-muted-deep tabular-nums w-6 text-right'>
-            {Math.round(performanceScore * 100)}
-          </span>
+          <span className='font-mono text-[8px] text-tw-muted-deep tabular-nums w-6 text-right'>{Math.round(performanceScore * 100)}</span>
         </div>
         <div className='flex items-center gap-2'>
-          <span className='font-mono text-[8px] text-tw-muted-deep w-14 shrink-0'>Valor</span>
+          <span className='font-mono text-[8px] text-tw-muted-deep w-14 shrink-0'>{t('recommendations.value')}</span>
           <ScoreBar value={valueScore} color='bg-tw-ram' />
-          <span className='font-mono text-[8px] text-tw-muted-deep tabular-nums w-6 text-right'>
-            {Math.round(valueScore * 100)}
-          </span>
+          <span className='font-mono text-[8px] text-tw-muted-deep tabular-nums w-6 text-right'>{Math.round(valueScore * 100)}</span>
         </div>
       </div>
 
       <div className='flex items-center justify-between pt-1 border-t border-tw-border-deep gap-2'>
         <div className='min-w-0'>
-          <p className='font-mono text-[8px] text-tw-muted-deep'>Mejor precio</p>
-          <p className='font-bold text-sm text-tw-primary tabular-nums'>
-            ${price.toLocaleString('es-CL')}
-          </p>
+          <p className='font-mono text-[8px] text-tw-muted-deep'>{t('recommendations.bestPrice')}</p>
+          <p className='font-bold text-sm text-tw-primary tabular-nums'>${price.toLocaleString('es-CL')}</p>
         </div>
         <motion.button
           whileHover={{ scale: 1.04, boxShadow: '0 0 12px rgba(255,255,255,0.15)' }}
@@ -113,7 +98,7 @@ function RecommendationCard({ scored, onAdd, rank }: RecommendationCardProps) {
           onClick={() => onAdd(component)}
           className='flex items-center gap-1 px-2.5 py-1.5 bg-tw-glass text-tw-base font-bold font-mono text-[9px] rounded-md transition-colors cursor-pointer shrink-0'>
           <Plus className='w-2.5 h-2.5' />
-          Agregar
+          {t('recommendations.add')}
         </motion.button>
       </div>
 
@@ -136,26 +121,18 @@ interface SectionProps {
 
 function CollapsibleSection({ title, subtitle, icon, children, defaultOpen = true }: SectionProps) {
   const [open, setOpen] = useState(defaultOpen);
-
   return (
     <div className='flex flex-col gap-3'>
-      <button
-        onClick={() => setOpen(!open)}
-        className='flex items-center justify-between w-full text-left cursor-pointer group'>
+      <button onClick={() => setOpen(!open)} className='flex items-center justify-between w-full text-left cursor-pointer group'>
         <div className='flex items-center gap-2'>
           <span className='text-tw-muted-deep group-hover:text-tw-muted transition-colors'>{icon}</span>
           <div>
-            <p className='font-mono text-[9px] uppercase tracking-widest text-tw-muted group-hover:text-tw-muted-highlight transition-colors'>
-              {title}
-            </p>
+            <p className='font-mono text-[9px] uppercase tracking-widest text-tw-muted group-hover:text-tw-muted-highlight transition-colors'>{title}</p>
             <p className='font-mono text-[8px] text-tw-muted-deep'>{subtitle}</p>
           </div>
         </div>
-        <ChevronDown
-          className={`w-3.5 h-3.5 text-tw-muted-deep transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-        />
+        <ChevronDown className={`w-3.5 h-3.5 text-tw-muted-deep transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
       </button>
-
       <AnimatePresence>
         {open && (
           <motion.div
@@ -179,36 +156,32 @@ interface TypeGroupProps {
 }
 
 function TypeGroup({ typeName, reason, suggestions, onAdd }: TypeGroupProps) {
+  const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const accent = TYPE_ACCENT[typeName] ?? 'tw-case';
   const visible = expanded ? suggestions : suggestions.slice(0, 2);
+  const hiddenCount = suggestions.length - 2;
 
   return (
     <div className='flex flex-col gap-2'>
       <div className='flex items-center gap-2'>
         <span className={`w-1.5 h-1.5 rounded-full bg-${accent} shrink-0`} />
         <div className='flex-1 min-w-0'>
-          <span className='font-mono text-[9px] uppercase tracking-widest text-tw-muted-highlight'>
-            {typeName}
-          </span>
+          <span className='font-mono text-[9px] uppercase tracking-widest text-tw-muted-highlight'>{typeName}</span>
           <span className='font-mono text-[8px] text-tw-muted-deep ml-2'>— {reason}</span>
         </div>
       </div>
-
       <div className='grid grid-cols-1 gap-2'>
         {visible.map((s, i) => (
           <RecommendationCard key={s.component.id} scored={s} onAdd={onAdd} rank={i} />
         ))}
       </div>
-
       {suggestions.length > 2 && (
         <button
           onClick={() => setExpanded(!expanded)}
           className='flex items-center gap-1 font-mono text-[9px] text-tw-muted-deep hover:text-tw-muted transition-colors cursor-pointer self-start'>
-          <ChevronRight
-            className={`w-3 h-3 transition-transform duration-150 ${expanded ? 'rotate-90' : ''}`}
-          />
-          {expanded ? 'Ver menos' : `Ver ${suggestions.length - 2} más`}
+          <ChevronRight className={`w-3 h-3 transition-transform duration-150 ${expanded ? 'rotate-90' : ''}`} />
+          {expanded ? t('recommendations.seeLess') : t('recommendations.seeMore', { count: hiddenCount })}
         </button>
       )}
     </div>
@@ -222,8 +195,10 @@ interface Props {
 }
 
 export function RecommendationsPanel({ recommendations, loading, onAdd }: Props) {
+  const { t } = useTranslation();
   const hasMissing = (recommendations?.missing.length ?? 0) > 0;
   const isEmpty = !loading && !hasMissing;
+  const missingCount = recommendations?.missing.length ?? 0;
 
   return (
     <div className='relative rounded-xl border border-tw-border-deep bg-tw-surface-deep/80 backdrop-blur-xl p-4 flex flex-col gap-4'>
@@ -232,16 +207,10 @@ export function RecommendationsPanel({ recommendations, loading, onAdd }: Props)
       <div className='flex items-center gap-2'>
         <Sparkles className='w-3.5 h-3.5 text-tw-muted-deep' />
         <div>
-          <p className='font-mono text-[9px] uppercase tracking-widest text-tw-muted'>
-            Recomendaciones
-          </p>
-          <p className='font-mono text-[8px] text-tw-muted-deep'>
-            Basadas en compatibilidad, rendimiento y valor
-          </p>
+          <p className='font-mono text-[9px] uppercase tracking-widest text-tw-muted'>{t('recommendations.title')}</p>
+          <p className='font-mono text-[8px] text-tw-muted-deep'>{t('recommendations.subtitle')}</p>
         </div>
-        {loading && (
-          <Loader2 className='w-3 h-3 text-tw-muted-deep animate-spin ml-auto' />
-        )}
+        {loading && <Loader2 className='w-3 h-3 text-tw-muted-deep animate-spin ml-auto' />}
       </div>
 
       {loading && (
@@ -255,19 +224,15 @@ export function RecommendationsPanel({ recommendations, loading, onAdd }: Props)
       {isEmpty && (
         <div className='flex flex-col items-center justify-center py-6 gap-2 text-center'>
           <Sparkles className='w-5 h-5 text-tw-muted-deep/50' />
-          <p className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest'>
-            Build completo
-          </p>
-          <p className='font-mono text-[8px] text-tw-muted-deep'>
-            No hay recomendaciones adicionales
-          </p>
+          <p className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest'>{t('recommendations.buildComplete')}</p>
+          <p className='font-mono text-[8px] text-tw-muted-deep'>{t('recommendations.noAdditional')}</p>
         </div>
       )}
 
       {!loading && hasMissing && (
         <CollapsibleSection
-          title='Para completar tu build'
-          subtitle={`${recommendations!.missing.length} tipo${recommendations!.missing.length > 1 ? 's' : ''} faltante${recommendations!.missing.length > 1 ? 's' : ''}`}
+          title={t('recommendations.completeYourBuild')}
+          subtitle={t(missingCount === 1 ? 'recommendations.missing_one' : 'recommendations.missing_other', { count: missingCount })}
           icon={<Zap className='w-3.5 h-3.5' />}
           defaultOpen>
           <div className='flex flex-col gap-4'>
@@ -288,15 +253,15 @@ export function RecommendationsPanel({ recommendations, loading, onAdd }: Props)
         <div className='flex items-center gap-3 pt-1 border-t border-tw-border-deep'>
           <div className='flex items-center gap-1'>
             <div className='w-2 h-0.5 bg-tw-cpu rounded' />
-            <span className='font-mono text-[7px] text-tw-muted-deep'>Compat.</span>
+            <span className='font-mono text-[7px] text-tw-muted-deep'>{t('recommendations.compat')}</span>
           </div>
           <div className='flex items-center gap-1'>
             <div className='w-2 h-0.5 bg-tw-gpu rounded' />
-            <span className='font-mono text-[7px] text-tw-muted-deep'>Rend.</span>
+            <span className='font-mono text-[7px] text-tw-muted-deep'>{t('recommendations.perf')}</span>
           </div>
           <div className='flex items-center gap-1'>
             <div className='w-2 h-0.5 bg-tw-ram rounded' />
-            <span className='font-mono text-[7px] text-tw-muted-deep'>Valor</span>
+            <span className='font-mono text-[7px] text-tw-muted-deep'>{t('recommendations.value')}</span>
           </div>
         </div>
       )}

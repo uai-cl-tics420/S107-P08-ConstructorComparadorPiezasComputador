@@ -1,0 +1,242 @@
+{
+  "nav": {
+    "tagline": "Compara · Arma · Ahorra",
+    "myBuild": "Mi Build",
+    "activeSession": "Sesión activa",
+    "settings": "Configuración",
+    "signOut": "Cerrar sesión",
+    "signIn": "Iniciar sesión",
+    "toggleTheme": "Cambiar a modo {{mode}}",
+    "light": "claro",
+    "dark": "oscuro"
+  },
+  "tabs": {
+    "components": "Componentes",
+    "myBuild": "Mi Build"
+  },
+  "filters": {
+    "searchPlaceholder": "Buscar componentes...",
+    "allTypes": "Todos los tipos",
+    "allBrands": "Todas las marcas",
+    "price": "Precio",
+    "minPlaceholder": "Mín",
+    "maxPlaceholder": "Máx",
+    "sortDefault": "Nuevo",
+    "sortPriceAsc": "Precio ↑",
+    "sortPriceDesc": "Precio ↓",
+    "sortName": "Nombre A–Z",
+    "clear": "Limpiar",
+    "clearFilters": "Limpiar filtros"
+  },
+  "results": {
+    "noResults": "Sin resultados",
+    "adjustFilters": "Ajusta los filtros",
+    "noComponents": "No hay componentes disponibles",
+    "componentCount": "{{count}} componentes",
+    "comparing": "Comparando {{count}}/2",
+    "viewComparison": "Ver comparación",
+    "cancel": "Cancelar"
+  },
+  "build": {
+    "currentConfig": "Configuración actual",
+    "addComponents": "Agrega componentes",
+    "componentSelected_one": "{{count}} componente seleccionado",
+    "componentSelected_other": "{{count}} componentes seleccionados",
+    "share": "Compartir",
+    "save": "Guardar",
+    "clear": "Limpiar",
+    "saveBuild": "Guardar build",
+    "nameYourConfig": "Dale un nombre a tu configuración",
+    "buildPlaceholder": "Mi gaming build...",
+    "buildEliminated": "Build eliminado",
+    "errorDeleting": "Error al eliminar el build",
+    "linkCopied": "Enlace copiado al portapapeles",
+    "errorCopyingLink": "Error al copiar el enlace",
+    "errorSharingBuild": "Error al generar build compartido",
+    "buildRestored": "Tu build fue restaurado — {{count}} componente guardado",
+    "buildRestored_other": "Tu build fue restaurado — {{count}} componentes guardados",
+    "buildSaved": "Build \"{{name}}\" guardado",
+    "onlyCompareTwo": "Solo puedes comparar 2 componentes a la vez",
+    "sameTypeOnly": "Solo puedes comparar componentes del mismo tipo"
+  },
+  "card": {
+    "bestPrice": "Mejor precio",
+    "seeLess": "Ver menos",
+    "seeMore": "Ver {{count}} más",
+    "save": "Ahorra ${{amount}}",
+    "add": "Agregar",
+    "viewSpecs": "Ver especificaciones",
+    "removeFromCompare": "Quitar de comparación",
+    "compare": "Comparar",
+    "compatible": "✓ Compat.",
+    "incompatible": "✕ Incompat.",
+    "yes": "Sí",
+    "no": "No"
+  },
+  "buildList": {
+    "title": "Tu Build",
+    "components": "{{count}}/9 componentes",
+    "completeness": "Completitud",
+    "subtotal": "Subtotal",
+    "remove": "Quitar",
+    "notAdded": "Sin agregar",
+    "search": "Buscar",
+    "bestPrices": "Total con mejores precios",
+    "youCanSave": "Puedes ahorrar",
+    "worstCase": "Máximo posible: ${{amount}} eligiendo peores tiendas"
+  },
+  "checklist": {
+    "title": "Checklist del Build",
+    "added": "✓ Agregado",
+    "missing": "— Faltante"
+  },
+  "savedBuilds": {
+    "title": "Builds guardados",
+    "empty": "No hay builds guardados aún",
+    "emptyHint": "Guarda tu build actual para acceder después",
+    "load": "Cargar build",
+    "delete": "Eliminar",
+    "componentCount_one": "{{count}} componente",
+    "componentCount_other": "{{count}} componentes"
+  },
+  "recommendations": {
+    "title": "Recomendaciones",
+    "subtitle": "Basadas en compatibilidad, rendimiento y valor",
+    "buildComplete": "Build completo",
+    "noAdditional": "No hay recomendaciones adicionales",
+    "completeYourBuild": "Para completar tu build",
+    "missing_one": "{{count}} tipo faltante",
+    "missing_other": "{{count}} tipos faltantes",
+    "seeLess": "Ver menos",
+    "seeMore": "Ver {{count}} más",
+    "compat": "Compat.",
+    "perf": "Rend.",
+    "value": "Valor",
+    "bestPrice": "Mejor precio",
+    "add": "Agregar"
+  },
+  "compare": {
+    "title": "Comparar {{type}}",
+    "close": "Cerrar",
+    "bestPrice": "Mejor precio",
+    "noSpecs": "No hay especificaciones disponibles para comparar",
+    "yes": "Si",
+    "no": "No"
+  },
+  "detail": {
+    "specs": "Especificaciones",
+    "otherData": "Otros datos",
+    "prices": "Precios por vendedor",
+    "noSpecs": "Sin especificaciones disponibles",
+    "bestPrice": "Mejor precio",
+    "addToBuild": "Agregar al build",
+    "bestPriceLabel": "· mejor precio",
+    "yes": "Sí",
+    "no": "No"
+  },
+  "pagination": {
+    "showPerPage": "Mostrar por página:",
+    "itemsOption": "{{count}} componentes",
+    "showing": "Mostrando {{start}} a {{end}} de {{total}} componentes",
+    "previous": "Anterior",
+    "next": "Siguiente"
+  },
+  "saveDialog": {
+    "title": "Guardar build",
+    "subtitle": "Dale un nombre a tu configuración",
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  },
+  "appearance": {
+    "title": "Apariencia",
+    "theme": "Theme:",
+    "light": "Claro",
+    "dark": "Oscuro",
+    "language": "Idioma:"
+  },
+  "userData": {
+    "title": "Información de cuenta",
+    "loading": "Cargando datos de usuario...",
+    "name": "Nombre:",
+    "email": "Email:",
+    "changePassword": "Cambiar contraseña:",
+    "setPassword": "Configurar contraseña",
+    "repeatPassword": "Repita la contraseña:",
+    "currentPassword": "Su contraseña actual:",
+    "errorRewritePassword": "Reescriba la contraseña",
+    "errorPasswordMismatch": "Las contraseñas no coinciden",
+    "errorEnterCurrentPassword": "Ingrese su contraseña actual",
+    "errorInvalidCurrentPassword": "La contraseña actual no es válida"
+  },
+  "login": {
+    "versionBeta": "PC Builder — Versión Beta",
+    "views": {
+      "selection": {
+        "title": "PC Builder",
+        "sub": "Elige cómo quieres continuar"
+      },
+      "login": {
+        "title": "Inicia sesión",
+        "sub": "Ingresa tus credenciales"
+      },
+      "signon": {
+        "title": "Crea tu cuenta",
+        "sub": "Completa el formulario"
+      },
+      "OTP": {
+        "title": "Clave de acceso",
+        "sub": "Acceso sin contraseña"
+      }
+    },
+    "backToMethods": "← Volver a métodos",
+    "continueWithGoogle": "Continuar con Google",
+    "or": "o",
+    "signInWithCredentials": "Iniciar sesión con credenciales",
+    "continueWithOTP": "Continuar con clave de uso único",
+    "firstTime": "¿Primera vez? Crear cuenta",
+    "emailLabel": "Email",
+    "passwordLabel": "Contraseña",
+    "usernameLabel": "Nombre de usuario",
+    "confirmPasswordLabel": "Confirmar contraseña",
+    "usernamePlaceholder": "Tu nombre",
+    "emailPlaceholder": "tu@email.com",
+    "verifying": "Verificando...",
+    "signingIn": "Iniciar sesión",
+    "creatingAccount": "Creando cuenta...",
+    "createAccount": "Crear cuenta",
+    "sendCode": "Enviar código",
+    "sendingCode": "Enviando...",
+    "verifyCode": "Verificar código",
+    "verifyingCode": "Verificando...",
+    "otpSentTo": "Código de 6 dígitos enviado a",
+    "otpRetry": "¿No llegó el código? Reintentar",
+    "errorInvalidEmail": "El email no es válido",
+    "errorInvalidCredentials": "Email o contraseña incorrectos",
+    "errorDefault": "Error al iniciar sesión",
+    "errorPasswordMismatch": "Las contraseñas no coinciden",
+    "errorEmailInUse": "Este email ya está en uso",
+    "errorCreatingAccount": "Error al crear la cuenta",
+    "errorInvalidOTP": "Código incorrecto",
+    "errorTooManyAttempts": "Demasiados intentos. Vuelve atrás e ingresa tu email de nuevo",
+    "errorSendingCode": "Error al enviar el código"
+  },
+  "userConfig": {
+    "account": "Cuenta",
+    "preferences": "Preferencias",
+    "configuration": "Configuración",
+    "saveChanges": "Guardar cambios",
+    "discardChanges": "Descartar cambios",
+    "saving": "Guardando...",
+    "unsavedChanges": "Cambios sin guardar",
+    "back": "Volver",
+    "signOut": "Cerrar sesión"
+  },
+  "language": {
+    "en": "English (EN)",
+    "es": "Español (ES)"
+  },
+  "common": {
+    "close": "Cerrar",
+    "confirmDiscard": "¿Estás seguro de que deseas descartar los cambios?"
+  }
+}

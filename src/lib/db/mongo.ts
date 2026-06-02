@@ -35,7 +35,7 @@ export async function getComponents(
   brandId?: string,
   page: number = 1,
   limit: number = 16,
-  sortBy: string = 'updated_at',
+  sortBy: string = 'synced_at',
   sortOrder: -1 | 1 = -1,
   minPrice?: number,
   maxPrice?: number,

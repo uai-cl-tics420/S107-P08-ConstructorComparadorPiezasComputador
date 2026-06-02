@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useContext } from 'react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, ChevronDown, User, LogOut, Loader2, Sun, Moon, Share2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useSession, signOut } from '@/lib/auth/auth-client';
 import { ComponentCard } from '@/components/ComponentCard';
 import { BuildList } from '@/components/BuildList';
@@ -13,6 +14,7 @@ import { ComponentDetailModal } from '@/components/ComponentDetailModal';
 import { SavedBuildsPanel } from '@/components/SavedBuildsPanel';
 import { Pagination } from '@/components/Pagination';
 import { RecommendationsPanel } from '@/components/RecommendationsPanel';
+import { LanguageDropdown } from '@/components/LanguageDropdown';
 import { useToast } from '@/hooks/useToast';
 import { useSavedBuilds } from '@/hooks/useSavedBuilds';
 import { useRecommendations } from '@/hooks/useRecommendations';
@@ -23,6 +25,7 @@ import { ConfigContext } from '@/frontend';
 import '@/index.css';
 
 export function App() {
+  const { t } = useTranslation();
   const { config, setConfig } = useContext(ConfigContext);
 
   const [components, setComponents] = useState<Component[]>([]);
@@ -107,7 +110,7 @@ export function App() {
       if (restoredCount > 0) {
         setActiveTab('build');
         addToast(
-          `Tu build fue restaurado — ${restoredCount} componente${restoredCount !== 1 ? 's' : ''} guardado${restoredCount !== 1 ? 's' : ''}`,
+          t(restoredCount === 1 ? 'build.buildRestored' : 'build.buildRestored_other', { count: restoredCount }),
           'success',
         );
       }
@@ -141,18 +144,45 @@ export function App() {
   // Fetch components when search/type/brand changes
   useEffect(() => {
     setLoading(true);
-    const params = new URLSearchParams();
-    if (search) params.set('search', search);
-    if (selectedType) params.set('type_id', selectedType);
-    if (selectedBrand) params.set('brand_id', selectedBrand);
-    if (minPrice) params.set('minPrice', minPrice);
-    if (maxPrice) params.set('maxPrice', maxPrice);
 
-    params.set('page', String(currentPage));
-    params.set('limit', String(itemsPerPage));
-    params.set('sortBy', sortBy === 'default' ? 'updated_at' : sortBy);
+    const filters = {
+      search: search || undefined,
+      typeId: selectedType || undefined,
+      brandId: selectedBrand || undefined,
+      minPrice: minPrice ? parseFloat(minPrice) : undefined,
+      maxPrice: maxPrice ? parseFloat(maxPrice) : undefined,
+      page: currentPage,
+      limit: itemsPerPage,
+      sortBy: 'synced_at',
+      sortOrder: -1 as -1 | 1,
+    };
 
-    fetch(`/api/components?${params}`)
+    switch (sortBy) {
+      case 'latest':
+        filters.sortBy = 'synced_at';
+        filters.sortOrder = -1;
+        break;
+      case 'price_asc':
+        filters.sortBy = 'final_price';
+        filters.sortOrder = 1;
+        break;
+      case 'price_desc':
+        filters.sortBy = 'final_price';
+        filters.sortOrder = -1;
+        break;
+      case 'alphabetical':
+        filters.sortBy = 'name_model';
+        filters.sortOrder = 1;
+        break;
+    }
+
+    fetch(`/api/components`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(filters),
+    })
       .then((r) => r.json())
       .then((data) => {
         setComponents(data.components || []);
@@ -247,12 +277,12 @@ export function App() {
         return prev.filter((c) => c.id !== component.id);
       }
       if (prev.length >= 2) {
-        addToast('Solo puedes comparar 2 componentes a la vez', 'warning');
+        addToast(t('build.onlyCompareTwo'), 'warning');
         return prev;
       }
       // Solo permitir comparar componentes del mismo tipo
       if (prev.length === 1 && prev[0]!.type_id !== component.type_id) {
-        addToast(`Solo puedes comparar ${prev[0]!.type_name} con ${prev[0]!.type_name}`, 'warning');
+        addToast(t('build.sameTypeOnly'), 'warning');
         return prev;
       }
       const next = [...prev, component];
@@ -270,11 +300,11 @@ export function App() {
         setCurrentBuildId(saved.id as string);
       }
 
-      addToast(`Build "${saveName.trim()}" guardado`, 'success');
+      addToast(t('build.buildSaved', { name: saveName.trim() }), 'success');
       setSaveName('');
       setShowSaveDialog(false);
     } catch {
-      addToast('Error al guardar el build', 'error');
+      addToast(t('build.errorDeleting'), 'error');
     }
   };
 
@@ -396,7 +426,7 @@ export function App() {
               PC·BUILDER
             </span>
             <span className='font-mono text-[9px] text-tw-muted-deep tracking-[0.2em] uppercase'>
-              Compara · Arma · Ahorra
+              {t('nav.tagline')}
             </span>
           </Link>
 
@@ -409,14 +439,16 @@ export function App() {
                 <span className='font-mono w-4 h-4 bg-tw-base-highlight/10 rounded flex items-center justify-center text-[10px] font-bold'>
                   {buildComponents.length}
                 </span>
-                Mi Build
+                {t('nav.myBuild')}
               </motion.button>
             )}
+
+            <LanguageDropdown />
 
             <button
               onClick={toggleTheme}
               className='p-2 border border-tw-border-deep/50 hover:border-tw-border bg-tw-primary hover:bg-tw-primary-highlight rounded-lg transition-all cursor-pointer group'
-              title={`Cambiar a modo ${config.theme === 'dark' ? 'claro' : 'oscuro'}`}>
+              title={t('nav.toggleTheme', { mode: t(`nav.${config.theme === 'dark' ? 'light' : 'dark'}`) })}>
               {config.theme === 'dark' ? (
                 <Sun className='w-4 h-4 text-tw-base group-hover:text-tw-accent transition-colors' />
               ) : (
@@ -454,7 +486,7 @@ export function App() {
                         className='absolute right-0 mt-2 w-52 bg-tw-surface/98 backdrop-blur-xl border border-tw-border rounded-xl shadow-2xl shadow-black/40 z-20 overflow-hidden'>
                         <div className='px-4 py-3 border-b border-tw-border/50'>
                           <p className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest'>
-                            Sesión activa
+                            {t('nav.activeSession')}
                           </p>
                           <p className='font-mono text-xs text-tw-muted mt-0.5 truncate'>{session.user.email}</p>
                         </div>
@@ -464,13 +496,13 @@ export function App() {
                             onClick={() => setShowUserMenu(false)}
                             className='flex items-center gap-2.5 px-3 py-2 font-mono text-xs text-tw-muted hover:text-tw-primary hover:bg-tw-base-highlight/5 rounded-lg transition-all'>
                             <User className='w-3.5 h-3.5' />
-                            Configuración
+                            {t('nav.settings')}
                           </Link>
                           <button
                             onClick={handleLogout}
                             className='w-full flex items-center gap-2.5 px-3 py-2 font-mono text-xs text-tw-alert/70 hover:text-tw-alert-highlight hover:bg-tw-alert/5 rounded-lg transition-all cursor-pointer'>
                             <LogOut className='w-3.5 h-3.5' />
-                            Cerrar sesión
+                            {t('nav.signOut')}
                           </button>
                         </div>
                       </motion.div>
@@ -482,7 +514,7 @@ export function App() {
               <Link
                 to='/login'
                 className='font-mono text-xs text-tw-mute border text-tw-base border-tw-border-deep/50 hover:border-tw-accent/75 bg-tw-primary hover:bg-tw-primary-highlight hover:text-tw-accent px-4 py-2 rounded-lg transition-all'>
-                Iniciar sesión
+                {t('nav.signIn')}
               </Link>
             )}
           </div>
@@ -506,7 +538,7 @@ export function App() {
                   transition={{ duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
                 />
               )}
-              {tab === 'search' ? 'Componentes' : 'Mi Build'}
+              {tab === 'search' ? t('tabs.components') : t('tabs.myBuild')}
               {tab === 'build' && buildComponents.length > 0 && (
                 <span className='font-mono text-[9px] text-tw-muted-deep border border-tw-glass/10 px-1.5 py-0.5 rounded tabular-nums'>
                   {buildComponents.length}
@@ -528,7 +560,7 @@ export function App() {
                 className='flex items-center justify-between border border-tw-border bg-tw-base/80 backdrop-blur-xl rounded-xl px-4 py-3 mb-4'>
                 <div className='flex items-center gap-3 flex-wrap'>
                   <span className='font-mono text-[9px] text-tw-muted uppercase tracking-widest'>
-                    Comparando {compareList.length}/2
+                    {t('results.comparing', { count: compareList.length })}
                   </span>
                   {compareList.map((c) => (
                     <span
@@ -543,13 +575,13 @@ export function App() {
                     <button
                       onClick={() => setShowCompareModal(true)}
                       className='font-mono text-[10px] text-tw-primary border border-tw-glass/15 hover:border-tw-glass/28 hover:bg-tw-base-highlight/5 px-3 py-1.5 rounded transition-all cursor-pointer uppercase tracking-widest'>
-                      Ver comparación
+                      {t('results.viewComparison')}
                     </button>
                   )}
                   <button
                     onClick={() => setCompareList([])}
                     className='font-mono text-[10px] text-tw-muted-deep hover:text-tw-muted-highlight px-2 py-1.5 transition-colors cursor-pointer'>
-                    Cancelar
+                    {t('results.cancel')}
                   </button>
                 </div>
               </motion.div>
@@ -567,7 +599,7 @@ export function App() {
                     <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-tw-muted-deep' />
                     <input
                       type='text'
-                      placeholder='Buscar componentes...'
+                      placeholder={t('filters.searchPlaceholder')}
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       className='w-full font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-primary placeholder-tw-muted-deep rounded-lg pl-9 pr-4 py-2.5 focus:outline-none focus:border-tw-border-highlight transition-all'
@@ -577,7 +609,7 @@ export function App() {
                     value={selectedType}
                     onChange={(e) => setSelectedType(e.target.value)}
                     className='font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-muted-highlight rounded-lg px-3 py-2.5 focus:outline-none focus:border-tw-border-highlight cursor-pointer appearance-none transition-all min-w-35'>
-                    <option value=''>Todos los tipos</option>
+                    <option value=''>{t('filters.allTypes')}</option>
                     {componentTypes.map((t) => (
                       <option key={t.id} value={t.id}>
                         {t.name}
@@ -588,7 +620,7 @@ export function App() {
                     value={selectedBrand}
                     onChange={(e) => setSelectedBrand(e.target.value)}
                     className='font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-muted-highlight rounded-lg px-3 py-2.5 focus:outline-none focus:border-tw-border-highlight cursor-pointer appearance-none transition-all min-w-35'>
-                    <option value=''>Todas las marcas</option>
+                    <option value=''>{t('filters.allBrands')}</option>
                     {brands.map((b) => (
                       <option key={b.id} value={b.id}>
                         {b.name}
@@ -601,11 +633,11 @@ export function App() {
                 <div className='flex flex-col sm:flex-row gap-2.5 items-center'>
                   <div className='flex items-center gap-2 flex-1'>
                     <span className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest shrink-0'>
-                      Precio
+                      {t('filters.price')}
                     </span>
                     <input
                       type='number'
-                      placeholder='Mín'
+                      placeholder={t('filters.minPlaceholder')}
                       value={minPrice}
                       onChange={(e) => setMinPrice(e.target.value)}
                       className='flex-1 font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-primary placeholder-tw-muted-deep rounded-lg px-3 py-2 focus:outline-none focus:border-tw-border-highlight transition-all'
@@ -613,7 +645,7 @@ export function App() {
                     <span className='text-tw-muted-de text-xs'>—</span>
                     <input
                       type='number'
-                      placeholder='Máx'
+                      placeholder={t('filters.maxPlaceholder')}
                       value={maxPrice}
                       onChange={(e) => setMaxPrice(e.target.value)}
                       className='flex-1 font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-primary placeholder-tw-muted-deep rounded-lg px-3 py-2 focus:outline-none focus:border-tw-border-highlight transition-all'
@@ -634,16 +666,16 @@ export function App() {
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
                       className='font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-muted-highlight rounded-lg px-3 py-2 focus:outline-none focus:border-tw-border-highlight cursor-pointer appearance-none transition-all'>
-                      <option value='default'>Ordenar: Defecto</option>
-                      <option value='price_asc'>Precio ↑</option>
-                      <option value='price_desc'>Precio ↓</option>
-                      <option value='name'>Nombre A–Z</option>
+                      <option value='latest'>{t('filters.sortDefault')}</option>
+                      <option value='price_asc'>{t('filters.sortPriceAsc')}</option>
+                      <option value='price_desc'>{t('filters.sortPriceDesc')}</option>
+                      <option value='alphabetical'>{t('filters.sortName')}</option>
                     </select>
                     {hasActiveFilters && (
                       <button
                         onClick={clearFilters}
                         className='font-mono text-[9px] text-tw-muted-deep hover:text-tw-muted-highlight border border-tw-glass/8 hover:border-tw-glass/15 px-3 py-2 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
-                        Limpiar
+                        {t('filters.clear')}
                       </button>
                     )}
                   </div>
@@ -669,16 +701,16 @@ export function App() {
                   <Search className='w-4 h-4 text-tw-muted-de' />
                 </div>
                 <div className='text-center space-y-1'>
-                  <p className='text-tw-muted-highlight text-sm'>Sin resultados</p>
+                  <p className='text-tw-muted-highlight text-sm'>{t('results.noResults')}</p>
                   <p className='font-mono text-[9px] text-tw-muted-de uppercase tracking-widest'>
-                    {hasActiveFilters ? 'Ajusta los filtros' : 'No hay componentes disponibles'}
+                    {hasActiveFilters ? t('results.adjustFilters') : t('results.noComponents')}
                   </p>
                 </div>
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
                     className='font-mono text-[9px] text-tw-muted hover:text-tw-muted-highlight border border-tw-glass/8 hover:border-tw-glass/15 px-4 py-2 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
-                    Limpiar filtros
+                    {t('filters.clearFilters')}
                   </button>
                 )}
               </motion.div>
@@ -686,7 +718,7 @@ export function App() {
               <>
                 <motion.div variants={containerVariant} initial='hidden' animate='visible'>
                   <p className='font-mono text-[9px] text-tw-muted-de uppercase tracking-widest mb-4'>
-                    {totalCount} componentes
+                    {t('results.componentCount', { count: totalCount })}
                   </p>
                   {/* ── GRID UNIFORME — 4 por fila ── */}
                   <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
@@ -730,12 +762,17 @@ export function App() {
               <div className='flex items-center justify-between'>
                 <div>
                   <p className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest mb-1'>
-                    Configuración actual
+                    {t('build.currentConfig')}
                   </p>
                   <h2 className='text-tw-primary font-semibold text-base'>
                     {buildComponents.length === 0
-                      ? 'Agrega componentes'
-                      : `${buildComponents.length} componente${buildComponents.length > 1 ? 's' : ''} seleccionado${buildComponents.length > 1 ? 's' : ''}`}
+                      ? t('build.addComponents')
+                      : t(
+                          buildComponents.length === 1
+                            ? 'build.componentSelected_one'
+                            : 'build.componentSelected_other',
+                          { count: buildComponents.length },
+                        )}
                   </h2>
                 </div>
                 {buildComponents.length > 0 && (
@@ -747,8 +784,8 @@ export function App() {
                           const shareUrl = `${baseUrl}/?share=${currentBuildId}`;
                           navigator.clipboard
                             .writeText(shareUrl)
-                            .then(() => addToast('Enlace copiado al portapapeles', 'success'))
-                            .catch(() => addToast('Error al copiar el enlace', 'error'));
+                            .then(() => addToast(t('build.linkCopied'), 'success'))
+                            .catch(() => addToast(t('build.errorCopyingLink'), 'error'));
                         } else {
                           try {
                             const res = await fetch('/api/shared-builds', {
@@ -762,27 +799,27 @@ export function App() {
                               const shareUrl = `${baseUrl}/?share=${data.id}`;
                               navigator.clipboard
                                 .writeText(shareUrl)
-                                .then(() => addToast('Enlace copiado al portapapeles', 'success'))
-                                .catch(() => addToast('Error al copiar el enlace', 'error'));
+                                .then(() => addToast(t('build.linkCopied'), 'success'))
+                                .catch(() => addToast(t('build.errorCopyingLink'), 'error'));
                             }
                           } catch (err) {
-                            addToast('Error al generar build compartido', 'error');
+                            addToast(t('build.errorSharingBuild'), 'error');
                           }
                         }
                       }}
                       className='font-mono flex items-center gap-1.5 text-[10px] text-tw-muted-highlight hover:text-tw-primary border border-tw-glass/10 hover:border-tw-glass/20 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
                       <Share2 className='w-3.5 h-3.5' />
-                      Compartir
+                      {t('build.share')}
                     </button>
                     <button
                       onClick={() => setShowSaveDialog(true)}
                       className='font-mono text-[10px] text-tw-muted-highlight hover:text-tw-primary border border-tw-glass/10 hover:border-tw-glass/20 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
-                      Guardar
+                      {t('build.save')}
                     </button>
                     <button
                       onClick={handleClearBuild}
                       className='font-mono text-[10px] text-tw-alert hover:text-tw-alert-highlight border border-tw-alert/15 hover:border-tw-alert/30 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
-                      Limpiar
+                      {t('build.clear')}
                     </button>
                   </div>
                 )}
@@ -821,9 +858,9 @@ export function App() {
                 onDelete={async (id) => {
                   try {
                     await deleteBuild(id);
-                    addToast('Build eliminado', 'warning');
+                    addToast(t('build.buildEliminated'), 'warning');
                   } catch {
-                    addToast('Error al eliminar el build', 'error');
+                    addToast(t('build.errorDeleting'), 'error');
                   }
                 }}
               />
@@ -858,14 +895,14 @@ export function App() {
 
                 <div>
                   <p className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest mb-1'>
-                    Guardar build
+                    {t('saveDialog.title')}
                   </p>
-                  <h3 className='text-tw-primary font-semibold text-sm'>Dale un nombre a tu configuración</h3>
+                  <h3 className='text-tw-primary font-semibold text-sm'>{t('saveDialog.subtitle')}</h3>
                 </div>
 
                 <input
                   type='text'
-                  placeholder='Mi gaming build...'
+                  placeholder={t('build.buildPlaceholder')}
                   value={saveName}
                   onChange={(e) => setSaveName(e.target.value)}
                   onKeyDown={(e) => {
@@ -880,7 +917,7 @@ export function App() {
                     onClick={handleSaveBuild}
                     disabled={!saveName.trim()}
                     className='flex-1 font-mono text-[11px] text-tw-primary bg-tw-base-highlight/8 border border-tw-glass/12 hover:border-tw-glass/25 hover:bg-tw-base-highlight/12 disabled:opacity-25 disabled:cursor-not-allowed py-2.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
-                    Guardar
+                    {t('saveDialog.save')}
                   </button>
                   <button
                     onClick={() => {
@@ -888,7 +925,7 @@ export function App() {
                       setSaveName('');
                     }}
                     className='px-4 font-mono text-[11px] text-tw-muted border border-tw-glass/8 hover:border-tw-glass/15 hover:text-tw-muted-highlight hover:bg-tw-base-highlight/12 py-2.5 rounded-lg transition-all cursor-pointer'>
-                    Cancelar
+                    {t('saveDialog.cancel')}
                   </button>
                 </div>
               </div>

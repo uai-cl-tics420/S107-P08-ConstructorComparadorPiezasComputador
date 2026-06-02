@@ -1,0 +1,242 @@
+{
+  "nav": {
+    "tagline": "Compare · Build · Save",
+    "myBuild": "My Build",
+    "activeSession": "Active session",
+    "settings": "Settings",
+    "signOut": "Sign out",
+    "signIn": "Sign in",
+    "toggleTheme": "Switch to {{mode}} mode",
+    "light": "light",
+    "dark": "dark"
+  },
+  "tabs": {
+    "components": "Components",
+    "myBuild": "My Build"
+  },
+  "filters": {
+    "searchPlaceholder": "Search components...",
+    "allTypes": "All types",
+    "allBrands": "All brands",
+    "price": "Price",
+    "minPlaceholder": "Min",
+    "maxPlaceholder": "Max",
+    "sortDefault": "Latest",
+    "sortPriceAsc": "Price ↑",
+    "sortPriceDesc": "Price ↓",
+    "sortName": "Name A–Z",
+    "clear": "Clear",
+    "clearFilters": "Clear filters"
+  },
+  "results": {
+    "noResults": "No results",
+    "adjustFilters": "Adjust the filters",
+    "noComponents": "No components available",
+    "componentCount": "{{count}} components",
+    "comparing": "Comparing {{count}}/2",
+    "viewComparison": "View comparison",
+    "cancel": "Cancel"
+  },
+  "build": {
+    "currentConfig": "Current configuration",
+    "addComponents": "Add components",
+    "componentSelected_one": "{{count}} component selected",
+    "componentSelected_other": "{{count}} components selected",
+    "share": "Share",
+    "save": "Save",
+    "clear": "Clear",
+    "saveBuild": "Save build",
+    "nameYourConfig": "Name your configuration",
+    "buildPlaceholder": "My gaming build...",
+    "buildEliminated": "Build deleted",
+    "errorDeleting": "Error deleting build",
+    "linkCopied": "Link copied to clipboard",
+    "errorCopyingLink": "Error copying link",
+    "errorSharingBuild": "Error generating shared build",
+    "buildRestored": "Your build was restored — {{count}} component saved",
+    "buildRestored_other": "Your build was restored — {{count}} components saved",
+    "buildSaved": "Build \"{{name}}\" saved",
+    "onlyCompareTwo": "You can only compare 2 components at a time",
+    "sameTypeOnly": "You can only compare components of the same type"
+  },
+  "card": {
+    "bestPrice": "Best price",
+    "seeLess": "See less",
+    "seeMore": "See {{count}} more",
+    "save": "Save ${{amount}}",
+    "add": "Add",
+    "viewSpecs": "View specifications",
+    "removeFromCompare": "Remove from comparison",
+    "compare": "Compare",
+    "compatible": "✓ Compat.",
+    "incompatible": "✕ Incompat.",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "buildList": {
+    "title": "Your Build",
+    "components": "{{count}}/9 components",
+    "completeness": "Completeness",
+    "subtotal": "Subtotal",
+    "remove": "Remove",
+    "notAdded": "Not added",
+    "search": "Search",
+    "bestPrices": "Total with best prices",
+    "youCanSave": "You can save",
+    "worstCase": "Max possible: ${{amount}} with worst stores"
+  },
+  "checklist": {
+    "title": "Build Checklist",
+    "added": "✓ Added",
+    "missing": "— Missing"
+  },
+  "savedBuilds": {
+    "title": "Saved builds",
+    "empty": "No saved builds yet",
+    "emptyHint": "Save your current build to access it later",
+    "load": "Load build",
+    "delete": "Delete",
+    "componentCount_one": "{{count}} component",
+    "componentCount_other": "{{count}} components"
+  },
+  "recommendations": {
+    "title": "Recommendations",
+    "subtitle": "Based on compatibility, performance and value",
+    "buildComplete": "Build complete",
+    "noAdditional": "No additional recommendations",
+    "completeYourBuild": "To complete your build",
+    "missing_one": "{{count}} missing type",
+    "missing_other": "{{count}} missing types",
+    "seeLess": "See less",
+    "seeMore": "See {{count}} more",
+    "compat": "Compat.",
+    "perf": "Perf.",
+    "value": "Value",
+    "bestPrice": "Best price",
+    "add": "Add"
+  },
+  "compare": {
+    "title": "Compare {{type}}",
+    "close": "Close",
+    "bestPrice": "Best price",
+    "noSpecs": "No specifications available to compare",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "detail": {
+    "specs": "Specifications",
+    "otherData": "Other data",
+    "prices": "Prices by vendor",
+    "noSpecs": "No specifications available",
+    "bestPrice": "Best price",
+    "addToBuild": "Add to build",
+    "bestPriceLabel": "· best price",
+    "yes": "Yes",
+    "no": "No"
+  },
+  "pagination": {
+    "showPerPage": "Show per page:",
+    "itemsOption": "{{count}} components",
+    "showing": "Showing {{start}} to {{end}} of {{total}} components",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "saveDialog": {
+    "title": "Save build",
+    "subtitle": "Name your configuration",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "appearance": {
+    "title": "Appearance",
+    "theme": "Theme:",
+    "light": "Light",
+    "dark": "Dark",
+    "language": "Language:"
+  },
+  "userData": {
+    "title": "Account information",
+    "loading": "Loading user data...",
+    "name": "Name:",
+    "email": "Email:",
+    "changePassword": "Change password:",
+    "setPassword": "Set password",
+    "repeatPassword": "Repeat password:",
+    "currentPassword": "Your current password:",
+    "errorRewritePassword": "Re-enter password",
+    "errorPasswordMismatch": "Passwords do not match",
+    "errorEnterCurrentPassword": "Enter your current password",
+    "errorInvalidCurrentPassword": "Current password is not valid"
+  },
+  "login": {
+    "versionBeta": "PC Builder — Beta Version",
+    "views": {
+      "selection": {
+        "title": "PC Builder",
+        "sub": "Choose how to continue"
+      },
+      "login": {
+        "title": "Sign in",
+        "sub": "Enter your credentials"
+      },
+      "signon": {
+        "title": "Create account",
+        "sub": "Fill out the form"
+      },
+      "OTP": {
+        "title": "Access key",
+        "sub": "Passwordless access"
+      }
+    },
+    "backToMethods": "← Back to methods",
+    "continueWithGoogle": "Continue with Google",
+    "or": "or",
+    "signInWithCredentials": "Sign in with credentials",
+    "continueWithOTP": "Continue with one-time key",
+    "firstTime": "First time? Create account",
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "usernameLabel": "Username",
+    "confirmPasswordLabel": "Confirm password",
+    "usernamePlaceholder": "Your name",
+    "emailPlaceholder": "you@email.com",
+    "verifying": "Verifying...",
+    "signingIn": "Sign in",
+    "creatingAccount": "Creating account...",
+    "createAccount": "Create account",
+    "sendCode": "Send code",
+    "sendingCode": "Sending...",
+    "verifyCode": "Verify code",
+    "verifyingCode": "Verifying...",
+    "otpSentTo": "6-digit code sent to",
+    "otpRetry": "Code not received? Retry",
+    "errorInvalidEmail": "The email is not valid",
+    "errorInvalidCredentials": "Incorrect email or password",
+    "errorDefault": "Error signing in",
+    "errorPasswordMismatch": "Passwords do not match",
+    "errorEmailInUse": "This email is already in use",
+    "errorCreatingAccount": "Error creating account",
+    "errorInvalidOTP": "Incorrect code",
+    "errorTooManyAttempts": "Too many attempts. Go back and enter your email again",
+    "errorSendingCode": "Error sending code"
+  },
+  "userConfig": {
+    "account": "Account",
+    "preferences": "Preferences",
+    "configuration": "Configuration",
+    "saveChanges": "Save changes",
+    "discardChanges": "Discard changes",
+    "saving": "Saving...",
+    "unsavedChanges": "Unsaved changes",
+    "back": "Back",
+    "signOut": "Sign out"
+  },
+  "language": {
+    "en": "English (EN)",
+    "es": "Español (ES)"
+  },
+  "common": {
+    "close": "Close",
+    "confirmDiscard": "Are you sure you want to discard your changes?"
+  }
+}

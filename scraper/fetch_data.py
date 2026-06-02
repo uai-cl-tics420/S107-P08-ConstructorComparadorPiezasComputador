@@ -155,22 +155,6 @@ def main():
     except Exception:
         pg_conn.rollback()
 
-    # Ensure name_model column + index exist en components_mirror.
-    # Bases de datos creadas con un esquema viejo no tenian esta columna y el
-    # INSERT de abajo (y las queries de busqueda del frontend) crasheaban.
-    try:
-        pg_cursor.execute(
-            "ALTER TABLE public.components_mirror "
-            "ADD COLUMN IF NOT EXISTS name_model VARCHAR(160) NOT NULL DEFAULT '';"
-        )
-        pg_cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_components_mirror_name_model "
-            "ON public.components_mirror (name_model);"
-        )
-        pg_conn.commit()
-    except Exception:
-        pg_conn.rollback()
-
     # Option to clear existing data via command line arg
     if "--clear" in sys.argv:
         clear_database(mongo_db, pg_cursor, pg_conn)

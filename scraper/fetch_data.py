@@ -72,8 +72,17 @@ DISPLAY_SPECS = {
     "read_speed": "Lectura", "write_speed": "Escritura",
     # PSU
     "wattage": "Watts", "certification": "Certificacion", "is_modular": "Modular",
+    # CPU Cooler
+    "cooler_sockets": "Sockets",
+    "height": "Altura (mm)",
     # Case
     "max_motherboard_form_factor": "Form Factor",
+    "max_cpu_cooler_height": "Alt. máx. Cooler",
+    "max_video_card_length": "Largo máx. GPU",
+    # GPU
+    "length": "Largo (mm)",
+    # Motherboard (compat extra)
+    "m2_slots": "Slots M.2",
     # General
     "form_factor": "Form Factor",
 }
@@ -142,6 +151,22 @@ def main():
     # Ensure vendor_name column exists
     try:
         pg_cursor.execute("ALTER TABLE public.prices ADD COLUMN IF NOT EXISTS vendor_name TEXT;")
+        pg_conn.commit()
+    except Exception:
+        pg_conn.rollback()
+
+    # Ensure name_model column + index exist en components_mirror.
+    # Bases de datos creadas con un esquema viejo no tenian esta columna y el
+    # INSERT de abajo (y las queries de busqueda del frontend) crasheaban.
+    try:
+        pg_cursor.execute(
+            "ALTER TABLE public.components_mirror "
+            "ADD COLUMN IF NOT EXISTS name_model VARCHAR(160) NOT NULL DEFAULT '';"
+        )
+        pg_cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_components_mirror_name_model "
+            "ON public.components_mirror (name_model);"
+        )
         pg_conn.commit()
     except Exception:
         pg_conn.rollback()
@@ -233,7 +258,8 @@ def main():
 
             pg_cursor.execute(
                 "INSERT INTO public.components_mirror (component_id, name_model, type_id, brand_id) "
-                "VALUES (%s, %s, %s, %s) ON CONFLICT (component_id) DO NOTHING",
+                "VALUES (%s, %s, %s, %s) "
+                "ON CONFLICT (component_id) DO UPDATE SET name_model = EXCLUDED.name_model",
                 (comp_id, clean_name, type_id, brand_id),
             )
 

@@ -56,6 +56,24 @@ function str(specs: ComponentSpecs | undefined, key: string): string | null {
   return v != null ? String(v) : null;
 }
 
+// Normaliza sockets para comparar: "LGA 1700" == "LGA1700", "am4" == "AM4"
+function normSocket(raw: string | null | undefined): string {
+  return String(raw ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+// El CPU Cooler soporta una lista de sockets (cooler_sockets). Devuelve:
+//   true  -> el socket del CPU está soportado
+//   false -> no está soportado
+//   null  -> sin datos suficientes para evaluar
+function coolerSupportsSocket(
+  coolerSpecs: ComponentSpecs | undefined,
+  cpuSocket: string | null,
+): boolean | null {
+  const list = coolerSpecs?.['cooler_sockets'];
+  if (!cpuSocket || !Array.isArray(list) || list.length === 0) return null;
+  return list.map((s) => normSocket(String(s))).includes(normSocket(cpuSocket));
+}
+
 export function bestPrice(c: Component): number {
   if (!c.prices || c.prices.length === 0) return Infinity;
   return Math.min(...c.prices.map((p) => p.price));
@@ -162,7 +180,7 @@ export function scoreCompatibility(
       const cs = str(candidate.specs, 'socket');
       const ms = str(mb.specs, 'socket');
       if (cs && ms) {
-        cs === ms
+        normSocket(cs) === normSocket(ms)
           ? pass(`Socket ${cs} compatible con tu Motherboard`)
           : fail(`Socket ${cs} ≠ ${ms} de tu Motherboard`);
       }
@@ -173,9 +191,12 @@ export function scoreCompatibility(
       if (cd && rd) { cd === rd ? pass(`Soporta ${cd} como tu RAM`) : fail(); }
     }
     if (cooler) {
-      const ct = num(cooler.specs, 'tdp');
-      const pt = num(candidate.specs, 'tdp');
-      if (ct && pt) { ct >= pt ? pass(`Tu Cooler aguanta ${ct} W`) : fail(); }
+      const supported = coolerSupportsSocket(cooler.specs, str(candidate.specs, 'socket'));
+      if (supported !== null) {
+        supported
+          ? pass(`Tu Cooler es compatible con el socket`)
+          : fail(`Tu Cooler no soporta el socket de este CPU`);
+      }
     }
   }
 
@@ -185,7 +206,7 @@ export function scoreCompatibility(
       const cs = str(cpu.specs, 'socket');
       const ms = str(candidate.specs, 'socket');
       if (cs && ms) {
-        cs === ms
+        normSocket(cs) === normSocket(ms)
           ? pass(`Socket ${ms} compatible con tu CPU`)
           : fail(`Socket ${ms} ≠ ${cs} de tu CPU`);
       }
@@ -221,6 +242,18 @@ export function scoreCompatibility(
       const md = str(mb.specs, 'ram_type')?.toUpperCase();
       const rd = str(candidate.specs, 'ram_type')?.toUpperCase();
       if (md && rd && md !== rd) { hardFails++; } // silent — ya capturado por CPU
+
+      // Módulos de RAM vs slots de la Motherboard (no pasarse de la capacidad)
+      const slots = num(mb.specs, 'memory_slots_quantity');
+      if (slots !== null) {
+        const candModules  = num(candidate.specs, 'module_count') ?? 1;
+        const otherModules = build
+          .filter((b) => b.component.type_name === 'RAM' && b.component.id !== candidate.id)
+          .reduce((sum, b) => sum + (num(b.component.specs, 'module_count') ?? 1) * b.quantity, 0);
+        otherModules + candModules <= slots
+          ? pass(`Cabe en los ${slots} slots de RAM de tu Motherboard`)
+          : fail(`${otherModules + candModules} módulos exceden los ${slots} slots de tu Motherboard`);
+      }
     }
   }
 
@@ -234,9 +267,22 @@ export function scoreCompatibility(
         else if (ct >= pt)    soft(`${ct} W — margen justo para tu CPU (${pt} W)`);
         else                  fail(`${ct} W insuficiente para tu CPU (${pt} W)`);
       }
-      const cs = str(candidate.specs, 'socket');
       const ps = str(cpu.specs, 'socket');
-      if (cs && ps) { cs === ps ? pass(`Compatible con socket ${ps}`) : fail(); }
+      const supported = coolerSupportsSocket(candidate.specs, ps);
+      if (supported !== null) {
+        supported
+          ? pass(`Compatible con socket ${ps}`)
+          : fail(`No soporta el socket ${ps} de tu CPU`);
+      }
+    }
+    if (pcCase) {
+      const coolerH = num(candidate.specs, 'height');
+      const maxH    = num(pcCase.specs, 'max_cpu_cooler_height');
+      if (coolerH !== null && maxH !== null) {
+        coolerH <= maxH
+          ? pass(`${coolerH}mm — cabe en tu Case (máx. ${maxH}mm)`)
+          : fail(`${coolerH}mm no cabe en tu Case (máx. ${maxH}mm)`);
+      }
     }
   }
 
@@ -269,6 +315,15 @@ export function scoreCompatibility(
           : fail(`Tu PSU de ${pw} W puede ser insuficiente`);
       }
     }
+    if (pcCase) {
+      const gpuLen = num(candidate.specs, 'length');
+      const maxLen = num(pcCase.specs, 'max_video_card_length');
+      if (gpuLen !== null && maxLen !== null) {
+        gpuLen <= maxLen
+          ? pass(`${gpuLen}mm — cabe en tu Case (máx. ${maxLen}mm)`)
+          : fail(`${gpuLen}mm no cabe en tu Case (máx. ${maxLen}mm)`);
+      }
+    }
     const gTdp = num(candidate.specs, 'gpu_tdp');
     const vram  = num(candidate.specs, 'vram_quantity');
     if (gTdp) reasons.push(`${gTdp} W TDP`);
@@ -286,10 +341,41 @@ export function scoreCompatibility(
           : fail(`No soporta el Form Factor ${mff} de tu Motherboard`);
       }
     }
+    if (gpu) {
+      const gpuLen = num(gpu.specs, 'length');
+      const maxLen = num(candidate.specs, 'max_video_card_length');
+      if (gpuLen !== null && maxLen !== null) {
+        gpuLen <= maxLen
+          ? pass(`Tu GPU de ${gpuLen}mm cabe (máx. ${maxLen}mm)`)
+          : fail(`Tu GPU de ${gpuLen}mm no cabe (máx. ${maxLen}mm)`);
+      }
+    }
+    if (cooler) {
+      const coolerH = num(cooler.specs, 'height');
+      const maxH    = num(candidate.specs, 'max_cpu_cooler_height');
+      if (coolerH !== null && maxH !== null) {
+        coolerH <= maxH
+          ? pass(`Tu Cooler de ${coolerH}mm cabe (máx. ${maxH}mm)`)
+          : fail(`Tu Cooler de ${coolerH}mm no cabe (máx. ${maxH}mm)`);
+      }
+    }
   }
 
   // ── Storage ──────────────────────────────────────────────────
   if (type === 'Storage') {
+    if (mb) {
+      const isNvme  = candidate.specs?.['is_nvme'] === true;
+      const m2Slots = num(mb.specs, 'm2_slots');
+      if (isNvme && m2Slots !== null) {
+        const usedSlots = build
+          .filter(b => b.component.type_name === 'Storage' && b.component.specs?.['is_nvme'] === true
+                    && b.component.id !== candidate.id)
+          .length;
+        usedSlots < m2Slots
+          ? pass(`Slot M.2 disponible en tu Motherboard (${usedSlots + 1}/${m2Slots})`)
+          : fail(`Tu Motherboard no tiene más slots M.2 libres (${m2Slots}/${m2Slots})`);
+      }
+    }
     const r = num(candidate.specs, 'read_speed');
     const c = num(candidate.specs, 'capacity_value');
     if (r) reasons.push(`${r.toLocaleString('es-CL')} MB/s lectura`);

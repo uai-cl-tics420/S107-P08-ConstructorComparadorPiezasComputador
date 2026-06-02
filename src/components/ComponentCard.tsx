@@ -32,17 +32,24 @@ const SPEC_LABELS: Record<string, string> = {
   is_modular: 'Modular',
   form_factor: 'Form Factor',
   max_motherboard_form_factor: 'Form Factor',
+  cooler_sockets: 'Sockets',
+  height: 'Altura',
+  length: 'Largo',
+  max_cpu_cooler_height: 'Máx. Cooler',
+  max_video_card_length: 'Máx. GPU',
+  m2_slots: 'Slots M.2',
+  is_nvme: 'NVMe',
 };
 
 const PRIORITY_SPECS: Record<string, string[]> = {
   CPU: ['core_count', 'thread_count', 'socket', 'tdp', 'boost_clock'],
-  GPU: ['vram_quantity', 'gpu_boost_clock', 'gpu_tdp', 'bus_width'],
-  RAM: ['capacity', 'bus_speed', 'ram_type', 'module_count'],
-  Motherboard: ['chipset', 'socket', 'form_factor', 'memory_slots_quantity'],
+  GPU: ['vram_quantity', 'gpu_tdp', 'length', 'bus_width'],
+  RAM: ['capacity', 'ram_type', 'module_count', 'bus_speed'],
+  Motherboard: ['chipset', 'socket', 'ram_type', 'memory_slots_quantity', 'm2_slots'],
   Storage: ['capacity_value', 'bus_type', 'read_speed', 'write_speed'],
   PSU: ['wattage', 'certification', 'is_modular'],
-  Case: ['max_motherboard_form_factor', 'form_factor'],
-  'CPU Cooler': ['tdp', 'form_factor'],
+  Case: ['max_motherboard_form_factor', 'max_cpu_cooler_height', 'max_video_card_length'],
+  'CPU Cooler': ['cooler_sockets', 'height'],
 };
 
 const TYPE_ACCENT: Record<string, string> = {
@@ -58,11 +65,13 @@ const TYPE_ACCENT: Record<string, string> = {
 
 function formatSpecValue(key: string, value: unknown): string {
   if (value === null || value === undefined) return '—';
+  if (Array.isArray(value)) return value.join(' / ');
   if (typeof value === 'boolean') return value ? 'Sí' : 'No';
   if (key === 'tdp' || key === 'gpu_tdp') return `${value}W`;
   if (key === 'wattage') return `${value}W`;
   if (key === 'vram_quantity') return `${value} GB`;
   if (key === 'capacity') return `${value}`;
+  if (key === 'length' || key === 'height' || key === 'max_cpu_cooler_height' || key === 'max_video_card_length') return `${value}mm`;
   return String(value);
 }
 

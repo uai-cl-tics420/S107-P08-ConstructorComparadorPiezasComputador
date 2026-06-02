@@ -53,10 +53,18 @@ const SPEC_LABELS: Record<string, string> = {
   is_modular: 'Modular',
   form_factor: 'Factor de Forma',
   max_motherboard_form_factor: 'Factor de Forma Máx.',
+  cooler_sockets: 'Sockets',
+  height: 'Altura (mm)',
+  length: 'Largo (mm)',
+  max_cpu_cooler_height: 'Máx. Cooler (mm)',
+  max_video_card_length: 'Máx. GPU (mm)',
+  m2_slots: 'Slots M.2',
+  is_nvme: 'NVMe',
 };
 
 function formatValue(key: string, value: unknown): string {
   if (value === null || value === undefined) return '—';
+  if (Array.isArray(value)) return value.join(' / ');
   if (typeof value === 'boolean') return value ? 'Sí' : 'No';
   if (key === 'tdp' || key === 'gpu_tdp') return `${value} W`;
   if (key === 'wattage') return `${value} W`;
@@ -64,6 +72,7 @@ function formatValue(key: string, value: unknown): string {
   if (key === 'read_speed' || key === 'write_speed') return `${value} MB/s`;
   if (key === 'bus_speed') return `${value} MHz`;
   if (key === 'cinebench_r20_single_score' || key === 'cinebench_r20_multi_score') return `${value} pts`;
+  if (key === 'length' || key === 'height' || key === 'max_cpu_cooler_height' || key === 'max_video_card_length') return `${value} mm`;
   return String(value);
 }
 

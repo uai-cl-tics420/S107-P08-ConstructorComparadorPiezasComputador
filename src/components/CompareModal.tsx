@@ -45,6 +45,13 @@ const SPEC_LABELS: Record<string, string> = {
   is_modular: 'Modular',
   form_factor: 'Form Factor',
   max_motherboard_form_factor: 'Form Factor',
+  cooler_sockets: 'Sockets',
+  height: 'Altura',
+  length: 'Largo',
+  max_cpu_cooler_height: 'Máx. Cooler',
+  max_video_card_length: 'Máx. GPU',
+  m2_slots: 'Slots M.2',
+  is_nvme: 'NVMe',
 };
 
 // Specs donde menor valor es mejor (para destacar con verde al menor)
@@ -52,10 +59,12 @@ const LOWER_IS_BETTER = new Set(['tdp', 'gpu_tdp']);
 
 function formatValue(key: string, value: unknown): string {
   if (value === null || value === undefined) return '—';
+  if (Array.isArray(value)) return value.join(' / ');
   if (typeof value === 'boolean') return value ? 'Si' : 'No';
   if (key === 'tdp' || key === 'gpu_tdp') return `${value}W`;
   if (key === 'wattage') return `${value}W`;
   if (key === 'vram_quantity') return `${value} GB`;
+  if (key === 'length' || key === 'height' || key === 'max_cpu_cooler_height' || key === 'max_video_card_length') return `${value}mm`;
   return String(value);
 }
 

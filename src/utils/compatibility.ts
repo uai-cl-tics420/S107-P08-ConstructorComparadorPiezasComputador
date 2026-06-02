@@ -32,6 +32,14 @@ function ddrLabel(raw: unknown): string {
 }
 
 // ─────────────────────────────────────────────────────────────────
+// Normaliza nombres de socket para comparar de forma robusta:
+// "LGA 1700" == "LGA1700", "am4" == "AM4", etc.
+// ─────────────────────────────────────────────────────────────────
+function normSocket(raw: unknown): string {
+  return String(raw ?? '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+}
+
+// ─────────────────────────────────────────────────────────────────
 // Helper para leer specs numéricas de forma segura
 // ─────────────────────────────────────────────────────────────────
 function numSpec(component: { specs?: Record<string, unknown> } | undefined, key: string): number | null {
@@ -52,14 +60,15 @@ function strSpec(component: { specs?: Record<string, unknown> } | undefined, key
 export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[] {
   const issues: CompatibilityIssue[] = [];
 
-  const cpu        = build.find(b => b.component.type_name === "CPU")?.component;
-  const mb         = build.find(b => b.component.type_name === "Motherboard")?.component;
-  const psu        = build.find(b => b.component.type_name === "PSU")?.component;
-  const cooler     = build.find(b => b.component.type_name === "CPU Cooler")?.component;
-  const pcCase     = build.find(b => b.component.type_name === "Case")?.component;
-  const gpu        = build.find(b => b.component.type_name === "GPU")?.component;
-  const ramEntries = build.filter(b => b.component.type_name === "RAM");
-  const ram        = ramEntries[0]?.component;
+  const cpu            = build.find(b => b.component.type_name === "CPU")?.component;
+  const mb             = build.find(b => b.component.type_name === "Motherboard")?.component;
+  const psu            = build.find(b => b.component.type_name === "PSU")?.component;
+  const cooler         = build.find(b => b.component.type_name === "CPU Cooler")?.component;
+  const pcCase         = build.find(b => b.component.type_name === "Case")?.component;
+  const gpu            = build.find(b => b.component.type_name === "GPU")?.component;
+  const ramEntries     = build.filter(b => b.component.type_name === "RAM");
+  const ram            = ramEntries[0]?.component;
+  const storageEntries = build.filter(b => b.component.type_name === "Storage");
 
   // ───────────────────────────────────────────────
   // 1. CPU ↔ Motherboard — Socket
@@ -67,7 +76,7 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
   if (cpu && mb) {
     const cpuSocket = strSpec(cpu, 'socket');
     const mbSocket  = strSpec(mb, 'socket');
-    if (cpuSocket && mbSocket && cpuSocket !== mbSocket) {
+    if (cpuSocket && mbSocket && normSocket(cpuSocket) !== normSocket(mbSocket)) {
       issues.push({
         type: "error",
         message: `CPU usa socket ${cpuSocket} pero la Motherboard es ${mbSocket} — son incompatibles`,
@@ -150,16 +159,19 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
   }
 
   // ───────────────────────────────────────────────
-  // 6. CPU Cooler ↔ CPU — Socket
+  // 6. CPU Cooler ↔ CPU — Socket (el cooler soporta una lista de sockets)
   // ───────────────────────────────────────────────
   if (cooler && cpu) {
-    const coolerSocket = strSpec(cooler, 'socket');
-    const cpuSocket    = strSpec(cpu, 'socket');
-    if (coolerSocket && cpuSocket && coolerSocket !== cpuSocket) {
-      issues.push({
-        type: "error",
-        message: `El CPU Cooler es para socket ${coolerSocket} pero el CPU usa ${cpuSocket}`,
-      });
+    const cpuSocket     = strSpec(cpu, 'socket');
+    const coolerSockets = cooler.specs?.['cooler_sockets'];
+    if (cpuSocket && Array.isArray(coolerSockets) && coolerSockets.length > 0) {
+      const supported = coolerSockets.map((s) => normSocket(s));
+      if (!supported.includes(normSocket(cpuSocket))) {
+        issues.push({
+          type: "error",
+          message: `El CPU Cooler no soporta el socket ${cpuSocket} del CPU (soporta: ${coolerSockets.join(', ')})`,
+        });
+      }
     }
   }
 
@@ -265,6 +277,66 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
       type: "warning",
       message: `No tienes PSU en el build — agrega una fuente de poder`,
     });
+  }
+
+  // ───────────────────────────────────────────────
+  // 13. GPU ↔ Case — Largo físico
+  // ───────────────────────────────────────────────
+  if (gpu && pcCase) {
+    const gpuLen = numSpec(gpu, 'length');
+    const maxLen = numSpec(pcCase, 'max_video_card_length');
+    if (gpuLen !== null && maxLen !== null) {
+      if (gpuLen > maxLen) {
+        issues.push({
+          type: "error",
+          message: `GPU de ${gpuLen}mm no cabe en el Case (máx. ${maxLen}mm)`,
+        });
+      } else if (gpuLen > maxLen - 20) {
+        issues.push({
+          type: "warning",
+          message: `GPU de ${gpuLen}mm — solo ${maxLen - gpuLen}mm de margen en el Case (máx. ${maxLen}mm)`,
+        });
+      }
+    }
+  }
+
+  // ───────────────────────────────────────────────
+  // 14. CPU Cooler ↔ Case — Altura física
+  // ───────────────────────────────────────────────
+  if (cooler && pcCase) {
+    const coolerH = numSpec(cooler, 'height');
+    const maxH    = numSpec(pcCase, 'max_cpu_cooler_height');
+    if (coolerH !== null && maxH !== null) {
+      if (coolerH > maxH) {
+        issues.push({
+          type: "error",
+          message: `CPU Cooler de ${coolerH}mm no cabe en el Case (máx. ${maxH}mm)`,
+        });
+      } else if (coolerH > maxH - 10) {
+        issues.push({
+          type: "warning",
+          message: `CPU Cooler de ${coolerH}mm — solo ${maxH - coolerH}mm de margen en el Case (máx. ${maxH}mm)`,
+        });
+      }
+    }
+  }
+
+  // ───────────────────────────────────────────────
+  // 15. Storage NVMe ↔ Motherboard — Slots M.2
+  // ───────────────────────────────────────────────
+  if (mb && storageEntries.length > 0) {
+    const m2Slots  = numSpec(mb, 'm2_slots');
+    if (m2Slots !== null) {
+      const nvmeCount = storageEntries.filter(
+        b => b.component.specs?.['is_nvme'] === true
+      ).length;
+      if (nvmeCount > m2Slots) {
+        issues.push({
+          type: "error",
+          message: `Tienes ${nvmeCount} SSD NVMe pero tu Motherboard solo tiene ${m2Slots} slot${m2Slots > 1 ? 's' : ''} M.2`,
+        });
+      }
+    }
   }
 
   return issues;

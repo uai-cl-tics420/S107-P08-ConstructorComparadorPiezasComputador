@@ -1,3 +1,4 @@
+import re
 import requests
 from functools import lru_cache
 
@@ -66,6 +67,96 @@ def _clean_specs(raw_specs: dict) -> dict:
         result[base] = None if v in _NULL_STRINGS else v
 
     return result
+
+
+def _enrich_compat_specs(raw: dict) -> dict:
+    """Deriva campos canonicos de compatibilidad desde los specs crudos de SoloTodo.
+
+    Solo AGREGA campos (socket, ram_type, module_count, form_factor, wattage,
+    max_motherboard_form_factor, cooler_sockets); no toca los que ya produce
+    _clean_specs. Cada extraccion esta acotada a campos propios de cada categoria,
+    asi no contamina componentes de otro tipo (p.ej. solo la Motherboard tiene
+    chipset, solo la PSU tiene power_value, etc.).
+    """
+    out: dict[str, object] = {}
+
+    # Socket de la Motherboard -- embebido en el chipset: "AMD B550 (AM4)" -> "AM4"
+    for key in ("chipset_unicode", "chipset_northbridge_unicode"):
+        m = re.search(r"\(([^)]+)\)", str(raw.get(key) or ""))
+        if m:
+            out["socket"] = m.group(1).strip()
+            break
+
+    # Tipo de RAM (DDR4/DDR5)
+    #   Motherboard: "4x DDR4" en memory_slots_unicode
+    #   Modulo RAM:  "DIMM DDR4 3200 MT/s" en bus_unicode
+    for key in ("memory_slots_unicode", "bus_unicode"):
+        m = re.search(r"(DDR\d)", str(raw.get(key) or ""), re.IGNORECASE)
+        if m:
+            out["ram_type"] = m.group(1).upper()
+            break
+
+    # Numero de modulos del kit de RAM ("1 x 8 GB" -> 1, "2 x 8 GB" -> 2)
+    mc = raw.get("capacity_dimm_quantity_value")
+    if isinstance(mc, (int, float)):
+        out["module_count"] = int(mc)
+
+    # Form factor de la Motherboard: "Micro ATX", "ATX", etc.
+    ff = raw.get("format_name") or raw.get("format_unicode")
+    if ff:
+        out["form_factor"] = ff
+
+    # Wattaje de la PSU: power_value 650 -> wattage 650
+    pw = raw.get("power_value")
+    if isinstance(pw, (int, float)):
+        out["wattage"] = int(pw)
+
+    # Form factor maximo de placa que soporta el Case
+    cf = (raw.get("largest_motherboard_format_format_name")
+          or raw.get("largest_motherboard_format_unicode"))
+    if cf:
+        out["max_motherboard_form_factor"] = cf
+
+    # Sockets soportados por el CPU Cooler (grupos anidados -> lista de nombres)
+    gs = raw.get("grouped_sockets")
+    if isinstance(gs, list):
+        names: list[str] = []
+        for group in gs:
+            if not isinstance(group, dict):
+                continue
+            for s in group.get("sockets") or []:
+                if isinstance(s, dict):
+                    name = s.get("socket_name") or s.get("unicode")
+                    if name:
+                        names.append(str(name))
+        if names:
+            out["cooler_sockets"] = names
+
+    # Tipo de interfaz del Storage (bus_unicode -> bus_type para mostrar en tarjeta)
+    # Tambien aplica a GPU (PCIe) pero es inofensivo guardarlo
+    bu = raw.get("bus_unicode")
+    if bu and str(bu) not in ("", "No posee"):
+        out["bus_type"] = str(bu)
+
+    # NVMe detection para Storage — necesario para chequear slots M.2 del MB
+    if re.search(r"nvme|m\.2", str(raw.get("bus_unicode") or ""), re.IGNORECASE):
+        out["is_nvme"] = True
+
+    # Conteo de slots M.2 de la Motherboard (desde storage_ports array)
+    sp = raw.get("storage_ports")
+    if isinstance(sp, list):
+        m2_count = 0
+        for port in sp:
+            if not isinstance(port, dict):
+                continue
+            desc = str(port.get("unicode") or port.get("name") or "").lower()
+            qty = port.get("quantity")
+            if "m.2" in desc or "nvme" in desc:
+                m2_count += int(qty) if isinstance(qty, (int, float)) and qty > 0 else 1
+        if m2_count > 0:
+            out["m2_slots"] = m2_count
+
+    return out
 
 
 def _to_float(value) -> float | None:
@@ -139,6 +230,7 @@ def process_json_response(json_response: dict) -> dict:
                 "normal_price": normal_price,
                 "offer_price":  offer_price,
                 **_clean_specs(product.get("specs") or {}),
+                **_enrich_compat_specs(product.get("specs") or {}),
             }
     return results
 

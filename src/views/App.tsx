@@ -187,30 +187,51 @@ export function App() {
   }, [displayedComponents, buildComponents]);
 
   const handleAdd = (component: Component) => {
-    setBuildComponents((prev) => {
-      // Si el mismo componente (mismo id) ya está, intenta subir cantidad
-      const existing = prev.find((b) => b.component.id === component.id);
-      if (existing) {
-        const type = componentTypes.find((t) => t.id === component.type_id);
-        if (type && existing.quantity >= type.max_quantity) {
-          addToast(`Límite máximo alcanzado para ${component.type_name}`, 'warning');
-          return prev;
-        }
-        addToast(`${component.name} actualizado`, 'success');
-        return prev.map((b) => (b.component.id === component.id ? { ...b, quantity: b.quantity + 1 } : b));
-      }
+    const type = componentTypes.find((t) => t.id === component.type_id);
+    const existing = buildComponents.find((b) => b.component.id === component.id);
+    const sameType = buildComponents.find((b) => b.component.type_id === component.type_id);
 
-      // Si ya hay otro componente del mismo tipo con max_quantity = 1, reemplazar
-      const type = componentTypes.find((t) => t.id === component.type_id);
-      const sameType = prev.find((b) => b.component.type_id === component.type_id);
-      if (sameType && type && type.max_quantity === 1) {
-        addToast(`${sameType.component.name} reemplazado por ${component.name}`, 'success');
-        return prev.map((b) => (b.component.type_id === component.type_id ? { component, quantity: 1 } : b));
+    // Calcular cómo quedaría el build tras esta acción (incrementar, reemplazar o agregar)
+    let prospective: BuildComponent[];
+    let action: 'increment' | 'replace' | 'add';
+    if (existing) {
+      if (type && existing.quantity >= type.max_quantity) {
+        addToast(`Límite máximo alcanzado para ${component.type_name}`, 'warning');
+        return;
       }
+      action = 'increment';
+      prospective = buildComponents.map((b) =>
+        b.component.id === component.id ? { ...b, quantity: b.quantity + 1 } : b,
+      );
+    } else if (sameType && type && type.max_quantity === 1) {
+      action = 'replace';
+      prospective = buildComponents.map((b) =>
+        b.component.type_id === component.type_id ? { component, quantity: 1 } : b,
+      );
+    } else {
+      action = 'add';
+      prospective = [...buildComponents, { component, quantity: 1 }];
+    }
 
-      addToast(`${component.name} agregado al build`, 'success');
-      return [...prev, { component, quantity: 1 }];
-    });
+    // Bloquear si esta acción introduce una incompatibilidad nueva (socket, tipo de RAM,
+    // form factor, watts del PSU, cooler, módulos de RAM vs slots de la Motherboard, etc.)
+    const currentErrors = new Set(
+      checkCompatibility(buildComponents)
+        .filter((i) => i.type === 'error')
+        .map((i) => i.message),
+    );
+    const newErrors = checkCompatibility(prospective).filter(
+      (i) => i.type === 'error' && !currentErrors.has(i.message),
+    );
+    if (newErrors.length > 0) {
+      addToast(`No se puede agregar ${component.name}: ${newErrors[0]!.message}`, 'error');
+      return;
+    }
+
+    setBuildComponents(prospective);
+    if (action === 'increment') addToast(`${component.name} actualizado`, 'success');
+    else if (action === 'replace') addToast(`${sameType!.component.name} reemplazado por ${component.name}`, 'success');
+    else addToast(`${component.name} agregado al build`, 'success');
     setActiveTab('build');
   };
 

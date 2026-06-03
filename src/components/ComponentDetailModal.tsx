@@ -20,66 +20,18 @@ const TYPE_ACCENT: Record<string, string> = {
   PSU: 'tw-psu', Case: 'tw-case', 'CPU Cooler': 'tw-cooler',
 };
 
-// Technical spec labels — covers both English and Spanish DB key variants
-const SPEC_LABELS: Record<string, string> = {
-  // English DB keys
-  core_count: 'Cores',
-  thread_count: 'Threads',
-  tdp: 'TDP',
-  base_clock: 'Base Clock',
-  boost_clock: 'Boost Clock',
-  socket: 'Socket',
-  gpu: 'iGPU',
-  cinebench_r20_single_score: 'Cinebench R20 (1T)',
-  cinebench_r20_multi_score: 'Cinebench R20 (nT)',
-  gpu_boost_clock: 'GPU Boost Clock',
-  vram_quantity: 'VRAM',
-  gpu_tdp: 'GPU TDP',
-  bus_width: 'Bus Width',
-  capacity: 'Capacity',
-  bus_speed: 'Bus Speed',
-  ram_type: 'RAM Type',
-  module_count: 'Modules',
-  chipset: 'Chipset',
-  memory_slots_quantity: 'RAM Slots',
-  capacity_value: 'Capacity',
-  bus_type: 'Interface',
-  read_speed: 'Read Speed',
-  write_speed: 'Write Speed',
-  wattage: 'Wattage',
-  certification: 'Certification',
-  is_modular: 'Modular',
-  form_factor: 'Form Factor',
-  max_motherboard_form_factor: 'Max Form Factor',
-  cooler_sockets: 'Sockets',
-  height: 'Height (mm)',
-  length: 'Length (mm)',
-  max_cpu_cooler_height: 'Max Cooler (mm)',
-  max_video_card_length: 'Max GPU (mm)',
-  m2_slots: 'M.2 Slots',
-  is_nvme: 'NVMe',
-  // Spanish DB key variants (stored in DB as Spanish)
-  núcleos: 'Cores',
-  hilos: 'Threads',
-  zócalo: 'Socket',
-  reloj_base: 'Base Clock',
-  reloj_boost: 'Boost Clock',
-  potencia: 'TDP',
-  capacidad: 'Capacity',
-  velocidad_bus: 'Bus Speed',
-  tipo_ram: 'RAM Type',
-  módulos: 'Modules',
-  ranuras_memoria: 'RAM Slots',
-  interfaz: 'Interface',
-  velocidad_lectura: 'Read Speed',
-  velocidad_escritura: 'Write Speed',
-  vatios: 'Wattage',
-  certificación: 'Certification',
-  modular: 'Modular',
-  factor_forma: 'Form Factor',
-  ancho_bus: 'Bus Width',
-  memoria_vram: 'VRAM',
-};
+// Claves de specs con label conocido en i18n (spec.*). Se usa para separar
+// las specs "conocidas" de las "otras". Los labels salen de t('spec.<clave>').
+const KNOWN_SPECS = new Set([
+  'core_count', 'thread_count', 'tdp', 'base_clock', 'boost_clock', 'socket', 'gpu',
+  'cinebench_r20_single_score', 'cinebench_r20_multi_score', 'gpu_boost_clock',
+  'vram_quantity', 'gpu_tdp', 'bus_width', 'capacity', 'bus_speed', 'ram_type',
+  'module_count', 'chipset', 'memory_slots_quantity', 'capacity_value', 'bus_type',
+  'read_speed', 'write_speed', 'wattage', 'certification', 'is_modular', 'form_factor',
+  'max_motherboard_form_factor', 'cooler_sockets', 'height', 'length',
+  'max_cpu_cooler_height', 'max_video_card_length', 'm2_slots', 'is_nvme',
+]);
+
 interface Props {
   component: Component | null;
   onClose: () => void;
@@ -90,8 +42,8 @@ export function ComponentDetailModal({ component, onClose, onAdd }: Props) {
   const { t } = useTranslation();
 
   const specs = component?.specs ?? {};
-  const displayKeys = Object.keys(specs).filter((k) => SPEC_LABELS[k] !== undefined && specs[k] != null);
-  const unknownKeys = Object.keys(specs).filter((k) => SPEC_LABELS[k] === undefined && specs[k] != null);
+  const displayKeys = Object.keys(specs).filter((k) => KNOWN_SPECS.has(k) && specs[k] != null);
+  const unknownKeys = Object.keys(specs).filter((k) => !KNOWN_SPECS.has(k) && specs[k] != null);
   const minPrice = component && component.prices.length > 0
     ? Math.min(...component.prices.map((p) => p.price))
     : null;
@@ -160,7 +112,7 @@ export function ComponentDetailModal({ component, onClose, onAdd }: Props) {
                     <div className='rounded-xl border border-tw-border-deep overflow-hidden'>
                       {displayKeys.map((key, i) => (
                         <div key={key} className={`flex items-center justify-between gap-4 px-4 py-2.5 ${i % 2 === 0 ? 'bg-tw-base' : 'bg-tw-surface'} ${i < displayKeys.length - 1 ? 'border-b border-tw-border-deep' : ''}`}>
-                          <span className='font-mono text-[9px] uppercase tracking-[0.15em] text-tw-muted-deep shrink-0'>{SPEC_LABELS[key]}</span>
+                          <span className='font-mono text-[9px] uppercase tracking-[0.15em] text-tw-muted-deep shrink-0'>{t(`spec.${key}`, { defaultValue: key })}</span>
                           <span className='font-mono text-[11px] text-tw-primary font-medium tabular-nums text-right'>{formatValue(key, specs[key])}</span>
                         </div>
                       ))}

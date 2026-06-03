@@ -4,67 +4,6 @@ import { Plus, ArrowLeftRight, ChevronDown, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Component } from '../types/Frontend_types';
 
-// Spec labels are technical abbreviations — covers both English and Spanish DB key variants
-const SPEC_LABELS: Record<string, string> = {
-  // English DB keys
-  core_count: 'Cores',
-  thread_count: 'Threads',
-  tdp: 'TDP',
-  base_clock: 'Base Clk',
-  boost_clock: 'Boost Clk',
-  socket: 'Socket',
-  gpu: 'GPU Int.',
-  cinebench_r20_single_score: 'CB R20 (1T)',
-  cinebench_r20_multi_score: 'CB R20 (nT)',
-  gpu_boost_clock: 'Boost Clk',
-  vram_quantity: 'VRAM',
-  gpu_tdp: 'TDP',
-  bus_width: 'Bus',
-  capacity: 'Cap.',
-  bus_speed: 'Bus Spd',
-  ram_type: 'Type',
-  module_count: 'Modules',
-  chipset: 'Chipset',
-  memory_slots_quantity: 'RAM Slots',
-  capacity_value: 'Cap.',
-  bus_type: 'Interface',
-  read_speed: 'Read',
-  write_speed: 'Write',
-  wattage: 'Watts',
-  certification: 'Cert.',
-  is_modular: 'Modular',
-  form_factor: 'Form Factor',
-  max_motherboard_form_factor: 'Form Factor',
-  cooler_sockets: 'Sockets',
-  height: 'Altura',
-  length: 'Largo',
-  max_cpu_cooler_height: 'Máx. Cooler',
-  max_video_card_length: 'Máx. GPU',
-  m2_slots: 'Slots M.2',
-  is_nvme: 'NVMe',
-  // Spanish DB key variants
-  núcleos: 'Cores',
-  hilos: 'Threads',
-  zócalo: 'Socket',
-  reloj_base: 'Base Clk',
-  reloj_boost: 'Boost Clk',
-  potencia: 'TDP',
-  capacidad: 'Cap.',
-  velocidad_bus: 'Bus Spd',
-  tipo_ram: 'Type',
-  módulos: 'Modules',
-  ranuras_memoria: 'RAM Slots',
-  interfaz: 'Interface',
-  velocidad_lectura: 'Read',
-  velocidad_escritura: 'Write',
-  vatios: 'Watts',
-  certificación: 'Cert.',
-  modular: 'Modular',
-  factor_forma: 'Form Factor',
-  ancho_bus: 'Bus',
-  memoria_vram: 'VRAM',
-};
-
 const PRIORITY_SPECS: Record<string, string[]> = {
   CPU: ['core_count', 'thread_count', 'socket', 'tdp', 'boost_clock'],
   GPU: ['vram_quantity', 'gpu_tdp', 'length', 'bus_width'],
@@ -184,7 +123,7 @@ export function ComponentCard({ component, onAdd, onCompare, onViewSpecs, isSele
             {specsToShow.map((key) => (
               <div key={key} className='flex items-baseline justify-between gap-3'>
                 <span className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-[0.15em] shrink-0'>
-                  {SPEC_LABELS[key] ?? key}
+                  {t(`spec.${key}`, { defaultValue: key })}
                 </span>
                 <span className='font-mono text-[11px] text-tw-primary-deep font-medium tabular-nums'>
                   {formatSpecValue(key, component.specs![key])}

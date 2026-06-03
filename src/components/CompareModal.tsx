@@ -17,66 +17,16 @@ const TYPE_BADGE: Record<string, string> = {
   'CPU Cooler': 'bg-tw-cooler-deep/15 text-tw-cooler-highlight border-tw-cooler/25',
 };
 
-// Technical spec labels — covers both English and Spanish DB key variants
-const SPEC_LABELS: Record<string, string> = {
-  // English DB keys
-  core_count: 'Cores',
-  thread_count: 'Threads',
-  tdp: 'TDP (W)',
-  base_clock: 'Base Clock',
-  boost_clock: 'Boost Clock',
-  socket: 'Socket',
-  gpu: 'iGPU',
-  cinebench_r20_single_score: 'CB R20 (1T)',
-  cinebench_r20_multi_score: 'CB R20 (nT)',
-  gpu_boost_clock: 'Boost Clock',
-  vram_quantity: 'VRAM',
-  gpu_tdp: 'TDP (W)',
-  bus_width: 'Bus',
-  capacity: 'Capacity',
-  bus_speed: 'Speed',
-  ram_type: 'Type',
-  module_count: 'Modules',
-  chipset: 'Chipset',
-  memory_slots_quantity: 'RAM Slots',
-  capacity_value: 'Capacity',
-  bus_type: 'Interface',
-  read_speed: 'Read',
-  write_speed: 'Write',
-  wattage: 'Watts',
-  certification: 'Cert.',
-  is_modular: 'Modular',
-  form_factor: 'Form Factor',
-  max_motherboard_form_factor: 'Form Factor',
-  cooler_sockets: 'Sockets',
-  height: 'Altura',
-  length: 'Largo',
-  max_cpu_cooler_height: 'Máx. Cooler',
-  max_video_card_length: 'Máx. GPU',
-  m2_slots: 'Slots M.2',
-  is_nvme: 'NVMe',
-  // Spanish DB key variants
-  núcleos: 'Cores',
-  hilos: 'Threads',
-  zócalo: 'Socket',
-  reloj_base: 'Base Clock',
-  reloj_boost: 'Boost Clock',
-  potencia: 'TDP (W)',
-  capacidad: 'Capacity',
-  velocidad_bus: 'Speed',
-  tipo_ram: 'Type',
-  módulos: 'Modules',
-  ranuras_memoria: 'RAM Slots',
-  interfaz: 'Interface',
-  velocidad_lectura: 'Read',
-  velocidad_escritura: 'Write',
-  vatios: 'Watts',
-  certificación: 'Cert.',
-  modular: 'Modular',
-  factor_forma: 'Form Factor',
-  ancho_bus: 'Bus',
-  memoria_vram: 'VRAM',
-};
+// Claves de specs con label conocido en i18n (spec.*). Los labels salen de t('spec.<clave>').
+const KNOWN_SPECS = new Set([
+  'core_count', 'thread_count', 'tdp', 'base_clock', 'boost_clock', 'socket', 'gpu',
+  'cinebench_r20_single_score', 'cinebench_r20_multi_score', 'gpu_boost_clock',
+  'vram_quantity', 'gpu_tdp', 'bus_width', 'capacity', 'bus_speed', 'ram_type',
+  'module_count', 'chipset', 'memory_slots_quantity', 'capacity_value', 'bus_type',
+  'read_speed', 'write_speed', 'wattage', 'certification', 'is_modular', 'form_factor',
+  'max_motherboard_form_factor', 'cooler_sockets', 'height', 'length',
+  'max_cpu_cooler_height', 'max_video_card_length', 'm2_slots', 'is_nvme',
+]);
 
 const LOWER_IS_BETTER = new Set(['tdp', 'gpu_tdp']);
 
@@ -88,7 +38,7 @@ export function CompareModal({ components, onClose }: Props) {
   const specsA = a!.specs ?? {};
   const specsB = b!.specs ?? {};
   const allKeys = Array.from(new Set([...Object.keys(specsA), ...Object.keys(specsB)]));
-  const displayKeys = allKeys.filter((k) => SPEC_LABELS[k] !== undefined && (specsA[k] != null || specsB[k] != null));
+  const displayKeys = allKeys.filter((k) => KNOWN_SPECS.has(k) && (specsA[k] != null || specsB[k] != null));
   const minPriceA = a!.prices.length > 0 ? Math.min(...a!.prices.map((p) => p.price)) : null;
   const minPriceB = b!.prices.length > 0 ? Math.min(...b!.prices.map((p) => p.price)) : null;
   const badgeA = TYPE_BADGE[a!.type_name] ?? 'bg-tw-case-deep/15 text-tw-case-highlight border-tw-case/25';
@@ -159,7 +109,7 @@ export function CompareModal({ components, onClose }: Props) {
                 return (
                   <div key={key} className={`grid grid-cols-[140px_1fr_1fr] ${i % 2 === 0 ? 'bg-tw-base-highlight' : 'bg-tw-base'}`}>
                     <div className='px-4 py-3 flex items-center'>
-                      <span className='text-tw-muted text-xs uppercase tracking-wide font-medium'>{SPEC_LABELS[key]}</span>
+                      <span className='text-tw-muted text-xs uppercase tracking-wide font-medium'>{t(`spec.${key}`, { defaultValue: key })}</span>
                     </div>
                     <div className='px-5 py-3 flex items-center border-l border-tw-glass/5'>
                       <span className={`text-sm font-semibold tabular-nums ${valA == null ? 'text-tw-muted-deep' : aWins ? 'text-tw-success' : 'text-tw-primary-deep'}`}>

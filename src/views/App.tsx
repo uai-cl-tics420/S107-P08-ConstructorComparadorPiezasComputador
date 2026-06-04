@@ -216,6 +216,18 @@ export function App() {
     return map;
   }, [displayedComponents, buildComponents]);
 
+  // Cuando hay un build activo, los componentes incompatibles bajan al final de
+  // la página. Orden estable: respeta el orden del backend (default/precio/nombre)
+  // dentro de cada grupo. Sin build, se muestran tal cual los entrega el backend.
+  const sortedComponents = useMemo(() => {
+    if (buildComponents.length === 0) return displayedComponents;
+    return [...displayedComponents].sort((a, b) => {
+      const aRank = componentCompatibility.get(a.id)?.isCompatible === false ? 1 : 0;
+      const bRank = componentCompatibility.get(b.id)?.isCompatible === false ? 1 : 0;
+      return aRank - bRank;
+    });
+  }, [displayedComponents, componentCompatibility, buildComponents]);
+
   const handleAdd = (component: Component) => {
     const type = componentTypes.find((t) => t.id === component.type_id);
     const existing = buildComponents.find((b) => b.component.id === component.id);
@@ -722,7 +734,7 @@ export function App() {
                   </p>
                   {/* ── GRID UNIFORME — 4 por fila ── */}
                   <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
-                    {displayedComponents.map((c, i) => {
+                    {sortedComponents.map((c, i) => {
                       return (
                         <motion.div key={c.id} custom={i} variants={cardVariant}>
                           <ComponentCard

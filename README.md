@@ -1,10 +1,8 @@
-# 🖥️ PC Builder & Price Comparator (Constructor y Comparador de Piezas de Computador)
+# PC Builder & Price Comparator
 
 [![Docker](https://img.shields.io/badge/Docker-Enabled-blue.svg)](https://www.docker.com/)
 [![Bun](https://img.shields.io/badge/Bun-Ready-black.svg)](https://bun.sh/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-Supported-blue.svg)](https://www.typescriptlang.org/)
-
-### 📝 Descripción
 
 Esta aplicación busca ser una herramienta donde los usuarios puedan armar un computador, previsualizando las piezas que desean comprar, para luego entregarles una vista de comparación de precios disponibles. De esta manera, el usuario puede encontrar las mejores ofertas y precios para el computador que quiere armar.
 

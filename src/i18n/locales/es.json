@@ -75,7 +75,7 @@
   },
   "buildList": {
     "title": "Tu Build",
-    "components": "{{count}}/9 componentes",
+    "components": "componentes",
     "completeness": "Completitud",
     "subtotal": "Subtotal",
     "remove": "Quitar",

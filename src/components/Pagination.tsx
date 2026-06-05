@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -11,29 +12,56 @@ interface PaginationProps {
   onItemsPerPageChange: (itemsPerPage: number) => void;
 }
 
-export function Pagination({ currentPage, totalPages, itemsPerPage, totalItems, onPageChange, onItemsPerPageChange }: PaginationProps) {
+export function Pagination({
+  currentPage,
+  totalPages,
+  itemsPerPage,
+  totalItems,
+  onPageChange,
+  onItemsPerPageChange,
+}: PaginationProps) {
   const { t } = useTranslation();
+  const [isMobile, setIsMobile] = useState(false);
   const itemsPerPageOptions = [12, 24, 36, 48];
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalItems);
 
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile(); // Ejecución inicial
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const handlePreviousPage = () => {
-    if (currentPage > 1) { onPageChange(currentPage - 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    if (currentPage > 1) {
+      onPageChange(currentPage - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
   const handleNextPage = () => {
-    if (currentPage < totalPages) { onPageChange(currentPage + 1); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    if (currentPage < totalPages) {
+      onPageChange(currentPage + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   const getPageNumbers = (): (number | string)[] => {
     const pages: (number | string)[] = [];
-    const showPages = 5;
+    const showPages = isMobile ? 3 : 5;
     const halfShow = Math.floor(showPages / 2);
     let startPage = Math.max(1, currentPage - halfShow);
     let endPage = Math.min(totalPages, startPage + showPages - 1);
     if (endPage - startPage < showPages - 1) startPage = Math.max(1, endPage - showPages + 1);
-    if (startPage > 1) { pages.push(1); if (startPage > 2) pages.push('...'); }
+    if (startPage > 1) {
+      pages.push(1);
+      if (startPage > 2) pages.push('gap');
+    }
     for (let i = startPage; i <= endPage; i++) pages.push(i);
-    if (endPage < totalPages) { if (endPage < totalPages - 1) pages.push('...'); pages.push(totalPages); }
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) pages.push('gap');
+      pages.push(totalPages);
+    }
     return pages;
   };
 
@@ -51,7 +79,10 @@ export function Pagination({ currentPage, totalPages, itemsPerPage, totalItems, 
           <select
             id='items-per-page'
             value={itemsPerPage}
-            onChange={(e) => { onItemsPerPageChange(Number(e.target.value)); onPageChange(1); }}
+            onChange={(e) => {
+              onItemsPerPageChange(Number(e.target.value));
+              onPageChange(1);
+            }}
             className='font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-muted-highlight rounded-lg px-3 py-2 focus:outline-none focus:border-tw-border-highlight cursor-pointer appearance-none transition-all'>
             {itemsPerPageOptions.map((option) => (
               <option key={option} value={option}>
@@ -68,40 +99,52 @@ export function Pagination({ currentPage, totalPages, itemsPerPage, totalItems, 
 
       <div className='flex items-center justify-center gap-2'>
         <motion.button
-          whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={handlePreviousPage}
           disabled={currentPage === 1}
-          className='flex items-center gap-1.5 px-3 py-2 border border-tw-border-deep hover:border-tw-border disabled:border-tw-border-deep disabled:opacity-40 disabled:cursor-not-allowed bg-tw-surface hover:bg-tw-surface-deep rounded-lg transition-all cursor-pointer font-mono text-xs uppercase tracking-widest text-tw-muted hover:text-tw-muted-highlight disabled:text-tw-muted-deep'>
+          className='flex items-center gap-1.5 px-2 py-2 border border-tw-border-deep hover:border-tw-border disabled:border-tw-border-deep disabled:opacity-40 disabled:cursor-not-allowed bg-tw-surface hover:bg-tw-surface-deep rounded-lg transition-all cursor-pointer font-mono text-xs uppercase tracking-widest text-tw-muted hover:text-tw-muted-highlight disabled:text-tw-muted-deep'>
           <ChevronLeft className='w-3.5 h-3.5' />
-          {t('pagination.previous')}
+          <span className='hidden min-[650px]:flex text-tw-muted hover:text-tw-muted-highlight disabled:text-tw-muted-deep'>
+            {t('pagination.previous')}
+          </span>
         </motion.button>
 
         <div className='flex items-center gap-1'>
-          {getPageNumbers().map((page, index) => (
-            <motion.button
-              key={`${page}-${index}`}
-              whileHover={page !== '...' ? { scale: 1.08 } : {}}
-              whileTap={page !== '...' ? { scale: 0.95 } : {}}
-              onClick={() => { if (page !== '...') { onPageChange(page as number); window.scrollTo({ top: 0, behavior: 'smooth' }); } }}
-              disabled={page === '...'}
-              className={`w-9 h-9 flex items-center justify-center rounded-lg font-mono text-xs font-semibold uppercase tracking-widest transition-all cursor-pointer ${
-                page === currentPage
-                  ? 'bg-tw-base-highlight/20 border border-tw-base-highlight/40 text-tw-primary'
-                  : page === '...'
-                    ? 'text-tw-muted-deep cursor-default'
+          {getPageNumbers().map((page, index) =>
+            page === 'gap' ? (
+              <span key={`gap-${index}`} className='p-1 flex items-center justify-center text-tw-muted'>
+                {isMobile ? '' : '...'}
+              </span>
+            ) : (
+              <motion.button
+                key={`${page}-${index}`}
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  onPageChange(page as number);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className={`w-9 h-9 flex items-center justify-center rounded-lg font-mono text-xs font-semibold uppercase tracking-widest transition-all cursor-pointer ${
+                  page === currentPage
+                    ? 'bg-tw-base-highlight/20 border border-tw-base-highlight/40 text-tw-primary'
                     : 'border border-tw-border-deep hover:border-tw-border-highlight text-tw-muted hover:text-tw-muted-highlight hover:bg-tw-surface-deep'
-              }`}>
-              {page}
-            </motion.button>
-          ))}
+                }`}>
+                {page}
+              </motion.button>
+            ),
+          )}
         </div>
 
         <motion.button
-          whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
           onClick={handleNextPage}
           disabled={currentPage === totalPages}
-          className='flex items-center gap-1.5 px-3 py-2 border border-tw-border-deep hover:border-tw-border disabled:border-tw-border-deep disabled:opacity-40 disabled:cursor-not-allowed bg-tw-surface hover:bg-tw-surface-deep rounded-lg transition-all cursor-pointer font-mono text-xs uppercase tracking-widest text-tw-muted hover:text-tw-muted-highlight disabled:text-tw-muted-deep'>
-          {t('pagination.next')}
+          className='flex items-center gap-1.5 px-2 py-2 border border-tw-border-deep hover:border-tw-border disabled:border-tw-border-deep disabled:opacity-40 disabled:cursor-not-allowed bg-tw-surface hover:bg-tw-surface-deep rounded-lg transition-all cursor-pointer font-mono text-xs uppercase tracking-widest text-tw-muted hover:text-tw-muted-highlight disabled:text-tw-muted-deep'>
+          <span className='hidden min-[650px]:flex text-tw-muted hover:text-tw-muted-highlight disabled:text-tw-muted-deep'>
+            {t('pagination.next')}
+          </span>
           <ChevronRight className='w-3.5 h-3.5' />
         </motion.button>
       </div>

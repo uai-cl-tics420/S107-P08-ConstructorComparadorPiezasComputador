@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useContext } from 'react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ChevronDown, User, LogOut, Loader2, Sun, Moon, Share2 } from 'lucide-react';
+import { Search, ChevronDown, User, LogOut, Loader2, Sun, Moon, Share2, LogIn } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useSession, signOut } from '@/lib/auth/auth-client';
 import { ComponentCard } from '@/components/ComponentCard';
@@ -408,7 +408,7 @@ export function App() {
         className='min-h-screen bg-base flex items-center justify-center'>
         <div className='flex flex-col items-center gap-3'>
           <Loader2 className='w-5 h-5 text-tw-primary animate-spin' />
-          <span className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest'>Iniciando...</span>
+          <span className='font-mono text-[0.6rem] text-tw-muted-deep uppercase tracking-widest'>Iniciando...</span>
         </div>
       </motion.div>
     );
@@ -437,7 +437,7 @@ export function App() {
             <span className='font-mono text-sm font-bold text-tw-primary tracking-[0.12em] uppercase group-hover:text-tw-primary-deep transition-colors'>
               PC·BUILDER
             </span>
-            <span className='font-mono text-[9px] text-tw-muted-deep tracking-[0.2em] uppercase'>
+            <span className='font-mono text-[0.6rem] text-tw-muted-deep tracking-[0.2em] uppercase'>
               {t('nav.tagline')}
             </span>
           </Link>
@@ -447,26 +447,30 @@ export function App() {
               <motion.button
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setActiveTab('build')}
-                className='flex items-center gap-2 border border-tw-glass/10 hover:border-tw-glass/20 bg-tw-base-highlight/4 hover:bg-tw-base-highlight/7 text-tw-primary font-mono text-xs px-3 py-2 rounded-lg transition-all cursor-pointer'>
-                <span className='font-mono w-4 h-4 bg-tw-base-highlight/10 rounded flex items-center justify-center text-[10px] font-bold'>
+                className='hidden min-[600px]:flex items-center gap-2 border border-tw-glass/10 hover:border-tw-glass/20 bg-tw-base-highlight/4 hover:bg-tw-base-highlight/7 text-tw-primary font-mono text-xs px-3 py-2 rounded-lg transition-all cursor-pointer'>
+                <span className='font-mono w-4 h-4 bg-tw-base-highlight/10 rounded flex items-center justify-center text-[0.6rem] font-bold'>
                   {buildComponents.length}
                 </span>
                 {t('nav.myBuild')}
               </motion.button>
             )}
 
-            <LanguageDropdown />
+            {!session && (
+              <>
+                <LanguageDropdown />
 
-            <button
-              onClick={toggleTheme}
-              className='p-2 border border-tw-border-deep/50 hover:border-tw-border bg-tw-primary hover:bg-tw-primary-highlight rounded-lg transition-all cursor-pointer group'
-              title={t('nav.toggleTheme', { mode: t(`nav.${config.theme === 'dark' ? 'light' : 'dark'}`) })}>
-              {config.theme === 'dark' ? (
-                <Sun className='w-4 h-4 text-tw-base group-hover:text-tw-accent transition-colors' />
-              ) : (
-                <Moon className='w-4 h-4 text-tw-base group-hover:text-tw-alt transition-colors' />
-              )}
-            </button>
+                <button
+                  onClick={toggleTheme}
+                  className='p-2 border border-tw-border-deep/50 hover:border-tw-border bg-tw-primary hover:bg-tw-primary-highlight rounded-lg transition-all cursor-pointer group'
+                  title={t('nav.toggleTheme', { mode: t(`nav.${config.theme === 'dark' ? 'light' : 'dark'}`) })}>
+                  {config.theme === 'dark' ? (
+                    <Sun className='w-4 h-4 text-tw-base group-hover:text-tw-accent transition-colors' />
+                  ) : (
+                    <Moon className='w-4 h-4 text-tw-base group-hover:text-tw-alt transition-colors' />
+                  )}
+                </button>
+              </>
+            )}
 
             {isPending ? (
               <div className='h-9 w-24 bg-tw-surface/50 border border-tw-border/50 rounded-lg animate-pulse' />
@@ -475,10 +479,10 @@ export function App() {
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className='flex items-center gap-2 px-2.5 py-2 border border-tw-border/50 hover:border-tw-border bg-tw-surface/50 hover:bg-tw-surface rounded-lg transition-all cursor-pointer group'>
-                  <div className='w-6 h-6 rounded-md bg-tw-surface border border-tw-border/50 flex items-center justify-center font-mono text-[10px] font-bold text-tw-muted group-hover:text-tw-primary transition-colors'>
+                  <div className='w-6 h-6 rounded-md bg-tw-primary border border-tw-border/50 flex items-center justify-center font-mono text-[0.6rem] font-bold text-tw-surface-deep group-hover:text-tw-primary transition-colors'>
                     {session.user.name?.charAt(0).toUpperCase() || 'U'}
                   </div>
-                  <span className='font-mono text-[11px] text-tw-muted group-hover:text-tw-primary hidden sm:block transition-colors'>
+                  <span className='font-mono text-xs text-tw-muted group-hover:text-tw-primary hidden sm:block transition-colors'>
                     {session.user.name?.split(' ')[0] || session.user.email?.split('@')[0]}
                   </span>
                   <ChevronDown
@@ -497,7 +501,7 @@ export function App() {
                         transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
                         className='absolute right-0 mt-2 w-52 bg-tw-surface/98 backdrop-blur-xl border border-tw-border rounded-xl shadow-2xl shadow-black/40 z-20 overflow-hidden'>
                         <div className='px-4 py-3 border-b border-tw-border/50'>
-                          <p className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest'>
+                          <p className='font-mono text-[0.6rem] text-tw-muted-deep uppercase tracking-widest'>
                             {t('nav.activeSession')}
                           </p>
                           <p className='font-mono text-xs text-tw-muted mt-0.5 truncate'>{session.user.email}</p>
@@ -525,8 +529,11 @@ export function App() {
             ) : (
               <Link
                 to='/login'
-                className='font-mono text-xs text-tw-mute border text-tw-base border-tw-border-deep/50 hover:border-tw-accent/75 bg-tw-primary hover:bg-tw-primary-highlight hover:text-tw-accent px-4 py-2 rounded-lg transition-all'>
-                {t('nav.signIn')}
+                className='font-mono text-xs text-tw-mute border text-tw-base border-tw-border-deep/50 hover:border-tw-accent/75 bg-tw-primary hover:bg-tw-primary-highlight hover:text-tw-accent px-2 py-2 rounded-lg transition-all'>
+                <div className='flex items-center gap-2'>
+                  <LogIn className='w-3.5 h-3.5 text-tw-base' />
+                  <span className='text-xs text-tw-base hidden min-[480px]:inline'>{t('nav.signIn')}</span>
+                </div>
               </Link>
             )}
           </div>
@@ -540,7 +547,7 @@ export function App() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`relative pb-3 px-1 mr-6 font-mono text-[11px] uppercase tracking-widest transition-colors duration-200 cursor-pointer flex items-center gap-2 ${
+              className={`relative pb-3 px-1 mr-6 font-mono text-xs uppercase tracking-widest transition-colors duration-200 cursor-pointer flex items-center gap-2 ${
                 activeTab === tab ? 'text-tw-primary' : 'text-tw-muted-deep hover:text-tw-muted-highlight'
               }`}>
               {activeTab === tab && (
@@ -552,7 +559,7 @@ export function App() {
               )}
               {tab === 'search' ? t('tabs.components') : t('tabs.myBuild')}
               {tab === 'build' && buildComponents.length > 0 && (
-                <span className='font-mono text-[9px] text-tw-muted-deep border border-tw-glass/10 px-1.5 py-0.5 rounded tabular-nums'>
+                <span className='font-mono text-[0.6rem] text-tw-muted-deep border border-tw-glass/10 px-1.5 py-0.5 rounded tabular-nums'>
                   {buildComponents.length}
                 </span>
               )}
@@ -571,13 +578,13 @@ export function App() {
                 exit={{ opacity: 0, y: -8 }}
                 className='flex items-center justify-between border border-tw-border bg-tw-base/80 backdrop-blur-xl rounded-xl px-4 py-3 mb-4'>
                 <div className='flex items-center gap-3 flex-wrap'>
-                  <span className='font-mono text-[9px] text-tw-muted uppercase tracking-widest'>
+                  <span className='font-mono text-[0.6rem] text-tw-muted uppercase tracking-widest'>
                     {t('results.comparing', { count: compareList.length })}
                   </span>
                   {compareList.map((c) => (
                     <span
                       key={c.id}
-                      className='font-mono text-[10px] text-tw-muted-highlight border border-tw-border px-2.5 py-1 rounded'>
+                      className='font-mono text-[0.6rem] text-tw-muted-highlight border border-tw-border px-2.5 py-1 rounded'>
                       {c.name}
                     </span>
                   ))}
@@ -586,13 +593,13 @@ export function App() {
                   {compareList.length === 2 && (
                     <button
                       onClick={() => setShowCompareModal(true)}
-                      className='font-mono text-[10px] text-tw-primary border border-tw-glass/15 hover:border-tw-glass/28 hover:bg-tw-base-highlight/5 px-3 py-1.5 rounded transition-all cursor-pointer uppercase tracking-widest'>
+                      className='font-mono text-[0.6rem] text-tw-primary border border-tw-glass/15 hover:border-tw-glass/28 hover:bg-tw-base-highlight/5 px-3 py-1.5 rounded transition-all cursor-pointer uppercase tracking-widest'>
                       {t('results.viewComparison')}
                     </button>
                   )}
                   <button
                     onClick={() => setCompareList([])}
-                    className='font-mono text-[10px] text-tw-muted-deep hover:text-tw-muted-highlight px-2 py-1.5 transition-colors cursor-pointer'>
+                    className='font-mono text-[0.6rem] text-tw-muted-deep hover:text-tw-muted-highlight px-2 py-1.5 transition-colors cursor-pointer'>
                     {t('results.cancel')}
                   </button>
                 </div>
@@ -620,7 +627,7 @@ export function App() {
                   <select
                     value={selectedType}
                     onChange={(e) => setSelectedType(e.target.value)}
-                    className='font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-muted-highlight rounded-lg px-3 py-2.5 focus:outline-none focus:border-tw-border-highlight cursor-pointer appearance-none transition-all min-w-35'>
+                    className='font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-muted-highlight rounded-lg px-3 py-2.5 focus:outline-none focus:border-tw-border-highlight cursor-pointer appearance-none transition-all w-full'>
                     <option value=''>{t('filters.allTypes')}</option>
                     {componentTypes.map((t) => (
                       <option key={t.id} value={t.id}>
@@ -631,7 +638,7 @@ export function App() {
                   <select
                     value={selectedBrand}
                     onChange={(e) => setSelectedBrand(e.target.value)}
-                    className='font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-muted-highlight rounded-lg px-3 py-2.5 focus:outline-none focus:border-tw-border-highlight cursor-pointer appearance-none transition-all min-w-35'>
+                    className='font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-muted-highlight rounded-lg px-3 py-2.5 focus:outline-none focus:border-tw-border-highlight cursor-pointer appearance-none transition-all w-full'>
                     <option value=''>{t('filters.allBrands')}</option>
                     {brands.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -643,8 +650,8 @@ export function App() {
 
                 {/* Row 2: Price + Sort + Clear */}
                 <div className='flex flex-col sm:flex-row gap-2.5 items-center'>
-                  <div className='flex items-center gap-2 flex-1'>
-                    <span className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest shrink-0'>
+                  <div className='flex items-center gap-2 flex-1 w-full'>
+                    <span className='font-mono text-[0.6rem] text-tw-muted-deep uppercase tracking-widest'>
                       {t('filters.price')}
                     </span>
                     <input
@@ -652,15 +659,15 @@ export function App() {
                       placeholder={t('filters.minPlaceholder')}
                       value={minPrice}
                       onChange={(e) => setMinPrice(e.target.value)}
-                      className='flex-1 font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-primary placeholder-tw-muted-deep rounded-lg px-3 py-2 focus:outline-none focus:border-tw-border-highlight transition-all'
+                      className='flex-1 font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-primary placeholder-tw-muted-deep rounded-lg px-3 py-2 focus:outline-none focus:border-tw-border-highlight transition-all w-0'
                     />
-                    <span className='text-tw-muted-de text-xs'>—</span>
+                    <span className='text-tw-muted-deeep text-xs'>—</span>
                     <input
                       type='number'
                       placeholder={t('filters.maxPlaceholder')}
                       value={maxPrice}
                       onChange={(e) => setMaxPrice(e.target.value)}
-                      className='flex-1 font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-primary placeholder-tw-muted-deep rounded-lg px-3 py-2 focus:outline-none focus:border-tw-border-highlight transition-all'
+                      className='flex-1 font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-primary placeholder-tw-muted-deep rounded-lg px-3 py-2 focus:outline-none focus:border-tw-border-highlight transition-all w-0'
                     />
                     {(minPrice || maxPrice) && (
                       <button
@@ -686,7 +693,7 @@ export function App() {
                     {hasActiveFilters && (
                       <button
                         onClick={clearFilters}
-                        className='font-mono text-[9px] text-tw-muted-deep hover:text-tw-muted-highlight border border-tw-glass/8 hover:border-tw-glass/15 px-3 py-2 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                        className='font-mono text-[0.6rem] text-tw-muted-deep hover:text-tw-muted-highlight border border-tw-glass/8 hover:border-tw-glass/15 px-3 py-2 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
                         {t('filters.clear')}
                       </button>
                     )}
@@ -714,14 +721,14 @@ export function App() {
                 </div>
                 <div className='text-center space-y-1'>
                   <p className='text-tw-muted-highlight text-sm'>{t('results.noResults')}</p>
-                  <p className='font-mono text-[9px] text-tw-muted-de uppercase tracking-widest'>
+                  <p className='font-mono text-[0.6rem] text-tw-muted-deep uppercase tracking-widest'>
                     {hasActiveFilters ? t('results.adjustFilters') : t('results.noComponents')}
                   </p>
                 </div>
                 {hasActiveFilters && (
                   <button
                     onClick={clearFilters}
-                    className='font-mono text-[9px] text-tw-muted hover:text-tw-muted-highlight border border-tw-glass/8 hover:border-tw-glass/15 px-4 py-2 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                    className='font-mono text-[0.6rem] text-tw-muted hover:text-tw-muted-highlight border border-tw-glass/8 hover:border-tw-glass/15 px-4 py-2 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
                     {t('filters.clearFilters')}
                   </button>
                 )}
@@ -729,7 +736,7 @@ export function App() {
             ) : (
               <>
                 <motion.div variants={containerVariant} initial='hidden' animate='visible'>
-                  <p className='font-mono text-[9px] text-tw-muted-de uppercase tracking-widest mb-4'>
+                  <p className='font-mono text-[0.6rem] text-tw-muted-deep uppercase tracking-widest mb-4'>
                     {t('results.componentCount', { count: totalCount })}
                   </p>
                   {/* ── GRID UNIFORME — 4 por fila ── */}
@@ -771,22 +778,24 @@ export function App() {
         {activeTab === 'build' && (
           <div className='flex flex-col lg:flex-row gap-6'>
             <div className='flex-1 flex flex-col gap-4'>
-              <div className='flex items-center justify-between'>
-                <div>
-                  <p className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest mb-1'>
-                    {t('build.currentConfig')}
-                  </p>
-                  <h2 className='text-tw-primary font-semibold text-base'>
-                    {buildComponents.length === 0
-                      ? t('build.addComponents')
-                      : t(
-                          buildComponents.length === 1
-                            ? 'build.componentSelected_one'
-                            : 'build.componentSelected_other',
-                          { count: buildComponents.length },
-                        )}
-                  </h2>
+              {/* Compatibility issues */}
+              {compatibilityIssues.length > 0 && (
+                <div className='flex flex-col gap-2'>
+                  {compatibilityIssues.map((issue, i) => (
+                    <div
+                      key={i}
+                      className={`flex items-start gap-3 px-4 py-3 rounded-xl border font-mono text-xs ${
+                        issue.type === 'error'
+                          ? 'bg-tw-alert/5 border-tw-alert/15 text-tw-alert-highlight/80'
+                          : 'bg-tw-warning/5 border-tw-warbg-tw-warning/15 text-tw-warning-highlight/80'
+                      }`}>
+                      <span className='shrink-0 mt-px'>{issue.type === 'error' ? '✕' : '△'}</span>
+                      <span>{issue.message}</span>
+                    </div>
+                  ))}
                 </div>
+              )}
+              <div className='flex items-center justify-between'>
                 {buildComponents.length > 0 && (
                   <div className='flex gap-2'>
                     <button
@@ -819,41 +828,23 @@ export function App() {
                           }
                         }
                       }}
-                      className='font-mono flex items-center gap-1.5 text-[10px] text-tw-muted-highlight hover:text-tw-primary border border-tw-glass/10 hover:border-tw-glass/20 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                      className='font-mono flex items-center gap-1.5 text-[0.6rem] text-tw-muted-highlight hover:text-tw-primary border border-tw-glass/10 hover:border-tw-glass/20 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
                       <Share2 className='w-3.5 h-3.5' />
                       {t('build.share')}
                     </button>
                     <button
                       onClick={() => setShowSaveDialog(true)}
-                      className='font-mono text-[10px] text-tw-muted-highlight hover:text-tw-primary border border-tw-glass/10 hover:border-tw-glass/20 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                      className='font-mono text-[0.6rem] text-tw-muted-highlight hover:text-tw-primary border border-tw-glass/10 hover:border-tw-glass/20 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
                       {t('build.save')}
                     </button>
                     <button
                       onClick={handleClearBuild}
-                      className='font-mono text-[10px] text-tw-alert hover:text-tw-alert-highlight border border-tw-alert/15 hover:border-tw-alert/30 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                      className='font-mono text-[0.6rem] text-tw-alert hover:text-tw-alert-highlight border border-tw-alert/15 hover:border-tw-alert/30 px-3 py-1.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
                       {t('build.clear')}
                     </button>
                   </div>
                 )}
               </div>
-
-              {/* Compatibility issues */}
-              {compatibilityIssues.length > 0 && (
-                <div className='flex flex-col gap-2'>
-                  {compatibilityIssues.map((issue, i) => (
-                    <div
-                      key={i}
-                      className={`flex items-start gap-3 px-4 py-3 rounded-xl border font-mono text-xs ${
-                        issue.type === 'error'
-                          ? 'bg-tw-alert/5 border-tw-alert/15 text-tw-alert-highlight/80'
-                          : 'bg-tw-warning/5 border-tw-warbg-tw-warning/15 text-tw-warning-highlight/80'
-                      }`}>
-                      <span className='shrink-0 mt-px'>{issue.type === 'error' ? '✕' : '△'}</span>
-                      <span>{issue.message}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
 
               <BuildList buildComponents={buildComponents} onRemove={handleRemove} onSearchType={handleSearchType} />
 
@@ -906,7 +897,7 @@ export function App() {
                 <div className='absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-linear-to-r from-transparent via-tw-glass/8 to-transparent' />
 
                 <div>
-                  <p className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest mb-1'>
+                  <p className='font-mono text-[0.6rem] text-tw-muted-deep uppercase tracking-widest mb-1'>
                     {t('saveDialog.title')}
                   </p>
                   <h3 className='text-tw-primary font-semibold text-sm'>{t('saveDialog.subtitle')}</h3>
@@ -928,7 +919,7 @@ export function App() {
                   <button
                     onClick={handleSaveBuild}
                     disabled={!saveName.trim()}
-                    className='flex-1 font-mono text-[11px] text-tw-primary bg-tw-base-highlight/8 border border-tw-glass/12 hover:border-tw-glass/25 hover:bg-tw-base-highlight/12 disabled:opacity-25 disabled:cursor-not-allowed py-2.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
+                    className='flex-1 font-mono text-xs text-tw-primary bg-tw-base-highlight/8 border border-tw-glass/12 hover:border-tw-glass/25 hover:bg-tw-base-highlight/12 disabled:opacity-25 disabled:cursor-not-allowed py-2.5 rounded-lg transition-all cursor-pointer uppercase tracking-widest'>
                     {t('saveDialog.save')}
                   </button>
                   <button
@@ -936,7 +927,7 @@ export function App() {
                       setShowSaveDialog(false);
                       setSaveName('');
                     }}
-                    className='px-4 font-mono text-[11px] text-tw-muted border border-tw-glass/8 hover:border-tw-glass/15 hover:text-tw-muted-highlight hover:bg-tw-base-highlight/12 py-2.5 rounded-lg transition-all cursor-pointer'>
+                    className='px-4 font-mono text-xs text-tw-muted border border-tw-glass/8 hover:border-tw-glass/15 hover:text-tw-muted-highlight hover:bg-tw-base-highlight/12 py-2.5 rounded-lg transition-all cursor-pointer'>
                     {t('saveDialog.cancel')}
                   </button>
                 </div>

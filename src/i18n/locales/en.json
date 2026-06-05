@@ -75,7 +75,7 @@
   },
   "buildList": {
     "title": "Your Build",
-    "components": "{{count}}/9 components",
+    "components": "components",
     "completeness": "Completeness",
     "subtotal": "Subtotal",
     "remove": "Remove",

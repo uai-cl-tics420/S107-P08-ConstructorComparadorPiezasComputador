@@ -20,9 +20,14 @@ function ScoreBar({ value, color }: { value: number; color: string }) {
 }
 
 const TYPE_ACCENT: Record<string, string> = {
-  CPU: 'tw-cpu', GPU: 'tw-gpu', RAM: 'tw-ram',
-  Motherboard: 'tw-motherboard', Storage: 'tw-storage',
-  PSU: 'tw-psu', Case: 'tw-case', 'CPU Cooler': 'tw-cooler',
+  CPU: 'tw-cpu',
+  GPU: 'tw-gpu',
+  RAM: 'tw-ram',
+  Motherboard: 'tw-motherboard',
+  Storage: 'tw-storage',
+  PSU: 'tw-psu',
+  Case: 'tw-case',
+  'CPU Cooler': 'tw-cooler',
 };
 
 interface RecommendationCardProps {
@@ -51,19 +56,21 @@ function RecommendationCard({ scored, onAdd, rank }: RecommendationCardProps) {
           <span className={`w-1.5 h-1.5 rounded-full shrink-0 bg-${accent}`} />
           <p className='font-semibold text-xs text-tw-primary leading-tight line-clamp-2'>{component.name}</p>
         </div>
-        <span className='font-mono text-[9px] text-tw-muted-deep border border-tw-glass/8 px-1.5 py-0.5 rounded shrink-0'>
+        <span className='font-mono text-[0.6rem] text-tw-muted-deep border border-tw-glass/8 px-1.5 py-0.5 rounded shrink-0'>
           #{rank + 1}
         </span>
       </div>
 
-      <p className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest -mt-1'>{component.brand_name}</p>
+      <p className='font-mono text-[0.6rem] text-tw-muted-deep uppercase tracking-widest -mt-1'>
+        {component.brand_name}
+      </p>
 
       {topReasons.length > 0 && (
         <div className='flex flex-col gap-1'>
           {topReasons.map((r, i) => (
             <div key={i} className='flex items-start gap-1.5'>
-              <span className='text-tw-muted-deep mt-px shrink-0 text-[9px]'>›</span>
-              <span className='font-mono text-[9px] text-tw-muted leading-tight'>{r}</span>
+              <span className='text-tw-muted-deep mt-px shrink-0 text-[0.6rem]'>›</span>
+              <span className='font-mono text-[0.6rem] text-tw-muted leading-tight'>{r}</span>
             </div>
           ))}
         </div>
@@ -71,39 +78,47 @@ function RecommendationCard({ scored, onAdd, rank }: RecommendationCardProps) {
 
       <div className='space-y-1.5 pt-1'>
         <div className='flex items-center gap-2'>
-          <span className='font-mono text-[8px] text-tw-muted-deep w-14 shrink-0'>{t('recommendations.compat')}</span>
+          <span className='font-mono text-[0.5rem] text-tw-muted-deep w-14 shrink-0'>
+            {t('recommendations.compat')}
+          </span>
           <ScoreBar value={compatibilityScore} color='bg-tw-cpu' />
-          <span className='font-mono text-[8px] text-tw-muted-deep tabular-nums w-6 text-right'>{Math.round(compatibilityScore * 100)}</span>
+          <span className='font-mono text-[0.5rem] text-tw-muted-deep tabular-nums w-6 text-right'>
+            {Math.round(compatibilityScore * 100)}
+          </span>
         </div>
         <div className='flex items-center gap-2'>
-          <span className='font-mono text-[8px] text-tw-muted-deep w-14 shrink-0'>{t('recommendations.perf')}</span>
+          <span className='font-mono text-[0.5rem] text-tw-muted-deep w-14 shrink-0'>{t('recommendations.perf')}</span>
           <ScoreBar value={performanceScore} color='bg-tw-gpu' />
-          <span className='font-mono text-[8px] text-tw-muted-deep tabular-nums w-6 text-right'>{Math.round(performanceScore * 100)}</span>
+          <span className='font-mono text-[0.5rem] text-tw-muted-deep tabular-nums w-6 text-right'>
+            {Math.round(performanceScore * 100)}
+          </span>
         </div>
         <div className='flex items-center gap-2'>
-          <span className='font-mono text-[8px] text-tw-muted-deep w-14 shrink-0'>{t('recommendations.value')}</span>
+          <span className='font-mono text-[0.5rem] text-tw-muted-deep w-14 shrink-0'>{t('recommendations.value')}</span>
           <ScoreBar value={valueScore} color='bg-tw-ram' />
-          <span className='font-mono text-[8px] text-tw-muted-deep tabular-nums w-6 text-right'>{Math.round(valueScore * 100)}</span>
+          <span className='font-mono text-[0.5rem] text-tw-muted-deep tabular-nums w-6 text-right'>
+            {Math.round(valueScore * 100)}
+          </span>
         </div>
       </div>
 
       <div className='flex items-center justify-between pt-1 border-t border-tw-border-deep gap-2'>
         <div className='min-w-0'>
-          <p className='font-mono text-[8px] text-tw-muted-deep'>{t('recommendations.bestPrice')}</p>
+          <p className='font-mono text-[0.5rem] text-tw-muted-deep'>{t('recommendations.bestPrice')}</p>
           <p className='font-bold text-sm text-tw-primary tabular-nums'>${price.toLocaleString('es-CL')}</p>
         </div>
         <motion.button
           whileHover={{ scale: 1.04, boxShadow: '0 0 12px rgba(255,255,255,0.15)' }}
           whileTap={{ scale: 0.96 }}
           onClick={() => onAdd(component)}
-          className='flex items-center gap-1 px-2.5 py-1.5 bg-tw-glass text-tw-base font-bold font-mono text-[9px] rounded-md transition-colors cursor-pointer shrink-0'>
+          className='flex items-center gap-1 px-2.5 py-1.5 bg-tw-glass text-tw-base font-bold font-mono text-[0.6rem] rounded-md transition-colors cursor-pointer shrink-0'>
           <Plus className='w-2.5 h-2.5' />
           {t('recommendations.add')}
         </motion.button>
       </div>
 
       <div className='absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200'>
-        <span className='font-mono text-[8px] text-tw-muted-deep border border-tw-glass/8 bg-tw-surface px-1 py-0.5 rounded'>
+        <span className='font-mono text-[0.5rem] text-tw-muted-deep border border-tw-glass/8 bg-tw-surface px-1 py-0.5 rounded'>
           {Math.round(totalScore * 100)}%
         </span>
       </div>
@@ -123,15 +138,21 @@ function CollapsibleSection({ title, subtitle, icon, children, defaultOpen = tru
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className='flex flex-col gap-3'>
-      <button onClick={() => setOpen(!open)} className='flex items-center justify-between w-full text-left cursor-pointer group'>
+      <button
+        onClick={() => setOpen(!open)}
+        className='flex items-center justify-between w-full text-left cursor-pointer group'>
         <div className='flex items-center gap-2'>
           <span className='text-tw-muted-deep group-hover:text-tw-muted transition-colors'>{icon}</span>
           <div>
-            <p className='font-mono text-[9px] uppercase tracking-widest text-tw-muted group-hover:text-tw-muted-highlight transition-colors'>{title}</p>
-            <p className='font-mono text-[8px] text-tw-muted-deep'>{subtitle}</p>
+            <p className='font-mono text-[0.6rem] uppercase tracking-widest text-tw-muted group-hover:text-tw-muted-highlight transition-colors'>
+              {title}
+            </p>
+            <p className='font-mono text-[0.5rem] text-tw-muted-deep'>{subtitle}</p>
           </div>
         </div>
-        <ChevronDown className={`w-3.5 h-3.5 text-tw-muted-deep transition-transform duration-200 ${open ? 'rotate-180' : ''}`} />
+        <ChevronDown
+          className={`w-3.5 h-3.5 text-tw-muted-deep transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+        />
       </button>
       <AnimatePresence>
         {open && (
@@ -167,8 +188,8 @@ function TypeGroup({ typeName, reason, suggestions, onAdd }: TypeGroupProps) {
       <div className='flex items-center gap-2'>
         <span className={`w-1.5 h-1.5 rounded-full bg-${accent} shrink-0`} />
         <div className='flex-1 min-w-0'>
-          <span className='font-mono text-[9px] uppercase tracking-widest text-tw-muted-highlight'>{typeName}</span>
-          <span className='font-mono text-[8px] text-tw-muted-deep ml-2'>— {reason}</span>
+          <span className='font-mono text-[0.6rem] uppercase tracking-widest text-tw-muted-highlight'>{typeName}</span>
+          <span className='font-mono text-[0.5rem] text-tw-muted-deep ml-2'>— {reason}</span>
         </div>
       </div>
       <div className='grid grid-cols-1 gap-2'>
@@ -179,7 +200,7 @@ function TypeGroup({ typeName, reason, suggestions, onAdd }: TypeGroupProps) {
       {suggestions.length > 2 && (
         <button
           onClick={() => setExpanded(!expanded)}
-          className='flex items-center gap-1 font-mono text-[9px] text-tw-muted-deep hover:text-tw-muted transition-colors cursor-pointer self-start'>
+          className='flex items-center gap-1 font-mono text-[0.6rem] text-tw-muted-deep hover:text-tw-muted transition-colors cursor-pointer self-start'>
           <ChevronRight className={`w-3 h-3 transition-transform duration-150 ${expanded ? 'rotate-90' : ''}`} />
           {expanded ? t('recommendations.seeLess') : t('recommendations.seeMore', { count: hiddenCount })}
         </button>
@@ -207,8 +228,10 @@ export function RecommendationsPanel({ recommendations, loading, onAdd }: Props)
       <div className='flex items-center gap-2'>
         <Sparkles className='w-3.5 h-3.5 text-tw-muted-deep' />
         <div>
-          <p className='font-mono text-[9px] uppercase tracking-widest text-tw-muted'>{t('recommendations.title')}</p>
-          <p className='font-mono text-[8px] text-tw-muted-deep'>{t('recommendations.subtitle')}</p>
+          <p className='font-mono text-[0.6rem] uppercase tracking-widest text-tw-muted'>
+            {t('recommendations.title')}
+          </p>
+          <p className='font-mono text-[0.5rem] text-tw-muted-deep'>{t('recommendations.subtitle')}</p>
         </div>
         {loading && <Loader2 className='w-3 h-3 text-tw-muted-deep animate-spin ml-auto' />}
       </div>
@@ -224,15 +247,19 @@ export function RecommendationsPanel({ recommendations, loading, onAdd }: Props)
       {isEmpty && (
         <div className='flex flex-col items-center justify-center py-6 gap-2 text-center'>
           <Sparkles className='w-5 h-5 text-tw-muted-deep/50' />
-          <p className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest'>{t('recommendations.buildComplete')}</p>
-          <p className='font-mono text-[8px] text-tw-muted-deep'>{t('recommendations.noAdditional')}</p>
+          <p className='font-mono text-[0.6rem] text-tw-muted-deep uppercase tracking-widest'>
+            {t('recommendations.buildComplete')}
+          </p>
+          <p className='font-mono text-[0.5rem] text-tw-muted-deep'>{t('recommendations.noAdditional')}</p>
         </div>
       )}
 
       {!loading && hasMissing && (
         <CollapsibleSection
           title={t('recommendations.completeYourBuild')}
-          subtitle={t(missingCount === 1 ? 'recommendations.missing_one' : 'recommendations.missing_other', { count: missingCount })}
+          subtitle={t(missingCount === 1 ? 'recommendations.missing_one' : 'recommendations.missing_other', {
+            count: missingCount,
+          })}
           icon={<Zap className='w-3.5 h-3.5' />}
           defaultOpen>
           <div className='flex flex-col gap-4'>
@@ -253,15 +280,15 @@ export function RecommendationsPanel({ recommendations, loading, onAdd }: Props)
         <div className='flex items-center gap-3 pt-1 border-t border-tw-border-deep'>
           <div className='flex items-center gap-1'>
             <div className='w-2 h-0.5 bg-tw-cpu rounded' />
-            <span className='font-mono text-[7px] text-tw-muted-deep'>{t('recommendations.compat')}</span>
+            <span className='font-mono text-[0.4rem] text-tw-muted-deep'>{t('recommendations.compat')}</span>
           </div>
           <div className='flex items-center gap-1'>
             <div className='w-2 h-0.5 bg-tw-gpu rounded' />
-            <span className='font-mono text-[7px] text-tw-muted-deep'>{t('recommendations.perf')}</span>
+            <span className='font-mono text-[0.4rem] text-tw-muted-deep'>{t('recommendations.perf')}</span>
           </div>
           <div className='flex items-center gap-1'>
             <div className='w-2 h-0.5 bg-tw-ram rounded' />
-            <span className='font-mono text-[7px] text-tw-muted-deep'>{t('recommendations.value')}</span>
+            <span className='font-mono text-[0.4rem] text-tw-muted-deep'>{t('recommendations.value')}</span>
           </div>
         </div>
       )}

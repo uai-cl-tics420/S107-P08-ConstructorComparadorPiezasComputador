@@ -73,7 +73,7 @@ export function Pagination({
       className='flex flex-col gap-4 mt-8 py-6 border-t border-tw-border-deep'>
       <div className='flex flex-col sm:flex-row items-center justify-between gap-4'>
         <div className='flex items-center gap-3'>
-          <label htmlFor='items-per-page' className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest'>
+          <label htmlFor='items-per-page' className='font-mono text-[0.6rem] text-tw-muted-deep uppercase tracking-widest'>
             {t('pagination.showPerPage')}
           </label>
           <select

@@ -7,7 +7,7 @@ import { useLoginView } from './LogIn_SignOn';
 
 const inputClass =
   'w-full font-mono text-sm bg-tw-surface border border-tw-border-deep text-tw-primary placeholder-tw-muted-deep rounded-lg px-4 py-2.5 focus:outline-none focus:border-tw-border-highlight transition-colors duration-200';
-const labelClass = 'font-mono text-[9px] text-tw-muted uppercase tracking-[0.15em]';
+const labelClass = 'font-mono text-[0.6rem] text-tw-muted uppercase tracking-[0.15em]';
 
 export default function OTPSignOn() {
   const { t } = useTranslation();
@@ -96,7 +96,7 @@ export default function OTPSignOn() {
       {step === 'verify' && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
           className='flex flex-col items-center gap-5 py-2'>
-          <p className='font-mono text-[9px] text-tw-muted uppercase tracking-widest text-center'>
+          <p className='font-mono text-[0.6rem] text-tw-muted uppercase tracking-widest text-center'>
             {t('login.otpSentTo')}<br />
             <span className='text-tw-muted-highlight mt-0.5 block'>{email}</span>
           </p>
@@ -117,7 +117,7 @@ export default function OTPSignOn() {
           </div>
           <button type='button'
             onClick={() => { setStep('request'); setOtpArray(['', '', '', '', '', '']); setOtp(''); }}
-            className='font-mono text-[9px] text-tw-muted-deep hover:text-tw-muted uppercase tracking-widest transition-colors duration-200'>
+            className='font-mono text-[0.6rem] text-tw-muted-deep hover:text-tw-muted uppercase tracking-widest transition-colors duration-200'>
             {t('login.otpRetry')}
           </button>
         </motion.div>

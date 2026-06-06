@@ -57,7 +57,7 @@ export function BuildList({ buildComponents, onRemove, onSearchType }: Props) {
         </div>
         {addedCount > 0 && (
           <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className='text-right'>
-            <div className='text-[11px] font-bold uppercase tracking-widest text-tw-muted mb-2'>
+            <div className='text-[0.75rem] font-bold uppercase tracking-widest text-tw-muted mb-2'>
               {t('buildList.completeness')}
             </div>
             <div className='w-12 h-12 rounded-full border-2 border-tw-border flex items-center justify-center bg-tw-base-highlight ml-auto'>
@@ -95,22 +95,24 @@ export function BuildList({ buildComponents, onRemove, onSearchType }: Props) {
                         animate={{ opacity: [0.6, 1, 0.6] }}
                         transition={{ duration: 2, repeat: Infinity }}
                       />
-                      <span className='text-[9px] font-black uppercase tracking-widest text-tw-muted'>{typeName}</span>
+                      <span className='text-[0.6rem] font-black uppercase tracking-widest text-tw-muted'>
+                        {typeName}
+                      </span>
                     </div>
                     <h4 className='text-sm font-bold text-tw-primary truncate group-hover:text-tw-success-highlight transition-colors'>
                       {component.name}
                     </h4>
-                    <p className='text-[10px] text-tw-muted mt-1'>{bestVendor?.vendor_name}</p>
+                    <p className='text- text-tw-muted mt-1'>{bestVendor?.vendor_name}</p>
                   </div>
                   <div className='text-right space-y-2'>
                     <div className='flex items-center gap-2'>
                       {quantity > 1 && (
-                        <span className='text-[10px] font-bold bg-tw-base-highlight text-tw-muted px-2 py-1 rounded'>
+                        <span className='text- font-bold bg-tw-base-highlight text-tw-muted px-2 py-1 rounded'>
                           x{quantity}
                         </span>
                       )}
                       <div className='text-right'>
-                        <div className='text-[10px] font-bold uppercase tracking-widest text-tw-muted'>
+                        <div className='text- font-bold uppercase tracking-widest text-tw-muted'>
                           {t('buildList.subtotal')}
                         </div>
                         <div className='text-lg font-black text-tw-success-highlight'>
@@ -122,7 +124,7 @@ export function BuildList({ buildComponents, onRemove, onSearchType }: Props) {
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => onRemove(component.id)}
-                      className='w-full flex items-center justify-center gap-1 px-2.5 py-1.5 bg-tw-base-highlight hover:bg-tw-alert/20 border border-tw-border hover:border-tw-alert/50 rounded-md text-[10px] font-bold text-tw-muted hover:text-tw-alert-highlight transition-all'>
+                      className='w-full flex items-center justify-center gap-1 px-2.5 py-1.5 bg-tw-base-highlight hover:bg-tw-alert/20 border border-tw-border hover:border-tw-alert/50 rounded-md text- font-bold text-tw-muted hover:text-tw-alert-highlight transition-all'>
                       <X className='w-3 h-3' />
                       {t('buildList.remove')}
                     </motion.button>
@@ -142,7 +144,7 @@ export function BuildList({ buildComponents, onRemove, onSearchType }: Props) {
                   <div className='flex-1'>
                     <div className='flex items-center gap-2 mb-2'>
                       <div className={`w-2 h-2 rounded-full ${config.dot}/40`} />
-                      <span className='text-[9px] font-black uppercase tracking-widest text-tw-muted/60'>
+                      <span className='text-[0.6rem] font-black uppercase tracking-widest text-tw-muted/60'>
                         {typeName}
                       </span>
                     </div>
@@ -153,7 +155,7 @@ export function BuildList({ buildComponents, onRemove, onSearchType }: Props) {
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={() => onSearchType(typeName)}
-                      className='flex items-center gap-1.5 px-3 py-1.5 bg-tw-base-highlight border border-tw-success-highlight/30 hover:border-tw-success-highlight rounded-md text-[10px] font-bold text-tw-success-highlight hover:bg-tw-success-highlight/10 transition-all whitespace-nowrap'>
+                      className='flex items-center gap-1.5 px-3 py-1.5 bg-tw-base-highlight border border-tw-success-highlight/30 hover:border-tw-success-highlight rounded-md text- font-bold text-tw-success-highlight hover:bg-tw-success-highlight/10 transition-all whitespace-nowrap'>
                       <Plus className='w-3 h-3' />
                       {t('buildList.search')}
                     </motion.button>
@@ -172,7 +174,9 @@ export function BuildList({ buildComponents, onRemove, onSearchType }: Props) {
           transition={{ delay: 0.3 }}
           className='mt-4 bg-linear-to-br from-tw-surface-highlight to-tw-surface border-tw-success-highlight/20 rounded-xl p-6 space-y-4'>
           <div className='space-y-2'>
-            <p className='text-[9px] font-black uppercase tracking-widest text-tw-muted'>{t('buildList.bestPrices')}</p>
+            <p className='text-[0.6rem] font-black uppercase tracking-widest text-tw-muted'>
+              {t('buildList.bestPrices')}
+            </p>
             <motion.p
               key={totalMin}
               initial={{ scale: 0.9 }}
@@ -189,7 +193,7 @@ export function BuildList({ buildComponents, onRemove, onSearchType }: Props) {
               className='flex items-center gap-2 bg-tw-success-highlight/10 border border-tw-success-highlight/40 rounded-lg px-4 py-3'>
               <TrendingDown className='w-4 h-4 text-tw-success-highlight' />
               <div className='flex-1'>
-                <p className='text-[9px] font-bold uppercase tracking-widest text-tw-muted'>
+                <p className='text-[0.6rem] font-bold uppercase tracking-widest text-tw-muted'>
                   {t('buildList.youCanSave')}
                 </p>
                 <p className='text-lg font-black text-tw-success-highlight'>
@@ -200,7 +204,7 @@ export function BuildList({ buildComponents, onRemove, onSearchType }: Props) {
           )}
 
           {totalMin !== totalMax && (
-            <p className='text-[10px] text-tw-muted border-t border-tw-border pt-3'>
+            <p className='text- text-tw-muted border-t border-tw-border pt-3'>
               {t('buildList.worstCase', { amount: totalMax.toLocaleString('es-CL') })}
             </p>
           )}

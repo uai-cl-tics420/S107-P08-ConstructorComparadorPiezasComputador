@@ -45,7 +45,7 @@ export default function LoginMethodSelector() {
 
       <div className='flex items-center gap-3 my-0.5'>
         <div className='flex-1 h-px bg-tw-base-highlight' />
-        <span className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest'>{t('login.or')}</span>
+        <span className='font-mono text-[0.6rem] text-tw-muted-deep uppercase tracking-widest'>{t('login.or')}</span>
         <div className='flex-1 h-px bg-tw-base-highlight' />
       </div>
 

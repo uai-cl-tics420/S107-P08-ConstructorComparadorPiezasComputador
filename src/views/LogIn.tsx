@@ -48,7 +48,7 @@ export function LogIn() {
           <span className='font-mono text-sm font-bold text-tw-primary tracking-[0.12em] uppercase group-hover:text-tw-primary-deep transition-colors duration-200'>
             PC·BUILDER
           </span>
-          <span className='font-mono text-[9px] text-tw-muted-deep tracking-[0.2em] uppercase'>
+          <span className='font-mono text-[0.6rem] text-tw-muted-deep tracking-[0.2em] uppercase'>
             {t('nav.tagline')}
           </span>
         </Link>
@@ -65,7 +65,7 @@ export function LogIn() {
         </div>
       </div>
 
-      <p className='absolute bottom-6 font-mono text-[9px] text-tw-muted-deep uppercase tracking-widest z-10'>
+      <p className='absolute bottom-6 font-mono text-[0.6rem] text-tw-muted-deep uppercase tracking-widest z-10'>
         {t('login.versionBeta')}
       </p>
     </motion.div>

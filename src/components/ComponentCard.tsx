@@ -85,13 +85,13 @@ export function ComponentCard({ component, onAdd, onCompare, onViewSpecs, isSele
         <div className='flex items-center justify-between gap-2'>
           <div className='flex items-center gap-2'>
             <span className={`w-1.5 h-1.5 rounded-full shrink-0 transition-all duration-300 group-hover:scale-125 bg-${accent} shadow-[0_0_8px_var(--color-${accent})]`} />
-            <span className='font-mono text-[9px] uppercase tracking-[0.18em] text-tw-muted group-hover:text-tw-muted-highlight transition-colors duration-300'>
+            <span className='font-mono text-[0.6rem] uppercase tracking-[0.18em] text-tw-muted group-hover:text-tw-muted-highlight transition-colors duration-300'>
               {component.type_name}
             </span>
           </div>
           {buildCompatibility != null && (
             <div className='relative group/badge shrink-0'>
-              <span className={`font-mono text-[8px] px-1.5 py-0.5 rounded border ${
+              <span className={`font-mono text-[0.5rem] px-1.5 py-0.5 rounded border ${
                 buildCompatibility.isCompatible
                   ? 'text-green-400/80 border-green-500/20 bg-green-500/5'
                   : 'text-tw-alert/70 border-tw-alert/15 bg-tw-alert/5'
@@ -101,7 +101,7 @@ export function ComponentCard({ component, onAdd, onCompare, onViewSpecs, isSele
               {buildCompatibility.reasons.length > 0 && (
                 <div className='absolute right-0 top-full mt-1 z-20 hidden group-hover/badge:flex flex-col gap-1 w-48 bg-tw-surface/98 backdrop-blur-xl border border-tw-border rounded-lg p-2 shadow-xl shadow-black/40'>
                   {buildCompatibility.reasons.slice(0, 3).map((r, i) => (
-                    <span key={i} className='font-mono text-[8px] text-tw-muted leading-tight'>{r}</span>
+                    <span key={i} className='font-mono text-[0.5rem] text-tw-muted leading-tight'>{r}</span>
                   ))}
                 </div>
               )}
@@ -114,7 +114,7 @@ export function ComponentCard({ component, onAdd, onCompare, onViewSpecs, isSele
           <h3 className='text-tw-primary font-semibold text-sm leading-snug line-clamp-2 group-hover:text-tw-primary transition-colors'>
             {component.name}
           </h3>
-          <p className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-[0.15em]'>{component.brand_name}</p>
+          <p className='font-mono text-[0.6rem] text-tw-muted-deep uppercase tracking-[0.15em]'>{component.brand_name}</p>
         </div>
 
         {/* Specs */}
@@ -122,10 +122,10 @@ export function ComponentCard({ component, onAdd, onCompare, onViewSpecs, isSele
           <div className='border-t border-tw-border-deep pt-3.5 space-y-2.5'>
             {specsToShow.map((key) => (
               <div key={key} className='flex items-baseline justify-between gap-3'>
-                <span className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-[0.15em] shrink-0'>
+                <span className='font-mono text-[0.6rem] text-tw-muted-deep uppercase tracking-[0.15em] shrink-0'>
                   {t(`spec.${key}`, { defaultValue: key })}
                 </span>
-                <span className='font-mono text-[11px] text-tw-primary-deep font-medium tabular-nums'>
+                <span className='font-mono text-xs text-tw-primary-deep font-medium tabular-nums'>
                   {formatSpecValue(key, component.specs![key])}
                 </span>
               </div>
@@ -136,7 +136,7 @@ export function ComponentCard({ component, onAdd, onCompare, onViewSpecs, isSele
         {/* Price section */}
         <div className='mt-auto space-y-3'>
           <div className='flex items-baseline justify-between'>
-            <span className='font-mono text-[9px] text-tw-muted-deep uppercase tracking-[0.15em]'>{t('card.bestPrice')}</span>
+            <span className='font-mono text-[0.6rem] text-tw-muted-deep uppercase tracking-[0.15em]'>{t('card.bestPrice')}</span>
             <span className='text-2xl font-black text-tw-primary tabular-nums drop-shadow-[0_0_12px_rgba(255,255,255,0.25)] group-hover:drop-shadow-[0_0_16px_rgba(255,255,255,0.4)] transition-all duration-300'>
               ${minPrice.toLocaleString('es-CL')}
             </span>
@@ -146,10 +146,10 @@ export function ComponentCard({ component, onAdd, onCompare, onViewSpecs, isSele
           <div className='bg-tw-base border border-tw-border-deep rounded-lg p-2.5 space-y-1.5'>
             {visiblePrices.map((p) => (
               <div key={p.id} className='flex items-center justify-between gap-2'>
-                <span className={`font-mono text-[10px] truncate ${p.price === minPrice ? 'text-tw-muted-highlight' : 'text-tw-muted-deep'}`}>
+                <span className={`font-mono text-[0.6rem] truncate ${p.price === minPrice ? 'text-tw-muted-highlight' : 'text-tw-muted-deep'}`}>
                   {p.vendor_name}
                 </span>
-                <span className={`font-mono text-[10px] tabular-nums shrink-0 ${p.price === minPrice ? 'text-tw-primary font-bold' : 'text-tw-muted-deep'}`}>
+                <span className={`font-mono text-[0.6rem] tabular-nums shrink-0 ${p.price === minPrice ? 'text-tw-primary font-bold' : 'text-tw-muted-deep'}`}>
                   ${p.price.toLocaleString('es-CL')}
                 </span>
               </div>
@@ -161,7 +161,7 @@ export function ComponentCard({ component, onAdd, onCompare, onViewSpecs, isSele
                 className='w-full mt-2 pt-2 border-t border-tw-border-deep flex items-center justify-center gap-1.5 py-2 text-tw-muted hover:text-tw-muted-highlight transition-colors duration-200'
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}>
-                <span className='font-mono text-[9px] uppercase tracking-[0.15em]'>
+                <span className='font-mono text-[0.6rem] uppercase tracking-[0.15em]'>
                   {showAllPrices ? t('card.seeLess') : t('card.seeMore', { count: hiddenCount })}
                 </span>
                 <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${showAllPrices ? 'rotate-180' : ''}`} />
@@ -170,7 +170,7 @@ export function ComponentCard({ component, onAdd, onCompare, onViewSpecs, isSele
           </div>
 
           {savings > 0 && (
-            <p className='font-mono text-[9px] text-tw-muted-deep text-center tracking-wider'>
+            <p className='font-mono text-[0.6rem] text-tw-muted-deep text-center tracking-wider'>
               {t('card.save', { amount: savings.toLocaleString('es-CL') })}
             </p>
           )}
@@ -183,7 +183,7 @@ export function ComponentCard({ component, onAdd, onCompare, onViewSpecs, isSele
             whileTap={{ scale: 0.97 }}
             transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
             onClick={() => onAdd(component)}
-            className='flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-tw-glass hover:bg-tw-glass/90 text-tw-base font-bold font-mono text-[11px] rounded-lg transition-colors duration-150 cursor-pointer'>
+            className='flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-tw-glass hover:bg-tw-glass/90 text-tw-base font-bold font-mono text-xs rounded-lg transition-colors duration-150 cursor-pointer'>
             <Plus className='w-3.5 h-3.5' />
             {t('card.add')}
           </motion.button>

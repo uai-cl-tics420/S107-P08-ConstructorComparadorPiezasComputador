@@ -7,7 +7,7 @@ import { useLoginView } from './LogIn_SignOn';
 
 const inputClass =
   'w-full font-mono text-sm bg-tw-surface border border-tw-border-deep text-tw-primary placeholder-tw-muted-deep rounded-lg px-4 py-2.5 focus:outline-none focus:border-tw-border-highlight transition-colors duration-200';
-const labelClass = 'font-mono text-[9px] text-tw-muted uppercase tracking-[0.15em]';
+const labelClass = 'font-mono text-[0.6rem] text-tw-muted uppercase tracking-[0.15em]';
 
 export default function LogInForm() {
   const { t } = useTranslation();

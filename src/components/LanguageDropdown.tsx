@@ -20,7 +20,10 @@ export function LanguageDropdown() {
   const currentLang = config.language as SupportedLanguage;
 
   const handleSelect = (lang: SupportedLanguage) => {
-    if (lang === currentLang) { setIsOpen(false); return; }
+    if (lang === currentLang) {
+      setIsOpen(false);
+      return;
+    }
     // Change i18n first so all useTranslation hooks re-render immediately
     i18n.changeLanguage(lang);
     // Then update config (triggers localStorage persistence in frontend.tsx)
@@ -32,7 +35,7 @@ export function LanguageDropdown() {
     <div className='relative'>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-1.5 font-mono text-[11px] text-tw-muted hover:text-tw-primary border border-tw-border-deep/50 hover:border-tw-border bg-tw-surface/50 hover:bg-tw-surface px-2.5 py-2 rounded-lg transition-all cursor-pointer ${
+        className={`flex items-center gap-1.5 font-mono text-xs text-tw-muted hover:text-tw-primary border border-tw-border-deep/50 hover:border-tw-border bg-tw-surface/50 hover:bg-tw-surface px-2.5 py-2 rounded-lg transition-all cursor-pointer ${
           isOpen ? 'border-tw-border text-tw-primary' : ''
         }`}
         aria-label={t('common.close')}

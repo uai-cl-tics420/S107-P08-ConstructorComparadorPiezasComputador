@@ -45,7 +45,7 @@ export function BuildChecklist({ build }: Props) {
           return (
             <div key={type} className='flex items-center justify-between py-1'>
               <div className='flex items-center gap-2'>
-                <span className='text-tw-muted text-[10px] tabular-nums w-3 shrink-0'>{i + 1}</span>
+                <span className='text-tw-muted text-[0.6rem] tabular-nums w-3 shrink-0'>{i + 1}</span>
                 <span className={`w-2 h-2 rounded-full shrink-0 ${TYPE_DOT_COLOR[type] ?? 'bg-tw-case'}`} />
                 <span className='text-tw-muted-highlight text-xs'>{type}</span>
               </div>

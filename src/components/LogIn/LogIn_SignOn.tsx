@@ -52,7 +52,7 @@ const LogInSignOnContent = ({ onAuthSuccess }: Props) => {
             exit='exit'
             className='space-y-1.5'>
             <h2 className='text-2xl font-black tracking-tighter text-tw-primary leading-none'>{meta.title}</h2>
-            <p className='font-mono text-[9px] text-tw-muted uppercase tracking-[0.18em]'>{meta.sub}</p>
+            <p className='font-mono text-[0.6rem] text-tw-muted uppercase tracking-[0.18em]'>{meta.sub}</p>
           </motion.div>
         </AnimatePresence>
 
@@ -74,7 +74,7 @@ const LogInSignOnContent = ({ onAuthSuccess }: Props) => {
               className='border-t border-tw-border-deep pt-4 text-center'>
               <button
                 onClick={() => setView('selection')}
-                className='font-mono text-[9px] text-tw-muted-deep hover:text-tw-muted-highlight uppercase tracking-widest transition-colors duration-200 cursor-pointer'>
+                className='font-mono text-[0.6rem] text-tw-muted-deep hover:text-tw-muted-highlight uppercase tracking-widest transition-colors duration-200 cursor-pointer'>
                 {t('login.backToMethods')}
               </button>
             </motion.div>

@@ -23,7 +23,7 @@ export function ToastContainer({ toasts, onRemove }: Props) {
         return (
           <div
             key={toast.id}
-            className='pointer-events-auto flex items-center gap-3 bg-tw-surface-highlight border border-tw-glass/10 rounded-xl px-4 py-3 shadow-2xl min-w-70 max-w-sm animate-in slide-in-from-right-4 fade-in duration-200'>
+            className='pointer-events-auto flex items-center gap-3 bg-tw-surface-highlight border border-tw-glass/10 rounded-xl px-4 py-3 shadow-2xl ml-6 max-w-sm animate-in slide-in-from-right-4 fade-in duration-200'>
             <div className={`w-1 self-stretch rounded-full shrink-0 ${style.bar}`} />
             <span className={`text-sm font-bold shrink-0 ${style.icon}`}>{style.label}</span>
             <p className='text-tw-primary text-sm flex-1 leading-snug'>{toast.message}</p>

@@ -362,11 +362,6 @@ export function App() {
 
   const hasActiveFilters = search || selectedType || selectedBrand || minPrice || maxPrice;
 
-  // Grid uniforme: todas las cards del mismo tamaño (4 por fila)
-  function isLargeCard(_component: Component): boolean {
-    return false;
-  }
-
   const containerVariant = {
     hidden: {},
     visible: { transition: { staggerChildren: 0.055 } },
@@ -739,7 +734,6 @@ export function App() {
                   <p className='font-mono text-[0.6rem] text-tw-muted-deep uppercase tracking-widest mb-4'>
                     {t('results.componentCount', { count: totalCount })}
                   </p>
-                  {/* ── GRID UNIFORME — 4 por fila ── */}
                   <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3'>
                     {sortedComponents.map((c, i) => {
                       return (

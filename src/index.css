@@ -157,7 +157,7 @@
   .custom-scrollbar {
     /* Soporte para Firefox (limitado) */
     scrollbar-width: thin;
-    scrollbar-color: var(--color-tw-border) var(--color-tw-base-highlight);
+    scrollbar-color: var(--color-tw-muted-deep) var(--color-tw-base-highlight);
   }
 
   /* Contenedor de la barra (Chrome, Edge, Safari) */
@@ -169,7 +169,7 @@
   /* La "vía" por donde corre la barra */
   .custom-scrollbar::-webkit-scrollbar-track {
     /* IMPORTANTE: Usar el fondo sólido evita que el SO la oculte automáticamente */
-    background-color: var(--color-tw-base-highlight);
+    background-color: var(--color-tw-muted);
     margin-block: 12px; /* Margen superior e inferior para evitar las esquinas redondeadas */
     border-radius: 100px;
   }

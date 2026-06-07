@@ -39,11 +39,11 @@ export function Appearance() {
         {/* Theme */}
         <div className='flex flex-col gap-2'>
           <label className='text-tw-muted uppercase tracking-wider'>{t('appearance.theme')}</label>
-          <div className='flex flex-row gap-15 ml-15'>
+          <div className='flex flex-row gap-6 flex-wrap'>
             <motion.button
               whileHover={config.theme === 'light' ? { scale: 1 } : { scale: 1.02 }}
               whileTap={config.theme === 'light' ? { scale: 1 } : { scale: 0.96 }}
-              className={`border rounded-lg px-3 py-2 w-22 transition-all duration-150 ${
+              className={`border rounded-lg mr-15 px-3 py-2 w-22 transition-all duration-150 ${
                 config.theme === 'light'
                   ? 'bg-tw-accent/10 border-tw-accent shadow-[0_0_15px_rgba(16,185,129,0.1)]'
                   : 'bg-tw-surface border-tw-border hover:border-tw-border-highlight cursor-pointer'
@@ -51,7 +51,9 @@ export function Appearance() {
               onClick={() => handleThemeChange('light')}
               disabled={config.theme === 'light'}>
               <div className='flex flex-col gap-1 items-center px-2'>
-                <Sun className={`w-6 h-6 transition-colors duration-300 ${config.theme === 'light' ? 'text-tw-accent' : 'text-tw-muted-deep'}`} />
+                <Sun
+                  className={`w-6 h-6 transition-colors duration-300 ${config.theme === 'light' ? 'text-tw-accent' : 'text-tw-muted-deep'}`}
+                />
                 <span className={`uppercase ${config.theme === 'light' ? 'text-tw-primary' : 'text-tw-muted-deep'}`}>
                   {t('appearance.light')}
                 </span>
@@ -69,7 +71,9 @@ export function Appearance() {
               onClick={() => handleThemeChange('dark')}
               disabled={config.theme === 'dark'}>
               <div className='flex flex-col gap-1 items-center px-2'>
-                <Moon className={`w-6 h-6 transition-colors duration-300 ${config.theme === 'dark' ? 'text-tw-alt' : 'text-tw-muted-deep'}`} />
+                <Moon
+                  className={`w-6 h-6 transition-colors duration-300 ${config.theme === 'dark' ? 'text-tw-alt' : 'text-tw-muted-deep'}`}
+                />
                 <span className={`uppercase ${config.theme === 'dark' ? 'text-tw-primary' : 'text-tw-muted-deep'}`}>
                   {t('appearance.dark')}
                 </span>
@@ -86,7 +90,9 @@ export function Appearance() {
               onClick={() => setIsOpen(!isOpen)}
               className={`flex items-center justify-between w-full bg-tw-surface border border-tw-border text-tw-primary rounded-lg px-4 py-2 font-mono transition-all hover:border-tw-border-highlight cursor-pointer ${isOpen ? 'border-tw-accent ring-1 ring-tw-accent/20' : ''}`}>
               <span>{t(`language.${currentLang}`)}</span>
-              <ChevronDown className={`w-4 h-4 text-tw-muted-deep transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown
+                className={`w-4 h-4 text-tw-muted-deep transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+              />
             </button>
 
             <AnimatePresence>

@@ -19,13 +19,41 @@ const TYPE_BADGE: Record<string, string> = {
 
 // Claves de specs con label conocido en i18n (spec.*). Los labels salen de t('spec.<clave>').
 const KNOWN_SPECS = new Set([
-  'core_count', 'thread_count', 'tdp', 'base_clock', 'boost_clock', 'socket', 'gpu',
-  'cinebench_r20_single_score', 'cinebench_r20_multi_score', 'gpu_boost_clock',
-  'vram_quantity', 'gpu_tdp', 'bus_width', 'capacity', 'bus_speed', 'ram_type',
-  'module_count', 'chipset', 'memory_slots_quantity', 'capacity_value', 'bus_type',
-  'read_speed', 'write_speed', 'wattage', 'certification', 'is_modular', 'form_factor',
-  'max_motherboard_form_factor', 'cooler_sockets', 'height', 'length',
-  'max_cpu_cooler_height', 'max_video_card_length', 'm2_slots', 'is_nvme',
+  'core_count',
+  'thread_count',
+  'tdp',
+  'base_clock',
+  'boost_clock',
+  'socket',
+  'gpu',
+  'cinebench_r20_single_score',
+  'cinebench_r20_multi_score',
+  'gpu_boost_clock',
+  'vram_quantity',
+  'gpu_tdp',
+  'bus_width',
+  'capacity',
+  'bus_speed',
+  'ram_type',
+  'module_count',
+  'chipset',
+  'memory_slots_quantity',
+  'capacity_value',
+  'bus_type',
+  'read_speed',
+  'write_speed',
+  'wattage',
+  'certification',
+  'is_modular',
+  'form_factor',
+  'max_motherboard_form_factor',
+  'cooler_sockets',
+  'height',
+  'length',
+  'max_cpu_cooler_height',
+  'max_video_card_length',
+  'm2_slots',
+  'is_nvme',
 ]);
 
 const LOWER_IS_BETTER = new Set(['tdp', 'gpu_tdp']);
@@ -51,17 +79,20 @@ export function CompareModal({ components, onClose }: Props) {
     if (key === 'tdp' || key === 'gpu_tdp') return `${value}W`;
     if (key === 'wattage') return `${value}W`;
     if (key === 'vram_quantity') return `${value} GB`;
-    if (key === 'length' || key === 'height' || key === 'max_cpu_cooler_height' || key === 'max_video_card_length') return `${value}mm`;
+    if (key === 'length' || key === 'height' || key === 'max_cpu_cooler_height' || key === 'max_video_card_length')
+      return `${value}mm`;
     return String(value);
   }
 
   return (
     <div
       className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-tw-base-deep/70 backdrop-blur-sm'
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className='bg-tw-base-highlight border border-tw-glass/10 rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col overflow-hidden max-h-[90vh]'>
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}>
+      <div className='bg-tw-base-highlight border border-tw-glass/10 rounded-2xl w-full max-w-2xl shadow-2xl flex flex-col overflow-auto max-h-[90vh]'>
         {/* Header */}
-        <div className='flex items-center justify-between px-6 py-4 border-b border-tw-glass/5 shrink-0'>
+        <div className='flex items-center justify-between px-6 py-4 shrink-0'>
           <h2 className='text-tw-primary font-semibold text-base'>{t('compare.title', { type: a!.type_name })}</h2>
           <button
             onClick={onClose}
@@ -72,11 +103,17 @@ export function CompareModal({ components, onClose }: Props) {
         </div>
 
         {/* Component headers */}
-        <div className='grid grid-cols-[140px_1fr_1fr] shrink-0 border-b border-tw-glass/5'>
+        <div className='grid grid-cols-[140px_1fr_1fr] shrink-0'>
           <div className='bg-tw-base px-4 py-4' />
-          {[{ comp: a!, badge: badgeA }, { comp: b!, badge: badgeB }].map(({ comp, badge }) => (
-            <div key={comp.id} className='bg-tw-base-highlight px-5 py-4 flex flex-col gap-1.5 border-l border-tw-glass/5'>
-              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border w-fit ${badge}`}>
+          {[
+            { comp: a!, badge: badgeA },
+            { comp: b!, badge: badgeB },
+          ].map(({ comp, badge }) => (
+            <div
+              key={comp.id}
+              className='min-w-34 border-b border-t border-l border-tw-glass/5 bg-tw-base-highlight px-5 py-4 flex flex-col gap-1.5'>
+              <span
+                className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold border w-fit ${badge}`}>
                 {comp.type_name}
               </span>
               <h3 className='text-tw-primary font-semibold text-sm leading-snug'>{comp.name}</h3>
@@ -86,55 +123,61 @@ export function CompareModal({ components, onClose }: Props) {
         </div>
 
         {/* Specs table */}
-        <div className='overflow-y-auto flex-1'>
-          {displayKeys.length === 0 ? (
-            <div className='flex items-center justify-center py-12 text-tw-muted text-sm'>
-              {t('compare.noSpecs')}
-            </div>
-          ) : (
-            <div className='flex flex-col divide-y divide-tw-glass/5'>
-              {displayKeys.map((key, i) => {
-                const valA = specsA[key];
-                const valB = specsB[key];
-                const numA = typeof valA === 'number' ? valA : null;
-                const numB = typeof valB === 'number' ? valB : null;
-                const lowerBetter = LOWER_IS_BETTER.has(key);
-                let aWins = false;
-                let bWins = false;
-                if (numA !== null && numB !== null) {
-                  aWins = lowerBetter ? numA < numB : numA > numB;
-                  bWins = lowerBetter ? numB < numA : numB > numA;
-                }
+        {displayKeys.length === 0 ? (
+          <div className='flex items-center justify-center py-12 text-tw-muted text-sm'>{t('compare.noSpecs')}</div>
+        ) : (
+          <div>
+            {displayKeys.map((key, i) => {
+              const valA = specsA[key];
+              const valB = specsB[key];
+              const numA = typeof valA === 'number' ? valA : null;
+              const numB = typeof valB === 'number' ? valB : null;
+              const lowerBetter = LOWER_IS_BETTER.has(key);
+              let aWins = false;
+              let bWins = false;
+              if (numA !== null && numB !== null) {
+                aWins = lowerBetter ? numA < numB : numA > numB;
+                bWins = lowerBetter ? numB < numA : numB > numA;
+              }
 
-                return (
-                  <div key={key} className={`grid grid-cols-[140px_1fr_1fr] ${i % 2 === 0 ? 'bg-tw-base-highlight' : 'bg-tw-base'}`}>
-                    <div className='px-4 py-3 flex items-center'>
-                      <span className='text-tw-muted text-xs uppercase tracking-wide font-medium'>{t(`spec.${key}`, { defaultValue: key })}</span>
-                    </div>
-                    <div className='px-5 py-3 flex items-center border-l border-tw-glass/5'>
-                      <span className={`text-sm font-semibold tabular-nums ${valA == null ? 'text-tw-muted-deep' : aWins ? 'text-tw-success' : 'text-tw-primary-deep'}`}>
-                        {formatValue(key, valA)}
-                      </span>
-                    </div>
-                    <div className='px-5 py-3 flex items-center border-l border-tw-glass/5'>
-                      <span className={`text-sm font-semibold tabular-nums ${valB == null ? 'text-tw-muted-deep' : bWins ? 'text-tw-success' : 'text-tw-primary-deep'}`}>
-                        {formatValue(key, valB)}
-                      </span>
-                    </div>
+              return (
+                <div key={key} className='grid grid-cols-[140px_1fr_1fr] shrink-0'>
+                  <div
+                    className={`px-4 py-3 flex items-center border-b border-tw-glass/5 ${i % 2 === 0 ? 'bg-tw-base-highlight' : 'bg-tw-base'}`}>
+                    <span className='text-tw-muted text-xs uppercase tracking-wide font-medium'>
+                      {t(`spec.${key}`, { defaultValue: key })}
+                    </span>
                   </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                  <div
+                    className={`min-w-34 px-5 py-3 flex items-center border-b border-l border-tw-glass/5 ${i % 2 === 0 ? 'bg-tw-base-highlight' : 'bg-tw-base'}`}>
+                    <span
+                      className={`text-sm font-semibold tabular-nums ${valA == null ? 'text-tw-muted-deep' : aWins ? 'text-tw-success' : 'text-tw-primary-deep'}`}>
+                      {formatValue(key, valA)}
+                    </span>
+                  </div>
+                  <div
+                    className={`min-w-34 px-5 py-3 flex items-center border-b border-l border-tw-glass/5 ${i % 2 === 0 ? 'bg-tw-base-highlight' : 'bg-tw-base'}`}>
+                    <span
+                      className={`text-sm font-semibold tabular-nums ${valB == null ? 'text-tw-muted-deep' : bWins ? 'text-tw-success' : 'text-tw-primary-deep'}`}>
+                      {formatValue(key, valB)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* Footer: best price */}
         <div className='grid grid-cols-[140px_1fr_1fr] border-t border-tw-glass/5 shrink-0'>
           <div className='bg-tw-base px-4 py-3 flex items-center'>
             <span className='text-tw-muted text-xs uppercase tracking-wide font-medium'>{t('compare.bestPrice')}</span>
           </div>
-          {[{ comp: a!, minPrice: minPriceA }, { comp: b!, minPrice: minPriceB }].map(({ comp, minPrice }) => (
-            <div key={comp.id} className='bg-tw-base px-5 py-3 flex items-center border-l border-tw-glass/5'>
+          {[
+            { comp: a!, minPrice: minPriceA },
+            { comp: b!, minPrice: minPriceB },
+          ].map(({ comp, minPrice }) => (
+            <div key={comp.id} className='min-w-34 bg-tw-base px-5 py-3 flex items-center border-l border-tw-glass/5'>
               <span className='text-tw-primary-deep text-sm font-bold tabular-nums'>
                 {minPrice != null ? `$${minPrice.toLocaleString('es-CL')}` : '—'}
               </span>

@@ -8,7 +8,6 @@
     "dev": "bun run validate-env && bun --hot src/index.ts",
     "start": "bun run validate-env && NODE_ENV=production bun src/index.ts",
     "build": "bun run validate-env && bun run build.ts",
-    "populate": "bun run validate-env && bun run src/lib/db/DBS_populator.ts",
     "scrape": "bun run validate-env && python -m venv .venv && ./.venv/Scripts/pip install pipreqs && ./.venv/Scripts/pipreqs ./scraper --force && ./.venv/Scripts/pip install -r scraper/requirements.txt && ./.venv/Scripts/python ./scraper/fetch_data.py"
   },
   "dependencies": {

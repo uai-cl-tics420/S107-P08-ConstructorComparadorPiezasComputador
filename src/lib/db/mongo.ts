@@ -1,17 +1,25 @@
 import { MongoClient, ObjectId } from 'mongodb';
 import { getComponentIdsByFilters, getPricesByComponentId, getComponentCountByFilters } from './postgres';
 import type { Vendor } from '@/types/Database_types';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('mongo');
 
 const mongoUrl = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}?authSource=admin`;
 
 const client = new MongoClient(mongoUrl);
 await client.connect();
+log.info('Conexión a MongoDB establecida', { db: process.env.MONGO_DB, host: process.env.MONGO_HOST });
 const db = client.db(process.env.MONGO_DB);
 
 // Transform MongoDB document to the format the frontend expects
 async function transformComponent(doc: any) {
   const type = await db.collection('component_types').findOne({ _id: doc.type_id });
   const brand = doc.brand_id ? await db.collection('brands').findOne({ _id: doc.brand_id }) : null;
+
+  if (!type) {
+    log.warn('Tipo de componente no encontrado', { type_id: doc.type_id, component_id: doc._id });
+  }
 
   // Fetch real prices from PostgreSQL
   const prices = await getPricesByComponentId(doc._id);
@@ -40,8 +48,9 @@ export async function getComponents(
   minPrice?: number,
   maxPrice?: number,
 ) {
+  log.debug('getComponents llamado', { search, typeId, brandId, page, limit, sortBy, sortOrder, minPrice, maxPrice });
+
   const componentIds = await getComponentIdsByFilters(
-    // Query to PostgreSQL to get components
     search,
     typeId,
     brandId,
@@ -54,21 +63,24 @@ export async function getComponents(
   );
 
   if (componentIds.length === 0) {
-    // Return early if none matched
+    log.info('No se encontraron componentes con los filtros aplicados', { search, typeId, brandId });
     return [];
   }
 
-  const idToOrder = new Map(componentIds.map((id, idx) => [id, idx])); // Map to save component order by ID
+  const idToOrder = new Map(componentIds.map((id, idx) => [id, idx]));
 
-  const docs = await db // Query to Mongo to get full component data
+  const docs = await db
     .collection('components')
     .find({ _id: { $in: componentIds } })
     .toArray();
 
-  docs.sort((a, b) => (idToOrder.get(a._id) ?? 0) - (idToOrder.get(b._id) ?? 0)); // Reorder components
+  docs.sort((a, b) => (idToOrder.get(a._id) ?? 0) - (idToOrder.get(b._id) ?? 0));
 
   const transformed = await Promise.all(docs.map(transformComponent));
-  return transformed.filter((comp) => comp.prices.length > 0);
+  const withPrices = transformed.filter((comp) => comp.prices.length > 0);
+
+  log.info('Componentes obtenidos', { total: withPrices.length, page, limit });
+  return withPrices;
 }
 
 export async function getComponentsCount(
@@ -82,20 +94,33 @@ export async function getComponentsCount(
 }
 
 export async function getComponentById(id: string) {
-  const doc = await db.collection('components').findOne({ _id: new ObjectId(id) });
-  if (!doc) return null;
-  return transformComponent(doc);
+  log.debug('Buscando componente por ID', { id });
+  try {
+    const doc = await db.collection('components').findOne({ _id: new ObjectId(id) });
+    if (!doc) {
+      log.warn('Componente no encontrado', { id });
+      return null;
+    }
+    return transformComponent(doc);
+  } catch (error) {
+    log.error('Error al buscar componente por ID', { id, error: (error as Error).message });
+    return null;
+  }
 }
 
 export async function getBrands() {
+  log.debug('Obteniendo marcas');
   const docs = await db.collection('brands').find({}).toArray();
+  log.info('Marcas obtenidas', { count: docs.length });
   return docs.map((b) => ({ id: b._id, name: b.name }));
 }
 
 const SINGLE_UNIT_TYPES = new Set(['CPU', 'GPU', 'Motherboard', 'PSU', 'CPU Cooler', 'Case']);
 
 export async function getComponentTypes() {
+  log.debug('Obteniendo tipos de componentes');
   const docs = await db.collection('component_types').find({}).toArray();
+  log.info('Tipos de componentes obtenidos', { count: docs.length });
   return docs.map((t) => ({
     id: t._id,
     name: t.name,
@@ -104,18 +129,29 @@ export async function getComponentTypes() {
 }
 
 export async function getVendorById(id: string): Promise<Vendor | null> {
+  log.debug('Buscando vendedor por ID', { id });
   const doc = await db.collection<Vendor>('vendors').findOne({ _id: id });
+  if (!doc) {
+    log.warn('Vendedor no encontrado', { id });
+  }
   return doc;
 }
 
 export async function getComponentsByTypeName(typeName: string, limit = 60) {
+  log.debug('Buscando componentes por tipo', { typeName, limit });
+
   const typeDoc = await db.collection('component_types').findOne({ name: typeName });
-  if (!typeDoc) return [];
+  if (!typeDoc) {
+    log.warn('Tipo de componente no encontrado al buscar por nombre', { typeName });
+    return [];
+  }
 
   const docs = await db.collection('components').find({ type_id: typeDoc._id }).limit(limit).toArray();
-
   const transformed = await Promise.all(docs.map(transformComponent));
-  return transformed.filter((comp) => comp.prices.length > 0);
+  const withPrices = transformed.filter((comp) => comp.prices.length > 0);
+
+  log.debug('Componentes por tipo obtenidos', { typeName, found: withPrices.length });
+  return withPrices;
 }
 
 export async function getComponentByStringId(id: string) {
@@ -124,6 +160,7 @@ export async function getComponentByStringId(id: string) {
     if (!doc) return null;
     return transformComponent(doc);
   } catch {
+    log.warn('ID de componente inválido o no encontrado', { id });
     return null;
   }
 }

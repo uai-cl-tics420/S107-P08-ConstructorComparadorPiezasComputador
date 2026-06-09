@@ -1,4 +1,7 @@
 import { Pool } from 'pg';
+import { createLogger } from '@/lib/logger';
+
+const log = createLogger('postgres');
 
 const pool = new Pool({
   host: process.env.POSTGRES_HOST,
@@ -10,7 +13,15 @@ const pool = new Pool({
   idleTimeoutMillis: 30000,
 });
 
-export async function getComponentIdsByFilters( // Retrieves a list of Mongo component IDs to match search parameters
+pool.on('connect', () => {
+  log.info('Nueva conexión establecida en el pool de PostgreSQL');
+});
+
+pool.on('error', (err) => {
+  log.error('Error inesperado en cliente inactivo del pool de PostgreSQL', { error: err.message });
+});
+
+export async function getComponentIdsByFilters(
   search?: string,
   typeId?: string,
   brandId?: string,
@@ -21,15 +32,14 @@ export async function getComponentIdsByFilters( // Retrieves a list of Mongo com
   sortBy: string = 'synced_at',
   sortOrder: -1 | 1 = -1,
 ) {
-  // Obtain implicit parameters
+  log.debug('getComponentIdsByFilters llamado', { search, typeId, brandId, minPrice, maxPrice, page, limit, sortBy, sortOrder });
+
   const offset = (page - 1) * limit;
   const direction = sortOrder === 1 ? 'ASC' : 'DESC';
 
-  // Build dynamic query sections
-  const params: any[] = []; // Array to hold parameter values to be passed to the final query
-
-  // Filters
+  const params: any[] = [];
   const conditions: string[] = [];
+
   if (search) {
     params.push(search);
     conditions.push(`cm.name_model ILIKE '%' || $${params.length} || '%'`);
@@ -47,9 +57,7 @@ export async function getComponentIdsByFilters( // Retrieves a list of Mongo com
   params.push(maxPrice);
   conditions.push(`LEAST(p.price, p.discount_price) <= $${params.length}`);
 
-  // Construct query clauses
   const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-
   const orderByClause = `${sortBy} ${direction}`;
 
   params.push(limit, offset);
@@ -75,8 +83,14 @@ export async function getComponentIdsByFilters( // Retrieves a list of Mongo com
   ${limitOffsetClause}  
   `;
 
-  const result = await pool.query(query, params);
-  return result.rows.map((row) => row.component_id);
+  try {
+    const result = await pool.query(query, params);
+    log.debug('Consulta de IDs completada', { rowCount: result.rowCount });
+    return result.rows.map((row) => row.component_id);
+  } catch (error) {
+    log.error('Error ejecutando consulta de componentes', { error: (error as Error).message, search, typeId, brandId });
+    throw error;
+  }
 }
 
 export async function getPricesByComponentId(componentId: string) {
@@ -89,6 +103,12 @@ export async function getPricesByComponentId(componentId: string) {
       [componentId],
     );
 
+    if (result.rows.length === 0) {
+      log.warn('No se encontraron precios para el componente', { componentId });
+    } else {
+      log.debug('Precios obtenidos', { componentId, count: result.rows.length });
+    }
+
     return result.rows.map((row: any) => ({
       id: row.id,
       component_id: componentId,
@@ -98,24 +118,29 @@ export async function getPricesByComponentId(componentId: string) {
       recorded_at: row.recorded_at.toISOString().split('T')[0],
     }));
   } catch (error) {
-    console.error('Error fetching prices for component', componentId, ':', error);
+    log.error('Error al obtener precios del componente', { componentId, error: (error as Error).message });
     return [];
   }
 }
 
-// Dado un set de IDs de componentes, devuelve los que SÍ tienen precios vigentes
-// (es decir, siguen disponibles). El scraper borra los precios de los productos
-// agotados, así que "sin precios" == "fuera de stock". Se consulta por component_id
-// (UUID) reutilizando getPricesByComponentId, que ya funciona con estos IDs.
 export async function getInStockComponentIds(ids: string[]): Promise<string[]> {
   if (!Array.isArray(ids) || ids.length === 0) return [];
+
+  log.debug('Verificando stock de componentes', { count: ids.length });
   const checks = await Promise.all(
     ids.map(async (id) => ({ id, inStock: (await getPricesByComponentId(id)).length > 0 })),
   );
-  return checks.filter((c) => c.inStock).map((c) => c.id);
+  const inStock = checks.filter((c) => c.inStock).map((c) => c.id);
+  const outOfStock = ids.length - inStock.length;
+
+  if (outOfStock > 0) {
+    log.warn('Componentes sin stock detectados', { total: ids.length, outOfStock, inStock: inStock.length });
+  }
+
+  return inStock;
 }
 
-export async function getComponentCountByFilters( // Obtains the total count of components matching the search filters
+export async function getComponentCountByFilters(
   search?: string,
   typeId?: string,
   brandId?: string,
@@ -130,36 +155,39 @@ export async function getComponentCountByFilters( // Obtains the total count of 
     FROM public.components_mirror cm
     LEFT JOIN public.prices p ON cm.component_id = p.component_id
     WHERE 1=1
-  `; // Base query
+  `;
 
   const params: any[] = [];
   let paramIndex = 1;
 
-  // Add filters
   if (search) {
     query += ` AND cm.name_model ILIKE $${paramIndex}`;
     params.push(`%${search}%`);
     paramIndex++;
   }
-
   if (typeId) {
     query += ` AND cm.type_id = $${paramIndex}`;
     params.push(typeId);
     paramIndex++;
   }
-
   if (brandId) {
     query += ` AND cm.brand_id = $${paramIndex}`;
     params.push(brandId);
     paramIndex++;
   }
-
   if (minPrice !== undefined || maxPrice !== undefined) {
     query += ` AND COALESCE(p.discount_price, p.price) BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
     params.push(min, max);
     paramIndex += 2;
   }
 
-  const result = await pool.query(query, params);
-  return parseInt(result.rows[0].count) || 0;
+  try {
+    const result = await pool.query(query, params);
+    const count = parseInt(result.rows[0].count) || 0;
+    log.debug('Conteo de componentes completado', { count, search, typeId, brandId });
+    return count;
+  } catch (error) {
+    log.error('Error al contar componentes', { error: (error as Error).message });
+    throw error;
+  }
 }

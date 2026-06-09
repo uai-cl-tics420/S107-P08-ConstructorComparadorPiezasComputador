@@ -54,6 +54,63 @@ function strSpec(component: { specs?: Record<string, unknown> } | undefined, key
   return val != null ? String(val) : null;
 }
 
+// Lee un spec que puede venir como número o como string ("3200 MT/s" -> 3200,
+// "16 GB" -> 16). Devuelve null si no logra extraer un número.
+function looseNum(component: { specs?: Record<string, unknown> } | undefined, key: string): number | null {
+  const val = component?.specs?.[key];
+  if (typeof val === 'number') return val;
+  if (typeof val === 'string') {
+    const m = val.match(/\d+(?:\.\d+)?/);
+    if (m) return parseFloat(m[0]);
+  }
+  return null;
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Estimación del "tier" de rendimiento (1 = entrada … 4 = entusiasta)
+// para detectar cuellos de botella (bottleneck) entre CPU y GPU.
+// Devuelve null cuando no hay datos suficientes para estimar.
+// ─────────────────────────────────────────────────────────────────
+function cpuPerfTier(cpu: { specs?: Record<string, unknown> } | undefined): number | null {
+  // 1ª opción: Cinebench R20 multinúcleo — la mejor señal de rendimiento disponible
+  const cb = numSpec(cpu, 'cinebench_r20_multi_score');
+  if (cb !== null && cb > 0) {
+    if (cb < 3000) return 1;
+    if (cb < 5500) return 2;
+    if (cb < 8500) return 3;
+    return 4;
+  }
+  // Fallback: número de núcleos
+  const cores = numSpec(cpu, 'core_count');
+  if (cores !== null && cores > 0) {
+    if (cores <= 4) return 1;
+    if (cores <= 6) return 2;
+    if (cores <= 8) return 3;
+    return 4;
+  }
+  return null;
+}
+
+function gpuPerfTier(gpu: { specs?: Record<string, unknown> } | undefined): number | null {
+  // 1ª opción: TDP de la GPU como proxy de su clase de rendimiento
+  const tdp = numSpec(gpu, 'gpu_tdp');
+  if (tdp !== null && tdp > 0) {
+    if (tdp < 100) return 1;
+    if (tdp < 180) return 2;
+    if (tdp < 280) return 3;
+    return 4;
+  }
+  // Fallback: cantidad de VRAM
+  const vram = numSpec(gpu, 'vram_quantity');
+  if (vram !== null && vram > 0) {
+    if (vram <= 4) return 1;
+    if (vram <= 8) return 2;
+    if (vram <= 12) return 3;
+    return 4;
+  }
+  return null;
+}
+
 // ─────────────────────────────────────────────────────────────────
 // CHECK PRINCIPAL
 // ─────────────────────────────────────────────────────────────────
@@ -334,6 +391,69 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
         issues.push({
           type: "error",
           message: `Tienes ${nvmeCount} SSD NVMe pero tu Motherboard solo tiene ${m2Slots} slot${m2Slots > 1 ? 's' : ''} M.2`,
+        });
+      }
+    }
+  }
+
+  // ───────────────────────────────────────────────
+  // 16. CPU ↔ GPU — Cuello de botella (bottleneck) de rendimiento
+  //     Estimación por "tier"; solo se avisa si la diferencia es grande.
+  //     Siempre advertencia (no bloquea el build).
+  // ───────────────────────────────────────────────
+  if (cpu && gpu) {
+    const cpuTier = cpuPerfTier(cpu);
+    const gpuTier = gpuPerfTier(gpu);
+    if (cpuTier !== null && gpuTier !== null) {
+      const gap = gpuTier - cpuTier;
+      if (gap >= 2) {
+        // GPU bastante más potente que el CPU → el CPU limita a la GPU
+        issues.push({
+          type: "warning",
+          message: `Posible cuello de botella: la GPU es bastante más potente que el CPU — en juegos el CPU podría limitar el rendimiento de la tarjeta (estimación)`,
+        });
+      } else if (gap <= -2) {
+        // CPU bastante más potente que la GPU → la GPU limita al CPU
+        issues.push({
+          type: "warning",
+          message: `Posible cuello de botella: el CPU es bastante más potente que la GPU — la tarjeta gráfica será el límite en juegos (estimación)`,
+        });
+      }
+    }
+  }
+
+  // ───────────────────────────────────────────────
+  // 17. RAM — Single-channel (1 solo módulo) limita el ancho de banda
+  //     Solo advertencia. Se evalúa cuando ya hay CPU o Motherboard.
+  // ───────────────────────────────────────────────
+  if (ramEntries.length > 0 && (cpu || mb)) {
+    const totalModules = ramEntries.reduce((sum, entry) => {
+      const modulesPerKit = numSpec(entry.component, 'module_count') ?? 1;
+      return sum + modulesPerKit * entry.quantity;
+    }, 0);
+    if (totalModules === 1) {
+      issues.push({
+        type: "warning",
+        message: `RAM en single-channel (1 solo módulo) — usar 2 módulos casi duplica el ancho de banda de memoria y mejora el rendimiento, sobre todo en gráficos integrados y CPUs Ryzen`,
+      });
+    }
+  }
+
+  // ───────────────────────────────────────────────
+  // 18. RAM ↔ CPU — Velocidad de memoria baja para su generación
+  //     Cuello de botella estimado; solo advertencia.
+  // ───────────────────────────────────────────────
+  if (ram && cpu) {
+    const ddr   = (strSpec(ram, 'ram_type') || '').toUpperCase();
+    const speed = looseNum(ram, 'bus_speed');
+    if (speed !== null && speed > 0) {
+      let floor = 0;
+      if (ddr === 'DDR4') floor = 3000;       // sweet spot DDR4: 3200+
+      else if (ddr === 'DDR5') floor = 5200;  // sweet spot DDR5: 5600/6000+
+      if (floor > 0 && speed < floor) {
+        issues.push({
+          type: "warning",
+          message: `RAM ${ddr} a ${speed} MT/s es lenta para su generación — memoria más rápida (${floor}+ MT/s) reduce el cuello de botella, especialmente en CPUs Ryzen`,
         });
       }
     }

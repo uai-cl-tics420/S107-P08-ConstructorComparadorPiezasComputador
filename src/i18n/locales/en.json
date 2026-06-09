@@ -56,6 +56,8 @@
     "buildRestored": "Your build was restored — {{count}} component saved",
     "buildRestored_other": "Your build was restored — {{count}} components saved",
     "buildSaved": "Build \"{{name}}\" saved",
+    "outOfStockToast": "{{count}} component in your build is out of stock",
+    "outOfStockToast_other": "{{count}} components in your build are out of stock",
     "onlyCompareTwo": "You can only compare 2 components at a time",
     "sameTypeOnly": "You can only compare components of the same type"
   },
@@ -83,7 +85,9 @@
     "search": "Search",
     "bestPrices": "Total with best prices",
     "youCanSave": "You can save",
-    "worstCase": "Max possible: ${{amount}} with worst stores"
+    "worstCase": "Max possible: ${{amount}} with worst stores",
+    "outOfStock": "Out of stock",
+    "seeAlternatives": "See alternatives"
   },
   "checklist": {
     "title": "Build Checklist",

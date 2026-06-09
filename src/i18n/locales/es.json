@@ -56,6 +56,8 @@
     "buildRestored": "Tu build fue restaurado — {{count}} componente guardado",
     "buildRestored_other": "Tu build fue restaurado — {{count}} componentes guardados",
     "buildSaved": "Build \"{{name}}\" guardado",
+    "outOfStockToast": "{{count}} componente de tu build está agotado",
+    "outOfStockToast_other": "{{count}} componentes de tu build están agotados",
     "onlyCompareTwo": "Solo puedes comparar 2 componentes a la vez",
     "sameTypeOnly": "Solo puedes comparar componentes del mismo tipo"
   },
@@ -83,7 +85,9 @@
     "search": "Buscar",
     "bestPrices": "Total con mejores precios",
     "youCanSave": "Puedes ahorrar",
-    "worstCase": "Máximo posible: ${{amount}} eligiendo peores tiendas"
+    "worstCase": "Máximo posible: ${{amount}} eligiendo peores tiendas",
+    "outOfStock": "Agotado",
+    "seeAlternatives": "Ver alternativas"
   },
   "checklist": {
     "title": "Checklist del Build",

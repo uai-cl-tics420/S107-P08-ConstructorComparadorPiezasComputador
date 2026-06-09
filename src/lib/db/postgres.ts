@@ -103,6 +103,18 @@ export async function getPricesByComponentId(componentId: string) {
   }
 }
 
+// Dado un set de IDs de componentes, devuelve los que SÍ tienen precios vigentes
+// (es decir, siguen disponibles). El scraper borra los precios de los productos
+// agotados, así que "sin precios" == "fuera de stock". Se consulta por component_id
+// (UUID) reutilizando getPricesByComponentId, que ya funciona con estos IDs.
+export async function getInStockComponentIds(ids: string[]): Promise<string[]> {
+  if (!Array.isArray(ids) || ids.length === 0) return [];
+  const checks = await Promise.all(
+    ids.map(async (id) => ({ id, inStock: (await getPricesByComponentId(id)).length > 0 })),
+  );
+  return checks.filter((c) => c.inStock).map((c) => c.id);
+}
+
 export async function getComponentCountByFilters( // Obtains the total count of components matching the search filters
   search?: string,
   typeId?: string,

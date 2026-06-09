@@ -21,9 +21,10 @@ interface Props {
   buildComponents: BuildComponent[];
   onRemove: (componentId: string) => void;
   onSearchType?: (typeName: string) => void;
+  outOfStockIds?: Set<string>;
 }
 
-export function BuildList({ buildComponents, onRemove, onSearchType }: Props) {
+export function BuildList({ buildComponents, onRemove, onSearchType, outOfStockIds }: Props) {
   const { t } = useTranslation();
   const byType = new Map<string, BuildComponent>();
   for (const entry of buildComponents) {
@@ -79,6 +80,7 @@ export function BuildList({ buildComponents, onRemove, onSearchType }: Props) {
             const minPrice = Math.min(...component.prices.map((p) => p.price));
             const subtotal = minPrice * quantity;
             const bestVendor = component.prices.find((p) => p.price === minPrice);
+            const isOutOfStock = outOfStockIds?.has(component.id) ?? false;
 
             return (
               <motion.div
@@ -86,7 +88,11 @@ export function BuildList({ buildComponents, onRemove, onSearchType }: Props) {
                 initial={{ opacity: 0, x: -24 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.04 }}
-                className='group relative bg-tw-base border border-tw-border rounded-lg p-4 hover:border-tw-success-highlight/40 hover:shadow-md hover:shadow-tw-success-highlight/10 transition-all duration-300'>
+                className={`group relative rounded-lg p-4 transition-all duration-300 ${
+                  isOutOfStock
+                    ? 'bg-tw-alert/5 border border-tw-alert/40 hover:border-tw-alert/60'
+                    : 'bg-tw-base border border-tw-border hover:border-tw-success-highlight/40 hover:shadow-md hover:shadow-tw-success-highlight/10'
+                }`}>
                 <div className='flex items-start justify-between gap-4'>
                   <div className='flex-1 min-w-0'>
                     <div className='flex items-center gap-2 mb-2'>
@@ -98,11 +104,27 @@ export function BuildList({ buildComponents, onRemove, onSearchType }: Props) {
                       <span className='text-[0.6rem] font-black uppercase tracking-widest text-tw-muted'>
                         {typeName}
                       </span>
+                      {isOutOfStock && (
+                        <span className='text-[0.55rem] font-black uppercase tracking-widest text-tw-alert-highlight bg-tw-alert/15 border border-tw-alert/40 px-1.5 py-0.5 rounded'>
+                          {t('buildList.outOfStock')}
+                        </span>
+                      )}
                     </div>
-                    <h4 className='text-sm font-bold text-tw-primary truncate group-hover:text-tw-success-highlight transition-colors'>
+                    <h4 className={`text-sm font-bold truncate transition-colors ${
+                      isOutOfStock ? 'text-tw-primary/70' : 'text-tw-primary group-hover:text-tw-success-highlight'
+                    }`}>
                       {component.name}
                     </h4>
                     <p className='text- text-tw-muted mt-1'>{bestVendor?.vendor_name}</p>
+                    {isOutOfStock && onSearchType && (
+                      <motion.button
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => onSearchType(typeName)}
+                        className='mt-2 inline-flex items-center gap-1 text-[0.65rem] font-bold text-tw-alert-highlight hover:text-tw-alert transition-colors'>
+                        {t('buildList.seeAlternatives')} →
+                      </motion.button>
+                    )}
                   </div>
                   <div className='text-right space-y-2'>
                     <div className='flex items-center gap-2'>

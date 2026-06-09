@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useContext } from 'react';
+import { useState, useEffect, useMemo, useContext, useRef } from 'react';
 import { motion, AnimatePresence, type Variants } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, ChevronDown, User, LogOut, Loader2, Sun, Moon, Share2, LogIn } from 'lucide-react';
@@ -85,6 +85,12 @@ export function App() {
   const compatibilityIssues = checkCompatibility(buildComponents);
   const { recommendations, loading: recsLoading } = useRecommendations(buildComponents);
 
+  // Componentes del build que ya no tienen stock (precios vigentes). Se consulta
+  // al backend porque los precios guardados en el build son un snapshot viejo.
+  const [outOfStockIds, setOutOfStockIds] = useState<Set<string>>(new Set());
+  // IDs ya avisados por toast, para no repetir el aviso en cada cambio del build.
+  const notifiedOosRef = useRef<Set<string>>(new Set());
+
   // Persistir build local en localStorage cada vez que cambia
   useEffect(() => {
     if (buildComponents.length > 0) {
@@ -92,6 +98,45 @@ export function App() {
     } else {
       localStorage.removeItem('local_build');
     }
+  }, [buildComponents]);
+
+  // Verificar disponibilidad (stock) de los componentes del build contra la BD.
+  // El build guarda precios como snapshot; aquí consultamos el stock real actual.
+  useEffect(() => {
+    const ids = buildComponents.map((b) => b.component.id);
+    if (ids.length === 0) {
+      setOutOfStockIds(new Set());
+      return;
+    }
+    let cancelled = false;
+    fetch('/api/components/availability', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ids }),
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        if (cancelled) return;
+        const oos: string[] = Array.isArray(data?.outOfStock) ? data.outOfStock : [];
+        setOutOfStockIds(new Set(oos));
+        // Avisar solo por los recién detectados (evita repetir el toast)
+        const fresh = oos.filter((id) => !notifiedOosRef.current.has(id));
+        if (fresh.length > 0) {
+          fresh.forEach((id) => notifiedOosRef.current.add(id));
+          addToast(
+            t(fresh.length === 1 ? 'build.outOfStockToast' : 'build.outOfStockToast_other', {
+              count: fresh.length,
+            }),
+            'warning',
+          );
+        }
+      })
+      .catch(() => {
+        // Silencioso: si falla la verificación no rompemos la UI del build
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [buildComponents]);
 
   // Load filter options on mount
@@ -840,7 +885,12 @@ export function App() {
                 )}
               </div>
 
-              <BuildList buildComponents={buildComponents} onRemove={handleRemove} onSearchType={handleSearchType} />
+              <BuildList
+                buildComponents={buildComponents}
+                onRemove={handleRemove}
+                onSearchType={handleSearchType}
+                outOfStockIds={outOfStockIds}
+              />
 
               {buildComponents.length > 0 && (
                 <RecommendationsPanel recommendations={recommendations} loading={recsLoading} onAdd={handleAdd} />

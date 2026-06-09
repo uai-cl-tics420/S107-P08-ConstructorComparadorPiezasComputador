@@ -2,7 +2,7 @@ import '@/lib/config'; // Validates env variables on app start
 import { serve } from 'bun';
 import { auth } from '@/lib/auth/auth';
 import { getComponents, getComponentById, getBrands, getComponentTypes } from '@/lib/db/mongo';
-import { getComponentCountByFilters } from '@/lib/db/postgres';
+import { getComponentCountByFilters, getInStockComponentIds } from '@/lib/db/postgres';
 import {
   getUserBuilds,
   createUserBuild,
@@ -68,6 +68,22 @@ const server = serve({
         );
 
         return Response.json({ components, total });
+      },
+    },
+
+    // POST /api/components/availability — body { ids: string[] }
+    //   Devuelve { outOfStock: string[] } con los IDs que ya no tienen precios
+    //   vigentes (agotados). Usado para avisar de componentes del build sin stock.
+    '/api/components/availability': {
+      async POST(req) {
+        const body = await req.json().catch(() => ({}));
+        const ids: string[] = Array.isArray(body?.ids)
+          ? body.ids.filter((x: unknown) => typeof x === 'string')
+          : [];
+        if (ids.length === 0) return Response.json({ outOfStock: [] });
+        const inStock = new Set(await getInStockComponentIds(ids));
+        const outOfStock = ids.filter((id) => !inStock.has(id));
+        return Response.json({ outOfStock });
       },
     },
 

@@ -62,6 +62,7 @@ export function App() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'search' | 'build'>('search');
   const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(currentPage);
   const [itemsPerPage, setItemsPerPage] = useState(12);
   const [totalCount, setTotalCount] = useState(0);
 
@@ -144,6 +145,12 @@ export function App() {
   // Fetch components when search/type/brand changes
   useEffect(() => {
     setLoading(true);
+
+    // If page was not changed then reset to page 1
+    if (currentPage == lastPage) {
+      setCurrentPage(1);
+    }
+    setLastPage(currentPage);
 
     const filters = {
       search: search || undefined,

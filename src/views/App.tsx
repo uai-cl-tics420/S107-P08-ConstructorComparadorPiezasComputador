@@ -86,6 +86,16 @@ export function App() {
   const compatibilityIssues = checkCompatibility(buildComponents);
   const { recommendations, loading: recsLoading } = useRecommendations(buildComponents);
 
+  const clearFilters = () => {
+    setSearch('');
+    setSelectedType('');
+    setSelectedBrand('');
+    setMinPrice('');
+    setMaxPrice('');
+    setSortBy('default');
+    setCurrentPage(1);
+  };
+
   // Persistir build local en localStorage cada vez que cambia
   useEffect(() => {
     if (buildComponents.length > 0) {
@@ -340,9 +350,9 @@ export function App() {
 
   // Desde el placeholder de BuildList, ir directo a buscar un tipo específico
   const handleSearchType = (typeName: string) => {
+    clearFilters();
     const type = componentTypes.find((t) => t.name === typeName);
     if (type) setSelectedType(String(type.id));
-    setSearch('');
     setActiveTab('search');
   };
 
@@ -355,16 +365,6 @@ export function App() {
         },
       },
     });
-  };
-
-  const clearFilters = () => {
-    setSearch('');
-    setSelectedType('');
-    setSelectedBrand('');
-    setMinPrice('');
-    setMaxPrice('');
-    setSortBy('default');
-    setCurrentPage(1);
   };
 
   const hasActiveFilters = search || selectedType || selectedBrand || minPrice || maxPrice;

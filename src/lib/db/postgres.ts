@@ -1,4 +1,6 @@
 import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import * as schema from './PostgreSQL_schema';
 
 const pool = new Pool({
   host: process.env.POSTGRES_HOST,
@@ -9,6 +11,8 @@ const pool = new Pool({
   max: 10,
   idleTimeoutMillis: 30000,
 });
+
+export const db = drizzle(pool, { schema });
 
 export async function getComponentIdsByFilters( // Retrieves a list of Mongo component IDs to match search parameters
   search?: string,

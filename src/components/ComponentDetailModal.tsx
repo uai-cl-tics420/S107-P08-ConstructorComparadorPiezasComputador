@@ -1,7 +1,8 @@
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { Component } from '../types/Frontend_types';
+import type { Component, Price } from '../types/Frontend_types';
 
 const TYPE_BADGE: Record<string, string> = {
   CPU: 'bg-tw-cpu-deep/15 text-tw-cpu-highlight border-tw-cpu/25',
@@ -74,10 +75,42 @@ interface Props {
 export function ComponentDetailModal({ component, onClose, onAdd }: Props) {
   const { t } = useTranslation();
 
+  // Precios a tiempo real: al abrir el detalle se consulta la API desde el browser
+  // para traer los precios vigentes de las tiendas, en vez de usar solo el snapshot
+  // que venía cargado con el catálogo. Mientras carga se muestra el snapshot.
+  const [livePrices, setLivePrices] = useState<Price[] | null>(null);
+  const [refreshingPrices, setRefreshingPrices] = useState(false);
+
+  useEffect(() => {
+    if (!component) {
+      setLivePrices(null);
+      return;
+    }
+    let cancelled = false;
+    setLivePrices(null);
+    setRefreshingPrices(true);
+    fetch(`/api/components/${component.id}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((fresh) => {
+        if (cancelled || !fresh || !Array.isArray(fresh.prices)) return;
+        setLivePrices(fresh.prices as Price[]);
+      })
+      .catch(() => {
+        // Si falla la consulta se mantiene el snapshot ya mostrado.
+      })
+      .finally(() => {
+        if (!cancelled) setRefreshingPrices(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [component?.id]);
+
   const specs = component?.specs ?? {};
   const displayKeys = Object.keys(specs).filter((k) => KNOWN_SPECS.has(k) && specs[k] != null);
   const unknownKeys = Object.keys(specs).filter((k) => !KNOWN_SPECS.has(k) && specs[k] != null);
-  const minPrice = component && component.prices.length > 0 ? Math.min(...component.prices.map((p) => p.price)) : null;
+  const prices = livePrices ?? component?.prices ?? [];
+  const minPrice = prices.length > 0 ? Math.min(...prices.map((p) => p.price)) : null;
   const badge = component
     ? (TYPE_BADGE[component.type_name] ?? 'bg-tw-case-deep/15 text-tw-case-highlight border-tw-case/25')
     : '';
@@ -193,18 +226,30 @@ export function ComponentDetailModal({ component, onClose, onAdd }: Props) {
                   <p className='font-mono text-[0.6rem] text-tw-muted-deep text-center py-4'>{t('detail.noSpecs')}</p>
                 )}
 
-                {component.prices.length > 0 && (
+                {prices.length > 0 && (
                   <div className='flex flex-col gap-1'>
-                    <p className='font-mono text-[0.5rem] uppercase tracking-widest text-tw-muted-deep mb-2'>
-                      {t('detail.prices')}
-                    </p>
+                    <div className='flex items-center justify-between mb-2'>
+                      <p className='font-mono text-[0.5rem] uppercase tracking-widest text-tw-muted-deep'>
+                        {t('detail.prices')}
+                      </p>
+                      {refreshingPrices ? (
+                        <span className='font-mono text-[0.5rem] uppercase tracking-widest text-tw-muted-deep animate-pulse'>
+                          {t('detail.updatingPrices')}
+                        </span>
+                      ) : livePrices ? (
+                        <span className='flex items-center gap-1 font-mono text-[0.5rem] uppercase tracking-widest text-tw-success-highlight'>
+                          <span className='w-1.5 h-1.5 rounded-full bg-tw-success-highlight animate-pulse' />
+                          {t('detail.realtime')}
+                        </span>
+                      ) : null}
+                    </div>
                     <div className='rounded-xl border border-tw-border-deep overflow-hidden'>
-                      {[...component.prices]
+                      {[...prices]
                         .sort((a, b) => a.price - b.price)
                         .map((p, i) => (
                           <div
                             key={p.id}
-                            className={`flex items-center justify-between gap-4 px-4 py-2.5 ${i % 2 === 0 ? 'bg-tw-base' : 'bg-tw-surface'} ${i < component.prices.length - 1 ? 'border-b border-tw-border-deep' : ''}`}>
+                            className={`flex items-center justify-between gap-4 px-4 py-2.5 ${i % 2 === 0 ? 'bg-tw-base' : 'bg-tw-surface'} ${i < prices.length - 1 ? 'border-b border-tw-border-deep' : ''}`}>
                             <span
                               className={`font-mono text-[0.6rem] truncate ${p.price === minPrice ? 'text-tw-muted-highlight' : 'text-tw-muted-deep'}`}>
                               {p.vendor_name}

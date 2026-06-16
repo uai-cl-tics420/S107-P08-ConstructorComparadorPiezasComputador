@@ -131,6 +131,8 @@
     "specs": "Especificaciones",
     "otherData": "Otros datos",
     "prices": "Precios por vendedor",
+    "updatingPrices": "Actualizando…",
+    "realtime": "Tiempo real",
     "noSpecs": "Sin especificaciones disponibles",
     "bestPrice": "Mejor precio",
     "addToBuild": "Agregar al build",

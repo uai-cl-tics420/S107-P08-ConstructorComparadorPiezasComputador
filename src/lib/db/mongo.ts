@@ -96,7 +96,10 @@ export async function getComponentsCount(
 export async function getComponentById(id: string) {
   log.debug('Buscando componente por ID', { id });
   try {
-    const doc = await db.collection('components').findOne({ _id: new ObjectId(id) });
+    // Los _id de la colección son UUID string (no ObjectId), igual que en getComponents.
+    // Se consulta por string directo; los precios se traen frescos desde PostgreSQL
+    // dentro de transformComponent, lo que permite mostrar precios a tiempo real.
+    const doc = await db.collection('components').findOne({ _id: id as any });
     if (!doc) {
       log.warn('Componente no encontrado', { id });
       return null;

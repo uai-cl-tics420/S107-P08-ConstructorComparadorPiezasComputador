@@ -38,19 +38,20 @@ PG_USER     = os.getenv("POSTGRES_USER")
 PG_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 
 CATEGORIES = [
-    ("CPU",         browse_cpus,         80),
-    ("GPU",         browse_gpus,         80),
-    ("RAM",         browse_ram,          80),
-    ("Motherboard", browse_motherboards, 80),
-    ("PSU",         browse_psu,          80),
-    ("Case",        browse_pc_cases,     80),
-    ("CPU Cooler",  browse_cpu_coolers,  80),
-    ("Fans",        browse_fans,         80),
-    ("Storage",     browse_storage,      80),
+    ("CPU",         browse_cpus, 200),
+    ("GPU",         browse_gpus, 200),
+    ("RAM",         browse_ram, 200),
+    ("Motherboard", browse_motherboards, 200),
+    ("PSU",         browse_psu, 200),
+    ("Case",        browse_pc_cases, 200),
+    ("CPU Cooler",  browse_cpu_coolers, 200),
+    ("Fans",        browse_fans, 200),
+    ("Storage",     browse_storage, 200),
 ]
 
 # Workers paralelos para fetch de precios. Más workers = más rápido pero más carga al servidor.
-PRICE_WORKERS = 16
+# Si le pones mucho la pagina te va a rate limitear
+PRICE_WORKERS = 5
 
 DISPLAY_SPECS = {
     # CPU
@@ -114,7 +115,6 @@ def clean_specs(product: dict) -> dict:
 
 
 def clear_database(mongo_db, pg_cursor, pg_conn):
-    """Clears existing components, prices, brands, and types from the databases."""
     pg_cursor.execute("DELETE FROM public.prices;")
     pg_cursor.execute("DELETE FROM public.;")
     pg_conn.commit()

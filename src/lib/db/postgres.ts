@@ -114,6 +114,7 @@ export async function getPricesByComponentId(componentId: string) {
       SELECT
         id,
         vendor_id,
+        vendor_name,
         price,
         discount_price,
         recorded_at
@@ -134,7 +135,7 @@ export async function getPricesByComponentId(componentId: string) {
       id: row.id,
       component_id: componentId,
       vendor_id: row.vendor_id,
-      vendor_name: 'SoloTodo',
+      vendor_name: row.vendor_name || 'SoloTodo',
       price: parseInt(row.discount_price) || parseInt(row.price),
       recorded_at: row.recorded_at.split(' ')[0],
     }));

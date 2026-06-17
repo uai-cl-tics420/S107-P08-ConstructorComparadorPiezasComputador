@@ -63,7 +63,11 @@ def _clean_specs(raw_specs: dict) -> dict:
     for base, variants in groups.items():
         if _is_traversal(base) or base in redundant_summaries or base in result:
             continue
-        v = variants.get("value") or variants.get("name") or variants.get("unicode")
+        # Prefer textual representations (_name, _unicode) over _value,
+        # because _value is often a numeric internal ID (e.g. PSU certification: 80 → "80 Plus Gold")
+        name = variants.get("name") or variants.get("unicode")
+        val  = variants.get("value")
+        v    = name if name else val
         result[base] = None if v in _NULL_STRINGS else v
 
     return result
@@ -268,7 +272,7 @@ def get_product_prices(product_id: int) -> list[dict]:
         print(f"Error fetching prices for product {product_id}: {e}")
         return []
 
-def get_stores() -> dict:
+def get_stores(limit=100) -> dict:
     resp = requests.get("https://publicapi.solotodo.com/stores/")
     resp.raise_for_status()
     
@@ -280,9 +284,12 @@ def get_stores() -> dict:
 
     all_stores = resp.json()
     
+    if limit is None:
+        return {s["id"]: s["name"] for s in all_stores}
+    
     priority = [s for s in all_stores if s["id"] in priority_ids]
     others = [s for s in all_stores if s["id"] not in priority_ids]
     
-    selected = (priority + others)[:100]
+    selected = (priority + others)[:limit]
     
     return {s["id"]: s["name"] for s in selected}

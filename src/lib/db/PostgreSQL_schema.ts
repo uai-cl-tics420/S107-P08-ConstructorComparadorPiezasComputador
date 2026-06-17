@@ -30,6 +30,7 @@ export const prices = pgTable(
       .notNull()
       .references(() => componentsMirror.component_id),
     vendor_id: uuid('vendor_id').notNull(),
+    vendor_name: varchar('vendor_name', { length: 255 }),
     price: numeric('price', { precision: 12, scale: 2, mode: 'number' }).notNull(),
     discount_price: numeric('discount_price', { precision: 12, scale: 2, mode: 'number' }),
     recorded_at: timestamp('recorded_at', { withTimezone: true, mode: 'string' }).defaultNow().notNull(),

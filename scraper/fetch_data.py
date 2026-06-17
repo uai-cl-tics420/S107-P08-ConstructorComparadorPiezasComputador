@@ -110,8 +110,17 @@ def extract_brand(product_name: str) -> str:
     return product_name.split()[0]
 
 
+# Benchmark keys where a score of 0 means "no data" (SoloTodo returns 0 as placeholder)
+ZERO_MEANS_MISSING = {"cinebench_r20_single_score", "cinebench_r20_multi_score"}
+
+
 def clean_specs(product: dict) -> dict:
-    return {k: v for k, v in product.items() if k in DISPLAY_SPECS and v is not None}
+    specs = {k: v for k, v in product.items() if k in DISPLAY_SPECS and v is not None}
+    # Filter out benchmark scores of 0 — they represent absent data, not real results
+    for key in ZERO_MEANS_MISSING:
+        if key in specs and specs[key] == 0:
+            del specs[key]
+    return specs
 
 
 def clear_database(mongo_db, pg_cursor, pg_conn):
@@ -131,7 +140,7 @@ def main():
     print("=" * 60)
 
     # Fetch store info
-    stores = get_stores()
+    stores = get_stores(limit=None)
 
     # Connect to MongoDB
     mongo_url = (

@@ -72,8 +72,24 @@ export function CompareModal({ components, onClose }: Props) {
   const badgeA = TYPE_BADGE[a!.type_name] ?? 'bg-tw-case-deep/15 text-tw-case-highlight border-tw-case/25';
   const badgeB = TYPE_BADGE[b!.type_name] ?? 'bg-tw-case-deep/15 text-tw-case-highlight border-tw-case/25';
 
+// Fallback map: SoloTodo numeric certification IDs → readable labels (for legacy DB data)
+const CERTIFICATION_MAP: Record<number, string> = {
+  2: '80 Plus',
+  4: '80 Plus Bronze',
+  5: '80 Plus Silver',
+  80: '80 Plus Gold',
+  6: '80 Plus Platinum',
+  7: '80 Plus Titanium',
+};
+
   function formatValue(key: string, value: unknown): string {
     if (value === null || value === undefined) return '—';
+    // Cinebench 0 = absent data from SoloTodo, not a real score
+    if ((key === 'cinebench_r20_single_score' || key === 'cinebench_r20_multi_score') && value === 0) return '—';
+    // PSU certification: translate numeric ID to readable text (legacy data fallback)
+    if (key === 'certification' && typeof value === 'number') {
+      return CERTIFICATION_MAP[value] ?? `80 Plus (${value})`;
+    }
     if (Array.isArray(value)) return value.join(' / ');
     if (typeof value === 'boolean') return value ? t('compare.yes') : t('compare.no');
     if (key === 'tdp' || key === 'gpu_tdp') return `${value}W`;

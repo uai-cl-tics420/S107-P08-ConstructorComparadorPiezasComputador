@@ -1,4 +1,8 @@
 import { Pool } from 'pg';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import * as schema from './PostgreSQL_schema';
+import { componentsMirror, prices } from './PostgreSQL_schema';
+import { sql } from 'drizzle-orm';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('postgres');
@@ -13,15 +17,9 @@ const pool = new Pool({
   idleTimeoutMillis: 30000,
 });
 
-pool.on('connect', () => {
-  log.info('Nueva conexión establecida en el pool de PostgreSQL');
-});
+export const db = drizzle(pool, { schema });
 
-pool.on('error', (err) => {
-  log.error('Error inesperado en cliente inactivo del pool de PostgreSQL', { error: err.message });
-});
-
-export async function getComponentIdsByFilters(
+export async function getComponentIdsByFilters( // Retrieves a list of Mongo component IDs to match search parameters
   search?: string,
   typeId?: string,
   brandId?: string,
@@ -32,112 +30,98 @@ export async function getComponentIdsByFilters(
   sortBy: string = 'synced_at',
   sortOrder: -1 | 1 = -1,
 ) {
-  log.debug('getComponentIdsByFilters llamado', { search, typeId, brandId, minPrice, maxPrice, page, limit, sortBy, sortOrder });
+  log.debug('getComponentIdsByFilters llamado', {
+    search,
+    typeId,
+    brandId,
+    minPrice,
+    maxPrice,
+    page,
+    limit,
+    sortBy,
+    sortOrder,
+  });
 
   const offset = (page - 1) * limit;
   const direction = sortOrder === 1 ? 'ASC' : 'DESC';
 
-  const params: any[] = [];
-  const conditions: string[] = [];
+  const allowedSortBy = new Set(['synced_at', 'final_price', 'name_model']);
+  const safeSortBy = allowedSortBy.has(sortBy) ? sortBy : 'synced_at';
+
+  const whereConditions = [sql`TRUE`];
 
   if (search) {
-    params.push(search);
-    conditions.push(`cm.name_model ILIKE '%' || $${params.length} || '%'`);
+    whereConditions.push(sql`cm.name_model ILIKE ${`%${search}%`}`);
   }
+
   if (typeId) {
-    params.push(typeId);
-    conditions.push(`cm.type_id = $${params.length}`);
+    whereConditions.push(sql`cm.type_id = ${typeId}`);
   }
+
   if (brandId) {
-    params.push(brandId);
-    conditions.push(`cm.brand_id = $${params.length}`);
+    whereConditions.push(sql`cm.brand_id = ${brandId}`);
   }
-  params.push(minPrice);
-  conditions.push(`LEAST(p.price, p.discount_price) >= $${params.length}`);
-  params.push(maxPrice);
-  conditions.push(`LEAST(p.price, p.discount_price) <= $${params.length}`);
 
-  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-  const orderByClause = `${sortBy} ${direction}`;
+  whereConditions.push(sql`bp.effective_price >= ${minPrice}`);
+  whereConditions.push(sql`bp.effective_price <= ${maxPrice}`);
 
-  params.push(limit, offset);
-  const limitOffsetClause = `LIMIT $${params.length - 1} OFFSET $${params.length}`;
+  let sortExpression = sql`cm.synced_at`;
 
-  const query = `
-  SELECT * FROM (
-    SELECT DISTINCT ON (p.component_id)
-      p.component_id,
-	    cm.name_model,
-    	cm.type_id,
-    	cm.brand_id,
-    	cm.synced_at,
-    	p.vendor_id,
-    	LEAST(p.price, p.discount_price) AS final_price
-    FROM public.prices p
-    INNER JOIN public.components_mirror cm
-      ON p.component_id = cm.component_id
-    ${whereClause}
-    ORDER BY p.component_id ASC, ${orderByClause}
-  ) sub
-  ORDER BY ${orderByClause}, component_id ASC
-  ${limitOffsetClause}  
+  if (safeSortBy === 'name_model') {
+    sortExpression = sql`LOWER(cm.name_model)`;
+  } else if (safeSortBy === 'final_price') {
+    sortExpression = sql`bp.effective_price`;
+  }
+
+  const query = sql`
+    WITH best_prices AS (
+      SELECT
+        p.component_id,
+        MIN(LEAST(p.price, COALESCE(p.discount_price, p.price))) AS effective_price
+      FROM ${prices} AS p
+      GROUP BY p.component_id
+    )
+    SELECT cm.component_id
+    FROM ${componentsMirror} AS cm
+    INNER JOIN best_prices AS bp
+      ON bp.component_id = cm.component_id
+    WHERE ${sql.join(whereConditions, sql` AND `)}
+    ORDER BY ${sortExpression} ${sql.raw(direction)}, cm.component_id ASC
+    LIMIT ${limit} OFFSET ${offset}
   `;
 
-  try {
-    const result = await pool.query(query, params);
-    log.debug('Consulta de IDs completada', { rowCount: result.rowCount });
-    return result.rows.map((row) => row.component_id);
-  } catch (error) {
-    log.error('Error ejecutando consulta de componentes', { error: (error as Error).message, search, typeId, brandId });
-    throw error;
-  }
+  const result = await db.execute(query);
+  return result.rows.map((row: any) => row.component_id);
 }
 
 export async function getPricesByComponentId(componentId: string) {
   try {
-    const result = await pool.query(
-      `SELECT id, vendor_id, vendor_name, price, discount_price, recorded_at
-       FROM public.prices
-       WHERE component_id = $1
-       ORDER BY price ASC`,
-      [componentId],
-    );
+    const query = sql`
+      SELECT
+        id,
+        vendor_id,
+        price,
+        discount_price,
+        recorded_at
+      FROM ${prices}
+      WHERE component_id = ${componentId}
+      ORDER BY ${prices.price} ASC
+    `;
 
-    if (result.rows.length === 0) {
-      log.warn('No se encontraron precios para el componente', { componentId });
-    } else {
-      log.debug('Precios obtenidos', { componentId, count: result.rows.length });
-    }
+    const result = await db.execute(query);
 
     return result.rows.map((row: any) => ({
       id: row.id,
       component_id: componentId,
       vendor_id: row.vendor_id,
-      vendor_name: row.vendor_name || 'SoloTodo',
+      vendor_name: 'SoloTodo',
       price: parseInt(row.discount_price) || parseInt(row.price),
-      recorded_at: row.recorded_at.toISOString().split('T')[0],
+      recorded_at: row.recorded_at.split(' ')[0],
     }));
   } catch (error) {
     log.error('Error al obtener precios del componente', { componentId, error: (error as Error).message });
     return [];
   }
-}
-
-export async function getInStockComponentIds(ids: string[]): Promise<string[]> {
-  if (!Array.isArray(ids) || ids.length === 0) return [];
-
-  log.debug('Verificando stock de componentes', { count: ids.length });
-  const checks = await Promise.all(
-    ids.map(async (id) => ({ id, inStock: (await getPricesByComponentId(id)).length > 0 })),
-  );
-  const inStock = checks.filter((c) => c.inStock).map((c) => c.id);
-  const outOfStock = ids.length - inStock.length;
-
-  if (outOfStock > 0) {
-    log.warn('Componentes sin stock detectados', { total: ids.length, outOfStock, inStock: inStock.length });
-  }
-
-  return inStock;
 }
 
 export async function getComponentCountByFilters(
@@ -150,44 +134,36 @@ export async function getComponentCountByFilters(
   const min = minPrice ?? 0;
   const max = maxPrice ?? Number.MAX_SAFE_INTEGER;
 
-  let query = `
-    SELECT COUNT(DISTINCT cm.component_id) as count
-    FROM public.components_mirror cm
-    LEFT JOIN public.prices p ON cm.component_id = p.component_id
-    WHERE 1=1
-  `;
-
-  const params: any[] = [];
-  let paramIndex = 1;
+  const whereConditions = [sql`TRUE`];
 
   if (search) {
-    query += ` AND cm.name_model ILIKE $${paramIndex}`;
-    params.push(`%${search}%`);
-    paramIndex++;
+    whereConditions.push(sql`cm.name_model ILIKE ${`%${search}%`}`);
   }
   if (typeId) {
-    query += ` AND cm.type_id = $${paramIndex}`;
-    params.push(typeId);
-    paramIndex++;
+    whereConditions.push(sql`cm.type_id = ${typeId}`);
   }
   if (brandId) {
-    query += ` AND cm.brand_id = $${paramIndex}`;
-    params.push(brandId);
-    paramIndex++;
-  }
-  if (minPrice !== undefined || maxPrice !== undefined) {
-    query += ` AND COALESCE(p.discount_price, p.price) BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
-    params.push(min, max);
-    paramIndex += 2;
+    whereConditions.push(sql`cm.brand_id = ${brandId}`);
   }
 
-  try {
-    const result = await pool.query(query, params);
-    const count = parseInt(result.rows[0].count) || 0;
-    log.debug('Conteo de componentes completado', { count, search, typeId, brandId });
-    return count;
-  } catch (error) {
-    log.error('Error al contar componentes', { error: (error as Error).message });
-    throw error;
-  }
+  whereConditions.push(sql`bp.effective_price >= ${min}`);
+  whereConditions.push(sql`bp.effective_price <= ${max}`);
+
+  const query = sql`
+    WITH best_prices AS (
+      SELECT
+        p.component_id,
+        MIN(LEAST(p.price, COALESCE(p.discount_price, p.price))) AS effective_price
+      FROM ${prices} AS p
+      GROUP BY p.component_id
+    )
+    SELECT COUNT(*)::int AS count
+    FROM ${componentsMirror} AS cm
+    INNER JOIN best_prices AS bp
+      ON bp.component_id = cm.component_id
+    WHERE ${sql.join(whereConditions, sql` AND `)}
+  `;
+
+  const result = await db.execute(query);
+  return Number(result.rows[0]?.count ?? 0);
 }

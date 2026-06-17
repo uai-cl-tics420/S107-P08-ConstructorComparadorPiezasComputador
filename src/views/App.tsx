@@ -62,6 +62,7 @@ export function App() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'search' | 'build'>('search');
   const [currentPage, setCurrentPage] = useState(1);
+  const [lastPage, setLastPage] = useState(currentPage);
   const [itemsPerPage, setItemsPerPage] = useState(12);
   const [totalCount, setTotalCount] = useState(0);
 
@@ -90,6 +91,16 @@ export function App() {
   const [outOfStockIds, setOutOfStockIds] = useState<Set<string>>(new Set());
   // IDs ya avisados por toast, para no repetir el aviso en cada cambio del build.
   const notifiedOosRef = useRef<Set<string>>(new Set());
+
+  const clearFilters = () => {
+    setSearch('');
+    setSelectedType('');
+    setSelectedBrand('');
+    setMinPrice('');
+    setMaxPrice('');
+    setSortBy('default');
+    setCurrentPage(1);
+  };
 
   // Persistir build local en localStorage cada vez que cambia
   useEffect(() => {
@@ -189,6 +200,12 @@ export function App() {
   // Fetch components when search/type/brand changes
   useEffect(() => {
     setLoading(true);
+
+    // If page was not changed then reset to page 1
+    if (currentPage == lastPage) {
+      setCurrentPage(1);
+    }
+    setLastPage(currentPage);
 
     const filters = {
       search: search || undefined,
@@ -378,9 +395,9 @@ export function App() {
 
   // Desde el placeholder de BuildList, ir directo a buscar un tipo específico
   const handleSearchType = (typeName: string) => {
+    clearFilters();
     const type = componentTypes.find((t) => t.name === typeName);
     if (type) setSelectedType(String(type.id));
-    setSearch('');
     setActiveTab('search');
   };
 
@@ -393,16 +410,6 @@ export function App() {
         },
       },
     });
-  };
-
-  const clearFilters = () => {
-    setSearch('');
-    setSelectedType('');
-    setSelectedBrand('');
-    setMinPrice('');
-    setMaxPrice('');
-    setSortBy('default');
-    setCurrentPage(1);
   };
 
   const hasActiveFilters = search || selectedType || selectedBrand || minPrice || maxPrice;
@@ -667,7 +674,7 @@ export function App() {
                   <select
                     value={selectedType}
                     onChange={(e) => setSelectedType(e.target.value)}
-                    className='font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-muted-highlight rounded-lg px-3 py-2.5 focus:outline-none focus:border-tw-border-highlight cursor-pointer appearance-none transition-all w-full'>
+                    className='font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-muted-highlight rounded-lg px-3 py-2.5 focus:outline-none focus:border-tw-border-highlight cursor-pointer appearance-none transition-all'>
                     <option value=''>{t('filters.allTypes')}</option>
                     {componentTypes.map((t) => (
                       <option key={t.id} value={t.id}>
@@ -678,7 +685,7 @@ export function App() {
                   <select
                     value={selectedBrand}
                     onChange={(e) => setSelectedBrand(e.target.value)}
-                    className='font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-muted-highlight rounded-lg px-3 py-2.5 focus:outline-none focus:border-tw-border-highlight cursor-pointer appearance-none transition-all w-full'>
+                    className='font-mono text-xs bg-tw-surface border border-tw-border-deep text-tw-muted-highlight rounded-lg px-3 py-2.5 focus:outline-none focus:border-tw-border-highlight cursor-pointer appearance-none transition-all'>
                     <option value=''>{t('filters.allBrands')}</option>
                     {brands.map((b) => (
                       <option key={b.id} value={b.id}>

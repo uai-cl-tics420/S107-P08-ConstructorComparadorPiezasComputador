@@ -17,6 +17,14 @@ const pool = new Pool({
   idleTimeoutMillis: 30000,
 });
 
+pool.on('connect', () => {
+  log.info('Nueva conexión establecida en el pool de PostgreSQL');
+});
+
+pool.on('error', (err) => {
+  log.error('Error inesperado en cliente inactivo del pool de PostgreSQL', { error: err.message });
+});
+
 export const db = drizzle(pool, { schema });
 
 export async function getComponentIdsByFilters( // Retrieves a list of Mongo component IDs to match search parameters
@@ -90,8 +98,14 @@ export async function getComponentIdsByFilters( // Retrieves a list of Mongo com
     LIMIT ${limit} OFFSET ${offset}
   `;
 
-  const result = await db.execute(query);
-  return result.rows.map((row: any) => row.component_id);
+  try {
+    const result = await db.execute(query);
+    log.debug('Consulta de IDs completada', { rowCount: result.rowCount });
+    return result.rows.map((row: any) => row.component_id);
+  } catch (error) {
+    log.error('Error ejecutando consulta de componentes', { error: (error as Error).message, search, typeId, brandId });
+    throw error;
+  }
 }
 
 export async function getPricesByComponentId(componentId: string) {
@@ -110,6 +124,12 @@ export async function getPricesByComponentId(componentId: string) {
 
     const result = await db.execute(query);
 
+    if (result.rows.length === 0) {
+      log.warn('No se encontraron precios para el componente', { componentId });
+    } else {
+      log.debug('Precios obtenidos', { componentId, count: result.rows.length });
+    }
+
     return result.rows.map((row: any) => ({
       id: row.id,
       component_id: componentId,
@@ -122,6 +142,23 @@ export async function getPricesByComponentId(componentId: string) {
     log.error('Error al obtener precios del componente', { componentId, error: (error as Error).message });
     return [];
   }
+}
+
+export async function getInStockComponentIds(ids: string[]): Promise<string[]> {
+  if (!Array.isArray(ids) || ids.length === 0) return [];
+
+  log.debug('Verificando stock de componentes', { count: ids.length });
+  const checks = await Promise.all(
+    ids.map(async (id) => ({ id, inStock: (await getPricesByComponentId(id)).length > 0 })),
+  );
+  const inStock = checks.filter((c) => c.inStock).map((c) => c.id);
+  const outOfStock = ids.length - inStock.length;
+
+  if (outOfStock > 0) {
+    log.warn('Componentes sin stock detectados', { total: ids.length, outOfStock, inStock: inStock.length });
+  }
+
+  return inStock;
 }
 
 export async function getComponentCountByFilters(
@@ -164,6 +201,13 @@ export async function getComponentCountByFilters(
     WHERE ${sql.join(whereConditions, sql` AND `)}
   `;
 
-  const result = await db.execute(query);
-  return Number(result.rows[0]?.count ?? 0);
+  try {
+    const result = await db.execute(query);
+    const count = Number(result.rows[0]?.count ?? 0);
+    log.debug('Conteo de componentes completado', { count, search, typeId, brandId });
+    return count;
+  } catch (error) {
+    log.error('Error al contar componentes', { error: (error as Error).message });
+    throw error;
+  }
 }

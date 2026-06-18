@@ -32,7 +32,7 @@ export interface ComponentSpecs {
   form_factor?: string;
   storage_type?: string;
   wattage?: number;
-  [key: string]: string | number | boolean | null | undefined;
+  [key: string]: string | string[] | number | boolean | null | undefined;
 }
 
 export interface Component {

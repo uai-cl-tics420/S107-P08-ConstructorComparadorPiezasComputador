@@ -1,15 +1,18 @@
 import '@/lib/config'; // Validates env variables on app start
 import { serve } from 'bun';
 import { auth } from '@/lib/auth/auth';
-import { getComponents, getComponentById, getBrands, getComponentTypes } from '@/lib/db/mongo';
-import { getComponentCountByFilters, getInStockComponentIds } from '@/lib/db/postgres';
 import {
-  getUserBuilds,
-  createUserBuild,
-  deleteUserBuild,
-  getSharedBuild,
-  createSharedBuild,
-} from '@/lib/db/DBS_buildsManager';
+  getComponents,
+  getComponentById,
+  getBrands,
+  getComponentTypes,
+  getBuildsClient,
+  createBuildClient,
+  deleteBuildClient,
+  getSharedBuildClient,
+  createSharedBuildClient,
+} from '@/lib/db/mongo';
+import { getComponentCountByFilters, getInStockComponentIds } from '@/lib/db/postgres';
 import { getRecommendationsForBuild, getRecommendationsForComponent } from '@/lib/db/recommendationsManager';
 import { setUserPassword } from '@/lib/auth/serverRequests';
 import index from './index.html';
@@ -88,9 +91,7 @@ const server = serve({
     '/api/components/availability': {
       async POST(req) {
         const body = await req.json().catch(() => ({}));
-        const ids: string[] = Array.isArray(body?.ids)
-          ? body.ids.filter((x: unknown) => typeof x === 'string')
-          : [];
+        const ids: string[] = Array.isArray(body?.ids) ? body.ids.filter((x: unknown) => typeof x === 'string') : [];
 
         if (ids.length === 0) {
           logger.warn('POST /api/components/availability: lista de IDs vacía o inválida');
@@ -148,15 +149,7 @@ const server = serve({
         }
 
         logger.info('GET /api/builds', { userId: session.user.id });
-        const builds = await getUserBuilds(db, session.user.id);
-        return Response.json(
-          builds.map((b) => ({
-            id: b._id,
-            name: b.name,
-            components: b.components,
-            created_at: b.created_at.toISOString(),
-          })),
-        );
+        return await getBuildsClient(session.user.id);
       },
       async POST(req) {
         let session;
@@ -175,21 +168,15 @@ const server = serve({
         const { name, components } = body;
 
         if (!name || !Array.isArray(components)) {
-          logger.warn('POST /api/builds: datos inválidos en el cuerpo', { name, hasComponents: Array.isArray(components) });
+          logger.warn('POST /api/builds: datos inválidos en el cuerpo', {
+            name,
+            hasComponents: Array.isArray(components),
+          });
           return Response.json({ error: 'Datos inválidos' }, { status: 400 });
         }
 
         logger.info('POST /api/builds: creando build', { userId: session.user.id, name });
-        const build = await createUserBuild(db, session.user.id, name, components);
-        return Response.json(
-          {
-            id: build._id,
-            name: build.name,
-            components: build.components,
-            created_at: build.created_at.toISOString(),
-          },
-          { status: 201 },
-        );
+        return await createBuildClient(session.user.id, name, components);
       },
     },
 
@@ -208,29 +195,14 @@ const server = serve({
         }
 
         logger.info('DELETE /api/builds/:id', { buildId: req.params.id, userId: session.user.id });
-        const success = await deleteUserBuild(db, req.params.id, session.user.id);
-        if (!success) {
-          logger.warn('Build no encontrado al intentar eliminar', { buildId: req.params.id, userId: session.user.id });
-          return Response.json({ error: 'Build no encontrado' }, { status: 404 });
-        }
-        return Response.json({ success: true });
+        return await deleteBuildClient(req.params.id, session.user.id);
       },
     },
 
     '/api/shared-builds/:id': {
       async GET(req) {
         logger.info('GET /api/shared-builds/:id', { buildId: req.params.id });
-        const build = await getSharedBuild(db, req.params.id);
-        if (!build) {
-          logger.warn('Build compartido no encontrado', { buildId: req.params.id });
-          return Response.json({ error: 'Build no encontrado' }, { status: 404 });
-        }
-        return Response.json({
-          id: build._id,
-          name: build.name,
-          components: build.components,
-          created_at: build.created_at.toISOString(),
-        });
+        return await getSharedBuildClient(req.params.id);
       },
     },
 
@@ -246,16 +218,7 @@ const server = serve({
           }
 
           logger.info('POST /api/shared-builds: creando build compartido', { name, componentCount: components.length });
-          const build = await createSharedBuild(db, name || 'Shared Build', components);
-          return Response.json(
-            {
-              id: build._id,
-              name: build.name,
-              components: build.components,
-              created_at: build.created_at.toISOString(),
-            },
-            { status: 201 },
-          );
+          return await createSharedBuildClient(name || 'Shared Build', components);
         } catch (error) {
           logger.error('Error al crear build compartido', { error: (error as Error).message });
           return Response.json({ error: 'Failed to create shared build' }, { status: 500 });

@@ -16,6 +16,7 @@
     "dotenv": "^17.4.2",
     "drizzle-kit": "^0.31.10",
     "drizzle-orm": "^0.45.2",
+    "esbuild": "^0.28.1",
     "framer-motion": "^12.39.0",
     "i18next": "^26.3.0",
     "lucide-react": "^1.16.0",

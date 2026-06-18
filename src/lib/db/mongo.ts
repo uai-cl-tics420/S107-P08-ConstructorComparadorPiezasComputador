@@ -1,7 +1,14 @@
 import { MongoClient, ObjectId } from 'mongodb';
 import { getComponentIdsByFilters, getPricesByComponentId, getComponentCountByFilters } from './postgres';
-import type { Vendor } from '@/types/Database_types';
+import type { BuildComponent, Vendor } from '@/types/Frontend_types';
 import { createLogger } from '@/lib/logger';
+import {
+  getUserBuilds,
+  createUserBuild,
+  deleteUserBuild,
+  getSharedBuild,
+  createSharedBuild,
+} from '@/lib/db/DBS_buildsManager';
 
 const log = createLogger('mongo');
 
@@ -133,7 +140,7 @@ export async function getComponentTypes() {
 
 export async function getVendorById(id: string): Promise<Vendor | null> {
   log.debug('Buscando vendedor por ID', { id });
-  const doc = await db.collection<Vendor>('vendors').findOne({ _id: id });
+  const doc = await db.collection<Vendor>('vendors').findOne({ _id: id as any });
   if (!doc) {
     log.warn('Vendedor no encontrado', { id });
   }
@@ -166,4 +173,65 @@ export async function getComponentByStringId(id: string) {
     log.warn('ID de componente inválido o no encontrado', { id });
     return null;
   }
+}
+
+export async function getBuildsClient(userId: string) {
+  const builds = await getUserBuilds(db, userId);
+  return Response.json(
+    builds.map((b) => ({
+      id: b._id,
+      name: b.name,
+      components: b.components,
+      created_at: b.created_at.toISOString(),
+    })),
+  );
+}
+
+export async function createBuildClient(userId: string, name: string, components: BuildComponent[]) {
+  const build = await createUserBuild(db, userId, name, components);
+  return Response.json(
+    {
+      id: build._id,
+      name: build.name,
+      components: build.components,
+      created_at: build.created_at.toISOString(),
+    },
+    { status: 201 },
+  );
+}
+
+export async function deleteBuildClient(buildId: string, userId: string) {
+  const success = await deleteUserBuild(db, buildId, userId);
+  if (!success) {
+    log.warn('Build no encontrado al intentar eliminar', { buildId: buildId, userId: userId });
+    return Response.json({ error: 'Build no encontrado' }, { status: 404 });
+  }
+  return Response.json({ success: true });
+}
+
+export async function getSharedBuildClient(buildId: string) {
+  const build = await getSharedBuild(db, buildId);
+  if (!build) {
+    log.warn('Build compartido no encontrado', { buildId: buildId });
+    return Response.json({ error: 'Build no encontrado' }, { status: 404 });
+  }
+  return Response.json({
+    id: build._id,
+    name: build.name,
+    components: build.components,
+    created_at: build.created_at.toISOString(),
+  });
+}
+
+export async function createSharedBuildClient(name: string, components: BuildComponent[]) {
+  const build = await createSharedBuild(db, name, components);
+  return Response.json(
+    {
+      id: build._id,
+      name: build.name,
+      components: build.components,
+      created_at: build.created_at.toISOString(),
+    },
+    { status: 201 },
+  );
 }

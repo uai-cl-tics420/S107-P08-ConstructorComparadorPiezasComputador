@@ -1,8 +1,39 @@
-import re, requests
+import re, time, random, requests
 from functools import lru_cache
 
 BASE = "https://publicapi.solotodo.com"
 SESSION = requests.Session()
+
+
+MAX_RETRIES = 5
+BASE_DELAY  = 0.5
+MIN_INTERVAL = 0.1
+_last_request = 0
+
+def _throttle():
+    global _last_request
+    now = time.time()
+    if (d := now - _last_request) < MIN_INTERVAL:
+        time.sleep(MIN_INTERVAL - d)
+    _last_request = time.time()
+
+def request(method, url, **kwargs):
+    for i in range(MAX_RETRIES):
+        try:
+            _throttle()
+            r = SESSION.request(method, url, **kwargs)
+
+            if r.status_code == 429:
+                raise requests.exceptions.RequestException("rate limit")
+
+            r.raise_for_status()
+            return r
+
+        except requests.exceptions.RequestException:
+            if i == MAX_RETRIES - 1:
+                raise
+            time.sleep(BASE_DELAY * (2 ** i) + random.uniform(0, 0.3))
+
 
 CATEGORIES = {
     "cpu": 3, "gpu": 2, "mb": 5, "ram": 7, "psu": 9,
@@ -93,9 +124,7 @@ def enrich(raw: dict) -> dict:
     return {k: v for k, v in out.items() if v}
 
 def _get(url, **params):
-    r = SESSION.get(url, params=params)
-    r.raise_for_status()
-    return r.json()
+    return request("GET", url, params=params).json()
 
 def browse(category, page=1, size=10, refurbished=False):
     stores = list(get_stores().keys())
@@ -105,7 +134,7 @@ def browse(category, page=1, size=10, refurbished=False):
         ("page_size", size),
         *[("stores", s) for s in stores]
     ]
-    data = SESSION.get(f"{BASE}/categories/{category}/browse/", params=params).json()
+    data = request("GET", f"{BASE}/categories/{category}/browse/", params=params).json()
     return process(data)
 
 def process(data: dict) -> dict:
@@ -142,7 +171,7 @@ def to_float(v):
     except: return None
 
 def get_stores(limit=100):
-    data = requests.get(f"{BASE}/stores/").json()
+    data = request("GET", f"{BASE}/stores/").json()
     priority = [s for s in data if s["id"] in PRIORITY_IDS]
     others = [s for s in data if s["id"] not in PRIORITY_IDS]
     selected = (priority + others)[:limit]

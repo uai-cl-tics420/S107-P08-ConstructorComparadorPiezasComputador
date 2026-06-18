@@ -16,22 +16,7 @@ import { getComponentCountByFilters, getInStockComponentIds } from '@/lib/db/pos
 import { getRecommendationsForBuild, getRecommendationsForComponent } from '@/lib/db/recommendationsManager';
 import { setUserPassword } from '@/lib/auth/serverRequests';
 import index from './index.html';
-import { MongoClient } from 'mongodb';
-import { Pool } from 'pg';
 import { logger } from '@/lib/logger';
-
-// Initialize PostgreSQL connection pool
-const pgPool = new Pool({
-  user: process.env.POSTGRES_USER,
-  password: process.env.POSTGRES_PASSWORD,
-  host: process.env.POSTGRES_HOST,
-  port: parseInt(process.env.POSTGRES_PORT!),
-  database: process.env.POSTGRES_DB,
-});
-
-pgPool.on('error', (err) => {
-  logger.error('Error en el pool de PostgreSQL (index)', { error: err.message });
-});
 
 const server = serve({
   routes: {

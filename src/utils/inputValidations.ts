@@ -20,7 +20,11 @@ export const numericSchema = z
 
 export const uuidSchema = z.uuid('UUID no válido');
 
-export const numericIdSchema = z.coerce.number('ID numérico no válido').int('ID no entero').positive('ID no positivo');
+export const numericIdSchema = z.coerce
+  .number('ID numérico no válido')
+  .int('ID no entero')
+  .positive('ID no positivo')
+  .max(99999999);
 
 // Frontent_types schemas
 export const priceSchema = z.object({
@@ -56,5 +60,5 @@ export const componentSchema = z.object({
 
 export const buildComponentSchema = z.object({
   component: componentSchema,
-  quantity: numericSchema.positive('La cantidad debe ser positiva'),
+  quantity: numericSchema.int('La cantidad debe ser entera').positive('La cantidad debe ser positiva'),
 });

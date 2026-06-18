@@ -26,8 +26,7 @@ const TYPE_ACCENT: Record<string, string> = {
   'CPU Cooler': 'tw-cooler',
 };
 
-// Claves de specs con label conocido en i18n (spec.*). Se usa para separar
-// las specs "conocidas" de las "otras". Los labels salen de t('spec.<clave>').
+
 const KNOWN_SPECS = new Set([
   'core_count',
   'thread_count',
@@ -75,9 +74,7 @@ interface Props {
 export function ComponentDetailModal({ component, onClose, onAdd }: Props) {
   const { t } = useTranslation();
 
-  // Precios a tiempo real: al abrir el detalle se consulta la API desde el browser
-  // para traer los precios vigentes de las tiendas, en vez de usar solo el snapshot
-  // que venía cargado con el catálogo. Mientras carga se muestra el snapshot.
+
   const [livePrices, setLivePrices] = useState<Price[] | null>(null);
   const [refreshingPrices, setRefreshingPrices] = useState(false);
 
@@ -96,7 +93,7 @@ export function ComponentDetailModal({ component, onClose, onAdd }: Props) {
         setLivePrices(fresh.prices as Price[]);
       })
       .catch(() => {
-        // Si falla la consulta se mantiene el snapshot ya mostrado.
+
       })
       .finally(() => {
         if (!cancelled) setRefreshingPrices(false);
@@ -116,7 +113,7 @@ export function ComponentDetailModal({ component, onClose, onAdd }: Props) {
     : '';
   const accent = component ? (TYPE_ACCENT[component.type_name] ?? 'tw-case') : 'tw-case';
 
-// Fallback map: SoloTodo numeric certification IDs → readable labels (for legacy DB data)
+
 const CERTIFICATION_MAP: Record<number, string> = {
   2: '80 Plus',
   4: '80 Plus Bronze',
@@ -128,9 +125,7 @@ const CERTIFICATION_MAP: Record<number, string> = {
 
   function formatValue(key: string, value: unknown): string {
     if (value === null || value === undefined) return '—';
-    // Cinebench 0 = absent data from SoloTodo, not a real score
     if ((key === 'cinebench_r20_single_score' || key === 'cinebench_r20_multi_score') && value === 0) return '—';
-    // PSU certification: translate numeric ID to readable text (legacy data fallback)
     if (key === 'certification' && typeof value === 'number') {
       return CERTIFICATION_MAP[value] ?? `80 Plus (${value})`;
     }

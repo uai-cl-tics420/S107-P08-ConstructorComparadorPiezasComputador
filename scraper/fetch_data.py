@@ -1,31 +1,19 @@
-import os, uuid
+import os
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from pymongo import MongoClient
 import psycopg2
 
-from solotodo import browse, get_product_prices, get_stores, CATEGORIES
+from solotodo import browse, get_product_prices, CATEGORIES
 
 load_dotenv()
 
 PRICE_WORKERS = 5
 
-def uid(ns, name):
-    return str(uuid.uuid5(uuid.NAMESPACE_URL, f"{ns}:{name}"))
-
-
-def extract_brand(name):
-    return name.split()[0]
-
-
-def clean_specs(p):
-    return {k: v for k, v in p.items() if v not in (None, 0)}
-
 
 def main():
     start = datetime.now()
-    stores = get_stores(None)
 
     mongo = MongoClient(
         f"mongodb://{os.getenv('MONGO_USER')}:{os.getenv('MONGO_PASSWORD')}"
@@ -41,12 +29,8 @@ def main():
     )
     cur = pg.cursor()
 
-    brands, types = {}, {}
-
     for name, cid in CATEGORIES.items():
         print(f"\n[{name.upper()}]")
-
-        type_id = types.setdefault(name, uid("type", name))
 
         products = browse(cid, size=200)
         ids = list(products)
@@ -54,49 +38,64 @@ def main():
         with ThreadPoolExecutor(PRICE_WORKERS) as pool:
             prices = dict(zip(ids, pool.map(get_product_prices, ids)))
 
-        for pid, p in products.items():
-            n = (p.get("name") or "").split("[")[0].split("(")[0].strip()
-            if not n: continue
+        for cid_, p in products.items():
 
-            b = p.get("brand") or extract_brand(n)
-            bid = brands.setdefault(b, uid("brand", b))
-            cid_ = uid("component", str(pid))
-
+            # ---------------- MONGO UPSERT (DEDUPED) ----------------
             mongo["components"].update_one(
                 {"_id": cid_},
-                {"$set": {
-                    "name_model": n,
-                    "brand_id": bid,
-                    "type_id": type_id,
-                    "specs": clean_specs(p),
-                    "updated_at": datetime.now(),
-                }},
+                {
+                    "$set": {
+                        "name_model": p["name_model"],
+                        "type_id": p["type_id"],
+                        "brand": p.get("brand"),
+                        "specs": {k: v for k, v in p.items() if v not in (None, 0)},
+                        "updated_at": datetime.now(),
+                    },
+                    "$setOnInsert": {
+                        "created_at": datetime.now(),
+                        "requirements": {}
+                    }
+                },
                 upsert=True
             )
 
-            for sp in prices.get(pid, []):
-                if not sp["offer_price"]: continue
+            # ---------------- POSTGRES MIRROR ----------------
+            cur.execute(
+                """INSERT INTO public.components_mirror
+                (component_id, name_model, type_id, brand_id, synced_at)
+                VALUES (%s,%s,%s,%s,%s)
+                ON CONFLICT (component_id) DO UPDATE SET
+                    name_model=EXCLUDED.name_model,
+                    type_id=EXCLUDED.type_id,
+                    brand_id=EXCLUDED.brand_id,
+                    synced_at=EXCLUDED.synced_at""",
+                (cid_, p["name_model"], p["type_id"], None, datetime.now())
+            )
+
+            # ---------------- PRICES ----------------
+            for sp in prices.get(cid_, []):
+                if not sp["offer_price"]:
+                    continue
 
                 cur.execute(
                     """INSERT INTO public.prices
-                    (id, component_id, vendor_id, price, vendor_name, recorded_at)
-                    VALUES (%s,%s,%s,%s,%s,%s)
-                    ON CONFLICT (id) DO UPDATE SET price=EXCLUDED.price""",
+                    (component_id, vendor_id, price, recorded_at)
+                    VALUES (%s,%s,%s,%s)
+                    ON CONFLICT DO NOTHING""",
                     (
-                        sp["entity_id"],
                         cid_,
-                        uid("store", str(sp["store_id"])),
+                        sp["entity_id"],
                         int(sp["offer_price"]),
-                        stores.get(sp["store_id"], "Unknown"),
                         datetime.now()
                     )
                 )
 
         pg.commit()
 
-    cur.execute("DELETE FROM public.prices WHERE recorded_at < %s", (start,))
-    pg.commit()
-
     cur.close()
     pg.close()
     mongo.client.close()
+
+
+if __name__ == "__main__":
+    main()

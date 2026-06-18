@@ -19,7 +19,6 @@ await client.connect();
 log.info('Conexión a MongoDB establecida', { db: process.env.MONGO_DB, host: process.env.MONGO_HOST });
 const db = client.db(process.env.MONGO_DB);
 
-// Transform MongoDB document to the format the frontend expects
 async function transformComponent(doc: any) {
   const type = await db.collection('component_types').findOne({ _id: doc.type_id });
   const brand = doc.brand_id ? await db.collection('brands').findOne({ _id: doc.brand_id }) : null;
@@ -28,7 +27,6 @@ async function transformComponent(doc: any) {
     log.warn('Tipo de componente no encontrado', { type_id: doc.type_id, component_id: doc._id });
   }
 
-  // Fetch real prices from PostgreSQL
   const prices = await getPricesByComponentId(doc._id);
 
   return {
@@ -103,9 +101,6 @@ export async function getComponentsCount(
 export async function getComponentById(id: string) {
   log.debug('Buscando componente por ID', { id });
   try {
-    // Los _id de la colección son UUID string (no ObjectId), igual que en getComponents.
-    // Se consulta por string directo; los precios se traen frescos desde PostgreSQL
-    // dentro de transformComponent, lo que permite mostrar precios a tiempo real.
     const doc = await db.collection('components').findOne({ _id: id as any });
     if (!doc) {
       log.warn('Componente no encontrado', { id });

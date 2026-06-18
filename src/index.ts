@@ -18,6 +18,20 @@ import { setUserPassword } from '@/lib/auth/serverRequests';
 import index from './index.html';
 import { logger } from '@/lib/logger';
 
+async function requireSession(req: Request, endpointName: string) {
+  try {
+    const session = await auth.api.getSession({ headers: req.headers });
+    if (!session) {
+      logger.warn(`${endpointName}: solicitud sin sesión válida`);
+      return null;
+    }
+    return session;
+  } catch (error) {
+    logger.error(`Error al obtener sesión en ${endpointName}`, { error: (error as Error).message });
+    return null;
+  }
+}
+
 const server = serve({
   routes: {
     // BetterAuth routes
@@ -107,33 +121,15 @@ const server = serve({
 
     '/api/builds': {
       async GET(req) {
-        let session;
-        try {
-          session = await auth.api.getSession({ headers: req.headers });
-        } catch (error) {
-          logger.error('Error al obtener sesión en GET /api/builds', { error: (error as Error).message });
-          return Response.json({ error: 'No autorizado' }, { status: 401 });
-        }
-        if (!session) {
-          logger.warn('GET /api/builds: solicitud sin sesión válida');
-          return Response.json({ error: 'No autorizado' }, { status: 401 });
-        }
+        const session = await requireSession(req, 'GET /api/builds');
+        if (!session) return Response.json({ error: 'No autorizado' }, { status: 401 });
 
         logger.info('GET /api/builds', { userId: session.user.id });
         return await getBuildsClient(session.user.id);
       },
       async POST(req) {
-        let session;
-        try {
-          session = await auth.api.getSession({ headers: req.headers });
-        } catch (error) {
-          logger.error('Error al obtener sesión en POST /api/builds', { error: (error as Error).message });
-          return Response.json({ error: 'No autorizado' }, { status: 401 });
-        }
-        if (!session) {
-          logger.warn('POST /api/builds: solicitud sin sesión válida');
-          return Response.json({ error: 'No autorizado' }, { status: 401 });
-        }
+        const session = await requireSession(req, 'POST /api/builds');
+        if (!session) return Response.json({ error: 'No autorizado' }, { status: 401 });
 
         const body = await req.json();
         const { name, components } = body;
@@ -153,17 +149,8 @@ const server = serve({
 
     '/api/builds/:id': {
       async DELETE(req) {
-        let session;
-        try {
-          session = await auth.api.getSession({ headers: req.headers });
-        } catch (error) {
-          logger.error('Error al obtener sesión en DELETE /api/builds/:id', { error: (error as Error).message });
-          return Response.json({ error: 'No autorizado' }, { status: 401 });
-        }
-        if (!session) {
-          logger.warn('DELETE /api/builds/:id: solicitud sin sesión válida', { buildId: req.params.id });
-          return Response.json({ error: 'No autorizado' }, { status: 401 });
-        }
+        const session = await requireSession(req, `DELETE /api/builds/:id (${req.params.id})`);
+        if (!session) return Response.json({ error: 'No autorizado' }, { status: 401 });
 
         logger.info('DELETE /api/builds/:id', { buildId: req.params.id, userId: session.user.id });
         return await deleteBuildClient(req.params.id, session.user.id);

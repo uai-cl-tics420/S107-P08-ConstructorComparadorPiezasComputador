@@ -33,75 +33,21 @@ Example:
   process.exit(0);
 }
 
-const toCamelCase = (str: string): string => str.replace(/-([a-z])/g, (_, letter: string) => letter.toUpperCase());
+import { parseArgs } from "util";
 
-const parseValue = (value: string): any => {
-  if (value === "true") return true;
-  if (value === "false") return false;
-
-  if (/^\d+$/.test(value)) return parseInt(value, 10);
-  if (/^\d*\.\d+$/.test(value)) return parseFloat(value);
-
-  if (value.includes(",")) return value.split(",").map(v => v.trim());
-
-  return value;
-};
-
-function parseArgs(): Partial<Bun.BuildConfig> {
-  const config: Record<string, unknown> = {};
-  const args = process.argv.slice(2);
-
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    if (arg === undefined) continue;
-    if (!arg.startsWith("--")) continue;
-
-    if (arg.startsWith("--no-")) {
-      const key = toCamelCase(arg.slice(5));
-      config[key] = false;
-      continue;
-    }
-
-    if (!arg.includes("=") && (i === args.length - 1 || args[i + 1]?.startsWith("--"))) {
-      const key = toCamelCase(arg.slice(2));
-      config[key] = true;
-      continue;
-    }
-
-    let key: string;
-    let value: string;
-
-    if (arg.includes("=")) {
-      [key, value] = arg.slice(2).split("=", 2) as [string, string];
-    } else {
-      key = arg.slice(2);
-      value = args[++i] ?? "";
-    }
-
-    key = toCamelCase(key);
-
-    if (key.includes(".")) {
-      const parts = key.split(".");
-      if (parts.length > 2) {
-        console.warn(
-          `Warning: Deeply nested option "${key}" is not supported. Only single-level nesting (e.g., --minify.whitespace) is allowed.`,
-        );
-        continue;
-      }
-      const parentKey = parts[0]!;
-      const childKey = parts[1]!;
-      const existing = config[parentKey];
-      if (typeof existing !== "object" || existing === null || Array.isArray(existing)) {
-        config[parentKey] = {};
-      }
-      (config[parentKey] as Record<string, unknown>)[childKey] = parseValue(value);
-    } else {
-      config[key] = parseValue(value);
-    }
-  }
-
-  return config as Partial<Bun.BuildConfig>;
-}
+const { values: cliConfig } = parseArgs({
+  args: process.argv.slice(2),
+  options: {
+    outdir: { type: "string" },
+    minify: { type: "boolean" },
+    sourcemap: { type: "string" },
+    target: { type: "string" },
+    format: { type: "string" },
+    splitting: { type: "boolean" },
+    external: { type: "string", multiple: true },
+  },
+  strict: false,
+});
 
 const formatFileSize = (bytes: number): string => {
   const units = ["B", "KB", "MB", "GB"];

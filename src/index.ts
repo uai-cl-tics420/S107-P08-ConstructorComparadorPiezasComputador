@@ -20,20 +20,6 @@ import { MongoClient } from 'mongodb';
 import { Pool } from 'pg';
 import { logger } from '@/lib/logger';
 
-// Initialize MongoDB connection
-const mongoURL = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}?authSource=admin`;
-const mongoClient = new MongoClient(mongoURL);
-
-try {
-  await mongoClient.connect();
-  logger.info('Conexión a MongoDB establecida (index)', { host: process.env.MONGO_HOST, db: process.env.MONGO_DB });
-} catch (error) {
-  logger.error('Fallo al conectar con MongoDB', { error: (error as Error).message });
-  process.exit(1);
-}
-
-const db = mongoClient.db(process.env.MONGO_DB);
-
 // Initialize PostgreSQL connection pool
 const pgPool = new Pool({
   user: process.env.POSTGRES_USER,

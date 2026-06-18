@@ -1,346 +1,102 @@
-import os
-import sys
-import uuid
+import os, uuid
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 from dotenv import load_dotenv
 from pymongo import MongoClient
 import psycopg2
 
-from solotodo import (
-    browse_cpus,
-    browse_gpus,
-    browse_motherboards,
-    browse_ram,
-    browse_psu,
-    browse_cpu_coolers,
-    browse_fans,
-    browse_pc_cases,
-    browse_storage,
-    get_product_prices,
-    get_stores,
-)
+from solotodo import browse, get_product_prices, get_stores, CATEGORIES
 
 load_dotenv()
 
-# MongoDB
-MONGO_USER     = os.getenv("MONGO_USER")
-MONGO_PASSWORD = os.getenv("MONGO_PASSWORD")
-MONGO_HOST     = os.getenv("MONGO_HOST")
-MONGO_PORT     = int(os.getenv("MONGO_PORT"))
-MONGO_DB       = os.getenv("MONGO_DB")
-
-# PostgreSQL
-PG_HOST     = os.getenv("POSTGRES_HOST")
-PG_PORT     = int(os.getenv("POSTGRES_PORT"))
-PG_DB       = os.getenv("POSTGRES_DB")
-PG_USER     = os.getenv("POSTGRES_USER")
-PG_PASSWORD = os.getenv("POSTGRES_PASSWORD")
-
-CATEGORIES = [
-    ("CPU",         browse_cpus, 200),
-    ("GPU",         browse_gpus, 200),
-    ("RAM",         browse_ram, 200),
-    ("Motherboard", browse_motherboards, 200),
-    ("PSU",         browse_psu, 200),
-    ("Case",        browse_pc_cases, 200),
-    ("CPU Cooler",  browse_cpu_coolers, 200),
-    ("Fans",        browse_fans, 200),
-    ("Storage",     browse_storage, 200),
-]
-
-# Workers paralelos para fetch de precios. Más workers = más rápido pero más carga al servidor.
-# Si le pones mucho la pagina te va a rate limitear
 PRICE_WORKERS = 5
 
-DISPLAY_SPECS = {
-    # CPU
-    "core_count": "Cores", "thread_count": "Threads", "tdp": "TDP (W)",
-    "base_clock": "Base Clock", "boost_clock": "Boost Clock",
-    "socket": "Socket", "gpu": "GPU Integrada",
-    "cinebench_r20_single_score": "Cinebench R20 (1T)",
-    "cinebench_r20_multi_score": "Cinebench R20 (nT)",
-    # GPU
-    "gpu_boost_clock": "Boost Clock", "vram_quantity": "VRAM",
-    "gpu_tdp": "TDP (W)", "bus_width": "Bus",
-    # RAM
-    "capacity": "Capacidad", "bus_speed": "Velocidad",
-    "ram_type": "Tipo", "module_count": "Modulos",
-    # Motherboard
-    "chipset": "Chipset", "memory_slots_quantity": "Slots RAM",
-    # Storage
-    "capacity_value": "Capacidad", "bus_type": "Interface",
-    "read_speed": "Lectura", "write_speed": "Escritura",
-    # PSU
-    "wattage": "Watts", "certification": "Certificacion", "is_modular": "Modular",
-    # CPU Cooler
-    "cooler_sockets": "Sockets",
-    "height": "Altura (mm)",
-    # Case
-    "max_motherboard_form_factor": "Form Factor",
-    "max_cpu_cooler_height": "Alt. máx. Cooler",
-    "max_video_card_length": "Largo máx. GPU",
-    # GPU
-    "length": "Largo (mm)",
-    # Motherboard (compat extra)
-    "m2_slots": "Slots M.2",
-    # General
-    "form_factor": "Form Factor",
-}
+def uid(ns, name):
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, f"{ns}:{name}"))
 
 
-def deterministic_uuid(namespace: str, name: str) -> str:
-    return str(uuid.uuid5(uuid.NAMESPACE_URL, f"{namespace}:{name}"))
+def extract_brand(name):
+    return name.split()[0]
 
 
-def extract_brand(product_name: str) -> str:
-    brand_prefixes = [
-        "AMD", "Intel", "NVIDIA", "MSI", "ASUS", "Gigabyte", "ASRock",
-        "Corsair", "Kingston", "G.Skill", "Crucial", "A-DATA", "Samsung",
-        "Western Digital", "WD", "Seagate", "Seasonic", "EVGA", "Cooler Master",
-        "Noctua", "be quiet!", "NZXT", "Lian Li", "Fractal Design", "Thermaltake",
-        "DeepCool", "Arctic", "Phanteks", "Antec", "Biostar", "Zotac", "PNY",
-        "Palit", "Sparkle", "XPG", "KingSpec", "Hikvision", "Patriot",
-        "Team", "Hyte", "Gamemax", "Newgen", "Sama", "XTech", "Thermalright",
-        "Snake", "HP", "Dell",
-    ]
-    for brand in brand_prefixes:
-        if product_name.lower().startswith(brand.lower()):
-            return brand
-    return product_name.split()[0]
-
-
-# Benchmark keys where a score of 0 means "no data" (SoloTodo returns 0 as placeholder)
-ZERO_MEANS_MISSING = {"cinebench_r20_single_score", "cinebench_r20_multi_score"}
-
-
-def clean_specs(product: dict) -> dict:
-    specs = {k: v for k, v in product.items() if k in DISPLAY_SPECS and v is not None}
-    # Filter out benchmark scores of 0 — they represent absent data, not real results
-    for key in ZERO_MEANS_MISSING:
-        if key in specs and specs[key] == 0:
-            del specs[key]
-    return specs
-
-
-def clear_database(mongo_db, pg_cursor, pg_conn):
-    pg_cursor.execute("DELETE FROM public.prices;")
-    pg_cursor.execute("DELETE FROM public.;")
-    pg_conn.commit()
-    mongo_db["components"].delete_many({})
-    mongo_db["brands"].delete_many({})
-    mongo_db["component_types"].delete_many({})
-    print("Cleared existing data from both databases.\n")
+def clean_specs(p):
+    return {k: v for k, v in p.items() if v not in (None, 0)}
 
 
 def main():
-    sync_start_time = datetime.now()
-    
-    print("SoloTodo Scraper - Components + Store Prices")
-    print("=" * 60)
+    start = datetime.now()
+    stores = get_stores(None)
 
-    # Fetch store info
-    stores = get_stores(limit=None)
+    mongo = MongoClient(
+        f"mongodb://{os.getenv('MONGO_USER')}:{os.getenv('MONGO_PASSWORD')}"
+        f"@{os.getenv('MONGO_HOST')}:{os.getenv('MONGO_PORT')}/{os.getenv('MONGO_DB')}?authSource=admin"
+    )[os.getenv("MONGO_DB")]
 
-    # Connect to MongoDB
-    mongo_url = (
-        f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}"
-        f"@{MONGO_HOST}:{MONGO_PORT}/{MONGO_DB}?authSource=admin"
+    pg = psycopg2.connect(
+        host=os.getenv("POSTGRES_HOST"),
+        port=os.getenv("POSTGRES_PORT"),
+        database=os.getenv("POSTGRES_DB"),
+        user=os.getenv("POSTGRES_USER"),
+        password=os.getenv("POSTGRES_PASSWORD"),
     )
-    mongo_client = MongoClient(mongo_url)
-    mongo_db = mongo_client[MONGO_DB]
+    cur = pg.cursor()
 
-    # Connect to PostgreSQL
-    pg_conn = psycopg2.connect(
-        host=PG_HOST, port=PG_PORT, database=PG_DB,
-        user=PG_USER, password=PG_PASSWORD,
-    )
-    pg_cursor = pg_conn.cursor()
+    brands, types = {}, {}
 
-    # Ensure vendor_name column exists
-    try:
-        pg_cursor.execute("ALTER TABLE public.prices ADD COLUMN IF NOT EXISTS vendor_name TEXT;")
-        pg_conn.commit()
-    except Exception:
-        pg_conn.rollback()
+    for name, cid in CATEGORIES.items():
+        print(f"\n[{name.upper()}]")
 
-    # Option to clear existing data via command line arg
-    if "--clear" in sys.argv:
-        clear_database(mongo_db, pg_cursor, pg_conn)
-    else:
-        print("Appending to existing data (use --clear to flush databases).\n")
+        type_id = types.setdefault(name, uid("type", name))
 
-    brands_cache = {}
-    types_cache  = {}
-    total_components = 0
-    total_prices     = 0
+        products = browse(cid, size=200)
+        ids = list(products)
 
-    for type_name, browse_fn, count in CATEGORIES:
-        cat_start = datetime.now()
-        print(f"\n[{type_name}] fetching catalog...")
+        with ThreadPoolExecutor(PRICE_WORKERS) as pool:
+            prices = dict(zip(ids, pool.map(get_product_prices, ids)))
 
-        # Upsert component type into Mongo
-        if type_name not in types_cache:
-            type_id = deterministic_uuid("type", type_name)
-            types_cache[type_name] = type_id
+        for pid, p in products.items():
+            n = (p.get("name") or "").split("[")[0].split("(")[0].strip()
+            if not n: continue
 
-            if not mongo_db["component_types"].find_one({"_id": type_id}):
-                mongo_db["component_types"].insert_one({"_id": type_id, "name": type_name})
+            b = p.get("brand") or extract_brand(n)
+            bid = brands.setdefault(b, uid("brand", b))
+            cid_ = uid("component", str(pid))
 
-        type_id = types_cache[type_name]
-
-        products = browse_fn(page=1, page_size=count)
-        product_ids = list(products.keys())
-        print(f"  {len(product_ids)} productos. Pidiendo precios en paralelo ({PRICE_WORKERS} workers)...")
-
-        # Paralelizar la llamada lenta: get_product_prices por cada componente
-        with ThreadPoolExecutor(max_workers=PRICE_WORKERS) as pool:
-            price_map = dict(zip(product_ids, pool.map(get_product_prices, product_ids)))
-
-        # Ahora hacer todos los inserts secuencialmente (rápido, no es el bottleneck)
-        for solotodo_id, product in products.items():
-            name = product.get("name", "")
-            if not name:
-                continue
-
-            clean_name = name.split("[")[0].split("(")[0].strip()
-            brand_name = product.get("brand") or extract_brand(name)
-
-            # Upsert brand into Mongo
-            if brand_name not in brands_cache:
-                brand_id = deterministic_uuid("brand", brand_name)
-                brands_cache[brand_name] = brand_id
-
-                if not mongo_db["brands"].find_one({"_id": brand_id}):
-                    mongo_db["brands"].insert_one({"_id": brand_id, "name": brand_name})
-
-            brand_id = brands_cache[brand_name]
-
-            # Upsert component into Mongo keyed on name_model (has unique index)
-            comp_id = deterministic_uuid("component", str(solotodo_id))
-            now = datetime.now()
-            existing = mongo_db["components"].find_one({
-                "$or": [
-                    {"name_model": clean_name},
-                    {"_id": comp_id}
-                ]
-            }, {"_id": 1})
-            if existing:
-                comp_id = existing["_id"]
-                mongo_db["components"].update_one(
-                    {"_id": comp_id},
-                    {"$set": {
-                        "type_id":      type_id,
-                        "brand_id":     brand_id,
-                        "specs":        clean_specs(product),
-                        "requirements": {},
-                        "updated_at":   now,
-                    }},
-                )
-            else:
-                mongo_db["components"].insert_one({
-                    "_id":          comp_id,
-                    "type_id":      type_id,
-                    "brand_id":     brand_id,
-                    "name_model":   clean_name,
-                    "specs":        clean_specs(product),
-                    "requirements": {},
-                    "created_at":   now,
-                    "updated_at":   now,
-                })
-
-            pg_cursor.execute(
-                "INSERT INTO public.components_mirror (component_id, name_model, type_id, brand_id) "
-                "VALUES (%s, %s, %s, %s) "
-                "ON CONFLICT (component_id) DO UPDATE SET name_model = EXCLUDED.name_model",
-                (comp_id, clean_name, type_id, brand_id),
+            mongo["components"].update_one(
+                {"_id": cid_},
+                {"$set": {
+                    "name_model": n,
+                    "brand_id": bid,
+                    "type_id": type_id,
+                    "specs": clean_specs(p),
+                    "updated_at": datetime.now(),
+                }},
+                upsert=True
             )
 
-            store_prices = price_map.get(solotodo_id) or []
+            for sp in prices.get(pid, []):
+                if not sp["offer_price"]: continue
 
-            if store_prices:
-                seen_stores = set()
-                for sp in store_prices:
-                    offer_price = sp.get("offer_price")
-                    store_id = sp.get("store_id")
-                    if not offer_price or not store_id:
-                        continue
-                    if store_id in seen_stores:
-                        continue
-                    seen_stores.add(store_id)
-
-                    store_name = stores.get(store_id, f"Store {store_id}")
-
-                    pg_cursor.execute(
-                        "INSERT INTO public.prices "
-                        "  (id, component_id, vendor_id, price, vendor_name, recorded_at) "
-                        "VALUES (%s, %s, %s, %s, %s, %s) "
-                        "ON CONFLICT (id) DO UPDATE SET "
-                        "  price       = EXCLUDED.price, "
-                        "  vendor_name = EXCLUDED.vendor_name, "
-                        "  recorded_at = EXCLUDED.recorded_at",
-                        (
-                            sp["entity_id"],
-                            comp_id,
-                            deterministic_uuid("store", str(store_id)),
-                            int(offer_price),
-                            store_name,
-                            datetime.now(),
-                        ),
+                cur.execute(
+                    """INSERT INTO public.prices
+                    (id, component_id, vendor_id, price, vendor_name, recorded_at)
+                    VALUES (%s,%s,%s,%s,%s,%s)
+                    ON CONFLICT (id) DO UPDATE SET price=EXCLUDED.price""",
+                    (
+                        sp["entity_id"],
+                        cid_,
+                        uid("store", str(sp["store_id"])),
+                        int(sp["offer_price"]),
+                        stores.get(sp["store_id"], "Unknown"),
+                        datetime.now()
                     )
-                    total_prices += 1
-            else:
-                fallback = int(float(
-                    product.get("offer_price") or product.get("normal_price") or 0
-                ))
-                if fallback > 0:
-                    pg_cursor.execute(
-                        "INSERT INTO public.prices "
-                        "  (id, component_id, vendor_id, price, vendor_name, recorded_at) "
-                        "VALUES (%s, %s, %s, %s, %s, %s) "
-                        "ON CONFLICT (id) DO UPDATE SET "
-                        "  price       = EXCLUDED.price, "
-                        "  vendor_name = EXCLUDED.vendor_name, "
-                        "  recorded_at = EXCLUDED.recorded_at",
-                        (
-                            solotodo_id,
-                            comp_id,
-                            deterministic_uuid("store", "SoloTodo"),
-                            fallback,
-                            "SoloTodo",
-                            datetime.now(),
-                        ),
-                    )
-                    total_prices += 1
+                )
 
-            total_components += 1
+        pg.commit()
 
-        # Commit por categoría en vez de por componente — mucho más rápido
-        pg_conn.commit()
-        cat_elapsed = (datetime.now() - cat_start).total_seconds()
-        print(f"  {type_name}: {len(product_ids)} componentes en {cat_elapsed:.1f}s")
+    cur.execute("DELETE FROM public.prices WHERE recorded_at < %s", (start,))
+    pg.commit()
 
-    # Cleanup any prices that weren't updated in this scraping run
-    print("\nCleaning up sold-out items...")
-    pg_cursor.execute(
-        "DELETE FROM public.prices WHERE recorded_at < %s",
-        (sync_start_time,)
-    )
-    removed_prices = pg_cursor.rowcount
-    
-    pg_conn.commit()
-    pg_cursor.close()
-    pg_conn.close()
-    mongo_client.close()
-
-    print(f"\n{'='*60}")
-    print(f"Components : {total_components}")
-    print(f"Prices     : {total_prices}")
-    print(f"Brands     : {len(brands_cache)}")
-    print(f"Types      : {len(types_cache)}")
-    print(f"Sold Out   : {removed_prices} outdated prices removed")
-    print(f"{'='*60}")
-
-
-if __name__ == "__main__":
-    main()
+    cur.close()
+    pg.close()
+    mongo.client.close()

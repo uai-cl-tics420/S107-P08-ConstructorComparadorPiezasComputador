@@ -27,7 +27,7 @@ pool.on('error', (err) => {
 
 export const db = drizzle(pool, { schema });
 
-export async function getComponentIdsByFilters( // Retrieves a list of Mongo component IDs to match search parameters
+export async function getComponentIdsByFilters(
   search?: string,
   typeId?: string,
   brandId?: string,

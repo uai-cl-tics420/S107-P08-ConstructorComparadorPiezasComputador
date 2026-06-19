@@ -2,34 +2,20 @@ import { expect, test, describe } from 'bun:test';
 import { validatePassword } from '../src/lib/auth/validators';
 
 describe('Password Validators', () => {
-  test('Mínimo 8 caracteres', () => {
-    const result = validatePassword('Ab1!');
-    expect(result.isValid).toBe(false);
-    expect(result.message).toContain('La contraseña debe contener mínimo 8 caracteres.');
-  });
+  const cases = [
+    ['Ab1!', 'La contraseña debe contener mínimo 8 caracteres.'],
+    ['ABCDE123!', 'La contraseña debe contener al menos una minúscula.'],
+    ['abcde123!', 'La contraseña debe contener al menos una mayúscula.'],
+    ['Abcdefgh!', 'La contraseña debe contener al menos un número.'],
+    ['Abcdefgh1', 'La contraseña debe contener al menos un símbolo especial.']
+  ];
 
-  test('Al menos una minúsculas', () => {
-    const result = validatePassword('ABCDE123!');
-    expect(result.isValid).toBe(false);
-    expect(result.message).toContain('La contraseña debe contener al menos una minúscula.');
-  });
-
-  test('Al menos una mayúsculas', () => {
-    const result = validatePassword('abcde123!');
-    expect(result.isValid).toBe(false);
-    expect(result.message).toContain('La contraseña debe contener al menos una mayúscula.');
-  });
-
-  test('Al menos un número', () => {
-    const result = validatePassword('Abcdefgh!');
-    expect(result.isValid).toBe(false);
-    expect(result.message).toContain('La contraseña debe contener al menos un número.');
-  });
-
-  test('Al menos un símbolo', () => {
-    const result = validatePassword('Abcdefgh1');
-    expect(result.isValid).toBe(false);
-    expect(result.message).toContain('La contraseña debe contener al menos un símbolo especial.');
+  cases.forEach(([pwd, msg]) => {
+    test(`Falla con ${pwd}`, () => {
+      const result = validatePassword(pwd);
+      expect(result.isValid).toBe(false);
+      expect(result.message).toContain(msg);
+    });
   });
 
   test('Retorna múltiples fallos', () => {
@@ -44,3 +30,4 @@ describe('Password Validators', () => {
     expect(result.message).toBeNull();
   });
 });
+

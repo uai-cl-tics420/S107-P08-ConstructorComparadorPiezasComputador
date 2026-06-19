@@ -17,7 +17,7 @@ const mongoUrl = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWO
 const client = new MongoClient(mongoUrl);
 await client.connect();
 log.info('Conexión a MongoDB establecida', { db: process.env.MONGO_DB, host: process.env.MONGO_HOST });
-const db = client.db(process.env.MONGO_DB);
+export const db = client.db(process.env.MONGO_DB);
 
 async function transformComponent(doc: any) {
   const type = await db.collection('component_types').findOne({ _id: doc.type_id });

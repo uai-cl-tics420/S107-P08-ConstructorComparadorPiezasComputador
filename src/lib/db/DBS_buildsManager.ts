@@ -77,7 +77,9 @@ export async function deleteUserBuild(db: Db, buildId: string, userId: string): 
 // Obtener un build (por share id, o normal id, es publico para leer)
 export async function getSharedBuild(db: Db, buildId: string): Promise<SavedBuildDB | null> {
   log.debug('Buscando build compartido', { buildId });
-  const build = await db.collection<SavedBuildDB>('saved_builds').findOne({ _id: buildId });
+  const build = await db
+    .collection<SavedBuildDB>('saved_builds')
+    .findOne({ _id: buildId, user_id: 'shared' });
   if (!build) {
     log.warn('Build compartido no encontrado', { buildId });
   }
@@ -93,7 +95,7 @@ export async function createSharedBuild(
   log.info('Creando build compartido', { name, componentCount: components.length });
 
   const build: SavedBuildDB = {
-    _id: Math.random().toString(36).slice(2, 12),
+    _id: uuidv4(),
     user_id: 'shared',
     name,
     components,

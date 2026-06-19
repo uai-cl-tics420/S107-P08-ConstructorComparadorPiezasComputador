@@ -1,4 +1,4 @@
-import { MongoClient } from 'mongodb';
+import { db } from 'mongodb';
 import { betterAuth } from 'better-auth';
 import { mongodbAdapter } from 'better-auth/adapters/mongodb';
 import { emailOTP } from 'better-auth/plugins';
@@ -6,11 +6,6 @@ import { Resend } from 'resend';
 import { createLogger } from '@/lib/logger';
 
 const log = createLogger('auth');
-
-const mongoUrl = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}?authSource=admin`;
-
-const client = new MongoClient(mongoUrl);
-const db = client.db(process.env.MONGO_DB);
 log.info('Instancia de BetterAuth inicializada');
 
 const resend = new Resend(process.env.RESEND_API_KEY);

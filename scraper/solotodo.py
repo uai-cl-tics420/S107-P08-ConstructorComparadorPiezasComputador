@@ -1,224 +1,295 @@
-import re, time, random, requests, hashlib
+import re
+import requests
 from functools import lru_cache
-from uuid import uuid5, NAMESPACE_URL
 
-BASE = "https://publicapi.solotodo.com"
-SESSION = requests.Session()
+CATEGORY_CPU        = 3
+CATEGORY_GPU        = 2
+CATEGORY_MB         = 5
+CATEGORY_RAM        = 7
+CATEGORY_PSU        = 9
+CATEGORY_CPU_COOLER = 12
+CATEGORY_FANS       = 87
+CATEGORY_PC_CASE    = 10
+CATEGORY_STORAGE    = 8
 
-MAX_RETRIES = 5
-BASE_DELAY = 0.5
-MIN_INTERVAL = 0.12
-_last_request = 0
+_SKIP_SPEC_KEYS = frozenset({"id", "unicode", "default_bucket", "total_core_count", "picture"})
+_NULL_STRINGS   = frozenset({"No posee", "no posee", "N/A", ""})
 
-
-CATEGORIES = {
-    "cpu": 3, "gpu": 2, "mb": 5, "ram": 7, "psu": 9,
-    "cooler": 12, "fans": 87, "case": 10, "storage": 8
-}
-
-SKIP = {"id", "unicode", "default_bucket", "total_core_count", "picture"}
-NULLS = {"No posee", "no posee", "N/A", ""}
+_BASE    = "https://publicapi.solotodo.com"
+_SESSION = requests.Session()
 
 
-# ---------------- RATE LIMIT ----------------
-def _throttle():
-    global _last_request
-    now = time.time()
-    if (d := now - _last_request) < MIN_INTERVAL:
-        time.sleep(MIN_INTERVAL - d)
-    _last_request = time.time()
+@lru_cache(maxsize=512)
+def _is_traversal(base: str) -> bool:
+    parts = base.split("_")
+    for i in range(len(parts) - 1):
+        if parts[i] == parts[i + 1]:
+            return True
+    if len(parts) >= 2 and parts[1] == "family":
+        return True
+    if len(parts) >= 3 and parts[-1] in ("brand", "step"):
+        return True
+    return False
 
 
-def request(method, url, **kwargs):
-    for i in range(MAX_RETRIES):
-        try:
-            _throttle()
-            r = SESSION.request(method, url, **kwargs)
+def _clean_specs(raw_specs: dict) -> dict:
+    groups: dict[str, dict] = {}
+    plain:  dict[str, object] = {}
 
-            if r.status_code == 429:
-                raise requests.exceptions.RequestException("rate limit")
-
-            r.raise_for_status()
-            return r
-
-        except requests.exceptions.RequestException:
-            if i == MAX_RETRIES - 1:
-                raise
-            time.sleep(BASE_DELAY * (2 ** i) + random.uniform(0, 0.3))
-
-
-def _get(url, **params):
-    return request("GET", url, params=params).json()
-
-
-# ---------------- DEDUP ID ----------------
-def component_id(type_id: str, name: str) -> str:
-    key = f"{type_id}:{name.strip().lower()}"
-    return str(uuid5(NAMESPACE_URL, key))
-
-
-# ---------------- CLEANING ----------------
-@lru_cache(512)
-def is_traversal(k: str):
-    p = k.split("_")
-    return (
-        any(p[i] == p[i + 1] for i in range(len(p) - 1)) or
-        (len(p) > 1 and p[1] == "family") or
-        (len(p) > 2 and p[-1] in {"brand", "step"})
-    )
-
-
-def clean_specs(raw):
-    groups, plain = {}, {}
-
-    for k, v in raw.items():
-        if k in SKIP or k.endswith("_id"):
+    for k, v in raw_specs.items():
+        if k in _SKIP_SPEC_KEYS or k.endswith("_id"):
             continue
         if k.endswith("_value"):
-            groups.setdefault(k[:-6], {})["v"] = v
+            groups.setdefault(k[:-6], {})["value"] = v
         elif k.endswith("_name"):
-            groups.setdefault(k[:-5], {})["n"] = v
+            groups.setdefault(k[:-5], {})["name"] = v
         elif k.endswith("_unicode"):
-            groups.setdefault(k[:-8], {})["u"] = v
+            groups.setdefault(k[:-8], {})["unicode"] = v
         else:
             plain[k] = v
 
-    res = {k: v for k, v in plain.items() if not is_traversal(k)}
+    redundant_summaries = {
+        base
+        for base, variants in groups.items()
+        if tuple(variants) == ("unicode",) and (base + "_quantity") in groups
+    }
 
-    for b, g in groups.items():
-        if is_traversal(b) or b in res:
+    result: dict[str, object] = {}
+
+    for k, v in plain.items():
+        if not _is_traversal(k):
+            result[k] = v
+
+    for base, variants in groups.items():
+        if _is_traversal(base) or base in redundant_summaries or base in result:
             continue
-        val = g.get("n") or g.get("u") or g.get("v")
-        res[b] = None if val in NULLS else val
+        
+        
+        name = variants.get("name") or variants.get("unicode")
+        val  = variants.get("value")
+        v    = name if name else val
+        result[base] = None if v in _NULL_STRINGS else v
 
-    return res
-
-
-def enrich(raw):
-    out = {}
-
-    if m := re.search(r"\(([^)]+)\)", str(raw.get("chipset_unicode", ""))):
-        out["socket"] = m.group(1)
-
-    if m := re.search(r"(DDR\d)", str(raw.get("memory_slots_unicode") or raw.get("bus_unicode")), re.I):
-        out["ram_type"] = m.group(1).upper()
-
-    if isinstance(raw.get("capacity_dimm_quantity_value"), (int, float)):
-        out["module_count"] = int(raw["capacity_dimm_quantity_value"])
-
-    if f := raw.get("format_name") or raw.get("format_unicode"):
-        out["form_factor"] = f
-
-    if isinstance(raw.get("power_value"), (int, float)):
-        out["wattage"] = int(raw["power_value"])
-
-    if isinstance(gs := raw.get("grouped_sockets"), list):
-        out["cooler_sockets"] = [
-            s.get("socket_name") or s.get("unicode")
-            for g in gs if isinstance(g, dict)
-            for s in g.get("sockets", []) if isinstance(s, dict)
-        ]
-
-    if bu := raw.get("bus_unicode"):
-        if bu not in NULLS:
-            out["bus_type"] = str(bu)
-        if re.search(r"nvme|m\.2", str(bu), re.I):
-            out["is_nvme"] = True
-
-    if isinstance(sp := raw.get("storage_ports"), list):
-        out["m2_slots"] = sum(
-            int(p.get("quantity", 1))
-            for p in sp if isinstance(p, dict)
-            and ("m.2" in str(p.get("unicode", "")).lower()
-                 or "nvme" in str(p.get("unicode", "")).lower())
-        ) or None
-
-    return {k: v for k, v in out.items() if v}
+    return result
 
 
-# ---------------- API ----------------
-def browse(category, page=1, size=10, refurbished=False):
-    stores = list(get_stores().keys())
+def _enrich_compat_specs(raw: dict) -> dict:
+    out: dict[str, object] = {}
 
-    params = [
-        ("exclude_refurbished", str(refurbished).lower()),
-        ("page", page),
-        ("page_size", size),
-        *[("stores", s) for s in stores]
-    ]
+    # Socket de la Motherboard -- embebido en el chipset: "AMD B550 (AM4)" -> "AM4"
+    for key in ("chipset_unicode", "chipset_northbridge_unicode"):
+        m = re.search(r"\(([^)]+)\)", str(raw.get(key) or ""))
+        if m:
+            out["socket"] = m.group(1).strip()
+            break
 
-    data = request("GET", f"{BASE}/categories/{category}/browse/", params=params).json()
-    return process(data)
+    # Tipo de RAM (DDR4/DDR5)
+    #   Motherboard: "4x DDR4" en memory_slots_unicode
+    #   Modulo RAM:  "DIMM DDR4 3200 MT/s" en bus_unicode
+    for key in ("memory_slots_unicode", "bus_unicode"):
+        m = re.search(r"(DDR\d)", str(raw.get(key) or ""), re.IGNORECASE)
+        if m:
+            out["ram_type"] = m.group(1).upper()
+            break
 
+    # Numero de modulos del kit de RAM ("1 x 8 GB" -> 1, "2 x 8 GB" -> 2)
+    mc = raw.get("capacity_dimm_quantity_value")
+    if isinstance(mc, (int, float)):
+        out["module_count"] = int(mc)
 
-def process(data):
-    out = {}
+    # Form factor de la Motherboard: "Micro ATX", "ATX", etc.
+    ff = raw.get("format_name") or raw.get("format_unicode")
+    if ff:
+        out["form_factor"] = ff
 
-    for r in data.get("results", []):
-        for e in r.get("product_entries", []):
-            p = e.get("product", {})
-            pid = p.get("id")
-            if not pid:
+    # Wattaje de la PSU: power_value 650 -> wattage 650
+    pw = raw.get("power_value")
+    if isinstance(pw, (int, float)):
+        out["wattage"] = int(pw)
+
+    # Form factor maximo de placa que soporta el Case
+    cf = (raw.get("largest_motherboard_format_format_name")
+          or raw.get("largest_motherboard_format_unicode"))
+    if cf:
+        out["max_motherboard_form_factor"] = cf
+
+    # Sockets soportados por el CPU Cooler (grupos anidados -> lista de nombres)
+    gs = raw.get("grouped_sockets")
+    if isinstance(gs, list):
+        names: list[str] = []
+        for group in gs:
+            if not isinstance(group, dict):
                 continue
+            for s in group.get("sockets") or []:
+                if isinstance(s, dict):
+                    name = s.get("socket_name") or s.get("unicode")
+                    if name:
+                        names.append(str(name))
+        if names:
+            out["cooler_sockets"] = names
 
-            specs = p.get("specs") or {}
-            offer, normal = prices(e)
+    # Tipo de interfaz del Storage (bus_unicode -> bus_type para mostrar en tarjeta)
+    # Tambien aplica a GPU (PCIe) pero es inofensivo guardarlo
+    bu = raw.get("bus_unicode")
+    if bu and str(bu) not in ("", "No posee"):
+        out["bus_type"] = str(bu)
 
-            name = (p.get("name") or "").split("[")[0].split("(")[0].strip()
-            if not name:
+    # NVMe detection para Storage — necesario para chequear slots M.2 del MB
+    if re.search(r"nvme|m\.2", str(raw.get("bus_unicode") or ""), re.IGNORECASE):
+        out["is_nvme"] = True
+
+    # Conteo de slots M.2 de la Motherboard (desde storage_ports array)
+    sp = raw.get("storage_ports")
+    if isinstance(sp, list):
+        m2_count = 0
+        for port in sp:
+            if not isinstance(port, dict):
                 continue
-
-            type_id = str(p.get("type_id") or "unknown")
-
-            cid = component_id(type_id, name)
-
-            out[cid] = {
-                "component_id": cid,
-                "name_model": name,
-                "type_id": type_id,
-                "brand": p.get("brand"),
-                "offer_price": offer,
-                "normal_price": normal,
-                **clean_specs(specs),
-                **enrich(specs),
-            }
+            desc = str(port.get("unicode") or port.get("name") or "").lower()
+            qty = port.get("quantity")
+            if "m.2" in desc or "nvme" in desc:
+                m2_count += int(qty) if isinstance(qty, (int, float)) and qty > 0 else 1
+        if m2_count > 0:
+            out["m2_slots"] = m2_count
 
     return out
 
 
-def prices(e):
-    p = e.get("metadata", {}).get("prices_per_currency")
-    if not p:
-        return None, None
-    f = p[0]
-    return _float(f.get("offer_price")), _float(f.get("normal_price"))
-
-
-def _float(v):
+def _to_float(value) -> float | None:
     try:
-        return float(v)
-    except:
+        return float(value)
+    except (TypeError, ValueError):
         return None
 
 
-def get_stores(limit=100):
-    data = request("GET", f"{BASE}/stores/").json()
-    return {s["id"]: s["name"] for s in data[:limit or None]}
+def _clp_prices(product_entry: dict) -> tuple[float | None, float | None]:
+    prices = product_entry.get("metadata", {}).get("prices_per_currency")
+    if not prices:
+        return None, None
+    first = prices[0]
+    return _to_float(first.get("offer_price")), _to_float(first.get("normal_price"))
 
 
-def get_product_prices(pid):
-    try:
-        data = _get(f"{BASE}/products/available_entities/", ids=pid)
-        ents = data.get("results", [{}])[0].get("entities", [])
+def _get(url: str, **params) -> dict:
+    resp = _SESSION.get(url, params=params)
+    resp.raise_for_status()
+    return resp.json()
 
-        return sorted([
-            {
-                "entity_id": e["id"],
-                "store_id": int(e["store"].split("/")[-2]) if e.get("store") else None,
-                "offer_price": _float(e.get("active_registry", {}).get("offer_price")),
+
+def browse_category(
+    category_id = CATEGORY_CPU,
+    page: int    = 1,
+    page_size: int = 10,
+    exclude_refurbished: bool = True,
+) -> dict:
+    url = f"{_BASE}/categories/{category_id}/browse/"
+    store_ids = list(get_stores().keys())
+    params = [
+        ("exclude_refurbished", str(exclude_refurbished).lower()),
+        ("page", page),
+        ("page_size", page_size),
+    ] + [("stores", s) for s in store_ids]
+    resp = _SESSION.get(url, params=params)
+    resp.raise_for_status()
+    return process_json_response(resp.json())
+
+
+def browse_cpus        (page=1, page_size=200, **kw): return browse_category(CATEGORY_CPU,        page, page_size, **kw)
+def browse_ram         (page=1, page_size=200, **kw): return browse_category(CATEGORY_RAM,        page, page_size, **kw)
+def browse_motherboards(page=1, page_size=200, **kw): return browse_category(CATEGORY_MB,         page, page_size, **kw)
+def browse_gpus        (page=1, page_size=200, **kw): return browse_category(CATEGORY_GPU,        page, page_size, **kw)
+def browse_psu         (page=1, page_size=200, **kw): return browse_category(CATEGORY_PSU,        page, page_size, **kw)
+def browse_cpu_coolers (page=1, page_size=200, **kw): return browse_category(CATEGORY_CPU_COOLER, page, page_size, **kw)
+def browse_fans        (page=1, page_size=200, **kw): return browse_category(CATEGORY_FANS,       page, page_size, **kw)
+def browse_pc_cases    (page=1, page_size=200, **kw): return browse_category(CATEGORY_PC_CASE,    page, page_size, **kw)
+def browse_storage     (page=1, page_size=200, **kw): return browse_category(CATEGORY_STORAGE,    page, page_size, **kw)
+
+
+def process_json_response(json_response: dict) -> dict:
+    results = {}
+    for entry in json_response.get("results", []):
+        for product_entry in entry.get("product_entries", []):
+            product = product_entry.get("product", {})
+            product_id = product.get("id")
+            if product_id is None:
+                continue
+            offer_price, normal_price = _clp_prices(product_entry)
+            results[product_id] = {
+                "name":         product.get("name"),
+                "slug":         product.get("slug"),
+                "picture_url":  product.get("picture_url"),
+                "last_updated": product.get("last_updated"),
+                "normal_price": normal_price,
+                "offer_price":  offer_price,
+                **_clean_specs(product.get("specs") or {}),
+                **_enrich_compat_specs(product.get("specs") or {}),
             }
-            for e in ents
-        ], key=lambda x: x["offer_price"] or float("inf"))
+    return results
 
-    except:
+
+def get_store_info  (store_id):   return _get(f"{_BASE}/stores/{store_id}/")
+def get_product_info(product_id): return _get(f"{_BASE}/products/{product_id}/")
+
+def process_product_prices(entities: list) -> list[dict]:
+    results = []
+    for entity in entities:
+        registry = entity.get("active_registry", {})
+        store_url = entity.get("store", "")
+        store_id = int(store_url.rstrip("/").rsplit("/", 1)[-1]) if store_url else None
+
+        results.append({
+            "entity_id":    entity.get("id"),
+            "store_id":     store_id,
+            "store_url":    store_url,
+            "name":         entity.get("name"),
+            "sku":          entity.get("sku"),
+            "external_url": entity.get("external_url"),
+            "condition":    entity.get("condition"),
+            "is_visible":   entity.get("is_visible"),
+            "normal_price": _to_float(registry.get("normal_price")),
+            "offer_price":  _to_float(registry.get("offer_price")),
+            "is_available": registry.get("is_available"),
+            "last_updated": registry.get("timestamp"),
+            "picture_urls": entity.get("picture_urls", []),
+            "best_coupon":  entity.get("best_coupon"),
+        })
+
+    results.sort(key=lambda x: x["offer_price"] or float("inf"))
+    return results
+
+
+def get_product_prices(product_id: int) -> list[dict]:
+    try:
+        data = _get(
+            f"{_BASE}/products/available_entities/",
+            ids=product_id,
+            exclude_with_monthly_payment=1,
+        )
+        results = data.get("results", [])
+        entities = results[0].get("entities", []) if results else []
+        return process_product_prices(entities)
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching prices for product {product_id}: {e}")
         return []
+
+def get_stores(limit=100) -> dict:
+    resp = requests.get("https://publicapi.solotodo.com/stores/")
+    resp.raise_for_status()
+    
+    priority_ids = {
+        int(s) for s in
+        "8015|3|8279|7289|4913|128|8378|6365|2570|6101|788|2603|8312|3758|7718|201|398|397|755|31|61|193|7|5705|5639|5903|3164|656|6300|8576|7652|4451|1911|88|1580|172|38|2801|6398|8444|9|8147|326|2735|4484|6662|1217|87|27|281|4287|56|1283|7388|1845|197|4814|8543|8180|199|43|8642|3956|4154|294|6563|23|392|887|260|195|225|8477|3395|3362|37|118|39|5144|2339|6233|257|266|3263|3890|4880|11|8148|34|12|953|6299|5177|2471|18|8510|2009|223|2768|4088|194|7487|293|1877|67|47|86|22|1514|3165|955|1086|8213|2670|2438|6464|6134|4121|176|181|4616|167|3032|8114|173|264|6992|170|231|2636|6|280|789|2141|359|14|45|85|8411|7619"
+        .split("|") if s.strip().isdigit()
+    }
+
+    all_stores = resp.json()
+    
+    if limit is None:
+        return {s["id"]: s["name"] for s in all_stores}
+    
+    priority = [s for s in all_stores if s["id"] in priority_ids]
+    others = [s for s in all_stores if s["id"] not in priority_ids]
+    
+    selected = (priority + others)[:limit]
+    
+    return {s["id"]: s["name"] for s in selected}

@@ -25,8 +25,20 @@ Necesita tener instalada la última versión de Docker:
 docker-compose up -d --build
 ```
 
+*(💡 Usuarios de **Windows**: Pueden ejecutar el script `build.bat` para construir y levantar los contenedores, o `run.bat` para solo levantarlos).*
+
 4. Por último, para visualizar la app web, visite la siguiente dirección en su navegador:
 👉 [http://localhost:3000](http://localhost:3000)
+
+#### 🛑 Detener la ejecución
+
+Para detener y apagar los contenedores, ejecute en su terminal:
+
+```bash
+docker-compose down
+```
+
+*(💡 Usuarios de **Windows**: Pueden ejecutar el script `stop.bat` para apagar los contenedores).*
 
 ---
 
@@ -62,6 +74,8 @@ Luego, copie este secreto en la variable de entorno `BETTER_AUTH_SECRET` de su a
 docker-compose down -v
 docker-compose up -d --build
 ```
+
+*(💡 Usuarios de **Windows**: Pueden usar el script `build.bat` el cual ejecuta ambos comandos automáticamente).*
 
 #### ✉️ Ingreso con Email OTP
 

@@ -59,7 +59,18 @@
     "outOfStockToast": "{{count}} component in your build is out of stock",
     "outOfStockToast_other": "{{count}} components in your build are out of stock",
     "onlyCompareTwo": "You can only compare 2 components at a time",
-    "sameTypeOnly": "You can only compare components of the same type"
+    "sameTypeOnly": "You can only compare components of the same type",
+    "sharedBuildLoaded": "Shared build loaded",
+    "sharedBuildNotFound": "Shared build not found",
+    "errorLoadingSharedBuild": "Error loading shared build",
+    "maxLimitReached": "Maximum limit reached for {{type}}",
+    "cannotAdd": "Cannot add {{name}}: {{error}}",
+    "componentUpdated": "{{name}} updated",
+    "componentReplaced": "{{oldName}} replaced by {{newName}}",
+    "componentAdded": "{{name}} added to build",
+    "componentRemoved": "{{name}} removed",
+    "buildLoaded": "Build \"{{name}}\" loaded",
+    "buildCleared": "Build cleared"
   },
   "card": {
     "bestPrice": "Best price",
@@ -209,7 +220,8 @@
     "errorRewritePassword": "Re-enter password",
     "errorPasswordMismatch": "Passwords do not match",
     "errorEnterCurrentPassword": "Enter your current password",
-    "errorInvalidCurrentPassword": "Current password is not valid"
+    "errorInvalidCurrentPassword": "Current password is not valid",
+    "errorInvalidPassword": "Invalid password"
   },
   "login": {
     "versionBeta": "PC Builder — Beta Version",
@@ -280,6 +292,8 @@
   },
   "common": {
     "close": "Close",
-    "confirmDiscard": "Are you sure you want to discard your changes?"
+    "confirmDiscard": "Are you sure you want to discard your changes?",
+    "error": "Error",
+    "serverConnectionError": "Server connection error"
   }
 }

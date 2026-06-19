@@ -60,19 +60,19 @@ export function UserConfig() {
                     return rest;
                   });
                 },
-                onError: () => addToast('Error', 'error'),
+                onError: () => addToast(t('common.error'), 'error'),
               },
             );
             break;
           case 'password':
             const { isValid } = validatePassword(pendingChanges.password);
             if (!isValid) {
-              addToast('Contraseña no válida', 'error');
+              addToast(t('userData.errorInvalidPassword'), 'error');
               break;
             }
 
             if (pendingChanges.password !== pendingChanges.confirmPassword) {
-              addToast('Las contraseñas no coinciden', 'error');
+              addToast(t('userData.errorPasswordMismatch'), 'error');
               break;
             }
 
@@ -87,7 +87,7 @@ export function UserConfig() {
                       return rest;
                     });
                   },
-                  onError: () => addToast('Error', 'error'),
+                  onError: () => addToast(t('common.error'), 'error'),
                 },
               );
             } else {
@@ -104,10 +104,10 @@ export function UserConfig() {
                     return rest;
                   });
                 } else {
-                  addToast('Error', 'error');
+                  addToast(t('common.error'), 'error');
                 }
               } catch (error) {
-                addToast('Error de conexión al servidor', 'error');
+                addToast(t('common.serverConnectionError'), 'error');
               }
             }
             break;

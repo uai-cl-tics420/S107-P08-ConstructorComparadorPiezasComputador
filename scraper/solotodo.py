@@ -73,84 +73,110 @@ def _clean_specs(raw_specs: dict) -> dict:
     return result
 
 
-def _enrich_compat_specs(raw: dict) -> dict:
-    out: dict[str, object] = {}
-
-    # Socket de la Motherboard -- embebido en el chipset: "AMD B550 (AM4)" -> "AM4"
+def _extract_motherboard_socket(raw: dict) -> str | None:
     for key in ("chipset_unicode", "chipset_northbridge_unicode"):
-        m = re.search(r"\(([^)]+)\)", str(raw.get(key) or ""))
-        if m:
-            out["socket"] = m.group(1).strip()
-            break
+        match = re.search(r"\(([^)]+)\)", str(raw.get(key) or ""))
+        if match:
+            return match.group(1).strip()
+    return None
 
-    # Tipo de RAM (DDR4/DDR5)
-    #   Motherboard: "4x DDR4" en memory_slots_unicode
-    #   Modulo RAM:  "DIMM DDR4 3200 MT/s" en bus_unicode
+def _extract_ram_type(raw: dict) -> str | None:
     for key in ("memory_slots_unicode", "bus_unicode"):
-        m = re.search(r"(DDR\d)", str(raw.get(key) or ""), re.IGNORECASE)
-        if m:
-            out["ram_type"] = m.group(1).upper()
-            break
+        match = re.search(r"(DDR\d)", str(raw.get(key) or ""), re.IGNORECASE)
+        if match:
+            return match.group(1).upper()
+    return None
 
-    # Numero de modulos del kit de RAM ("1 x 8 GB" -> 1, "2 x 8 GB" -> 2)
-    mc = raw.get("capacity_dimm_quantity_value")
-    if isinstance(mc, (int, float)):
-        out["module_count"] = int(mc)
+def _extract_ram_module_count(raw: dict) -> int | None:
+    module_count = raw.get("capacity_dimm_quantity_value")
+    if isinstance(module_count, (int, float)):
+        return int(module_count)
+    return None
 
-    # Form factor de la Motherboard: "Micro ATX", "ATX", etc.
-    ff = raw.get("format_name") or raw.get("format_unicode")
-    if ff:
-        out["form_factor"] = ff
+def _extract_motherboard_form_factor(raw: dict) -> str | None:
+    return raw.get("format_name") or raw.get("format_unicode")
 
-    # Wattaje de la PSU: power_value 650 -> wattage 650
-    pw = raw.get("power_value")
-    if isinstance(pw, (int, float)):
-        out["wattage"] = int(pw)
+def _extract_psu_wattage(raw: dict) -> int | None:
+    wattage = raw.get("power_value")
+    if isinstance(wattage, (int, float)):
+        return int(wattage)
+    return None
 
-    # Form factor maximo de placa que soporta el Case
-    cf = (raw.get("largest_motherboard_format_format_name")
-          or raw.get("largest_motherboard_format_unicode"))
-    if cf:
-        out["max_motherboard_form_factor"] = cf
+def _extract_case_max_motherboard_form_factor(raw: dict) -> str | None:
+    return raw.get("largest_motherboard_format_format_name") or raw.get("largest_motherboard_format_unicode")
 
-    # Sockets soportados por el CPU Cooler (grupos anidados -> lista de nombres)
-    gs = raw.get("grouped_sockets")
-    if isinstance(gs, list):
+def _extract_cooler_supported_sockets(raw: dict) -> list[str] | None:
+    grouped_sockets = raw.get("grouped_sockets")
+    if isinstance(grouped_sockets, list):
         names: list[str] = []
-        for group in gs:
+        for group in grouped_sockets:
             if not isinstance(group, dict):
                 continue
-            for s in group.get("sockets") or []:
-                if isinstance(s, dict):
-                    name = s.get("socket_name") or s.get("unicode")
+            for socket_obj in group.get("sockets") or []:
+                if isinstance(socket_obj, dict):
+                    name = socket_obj.get("socket_name") or socket_obj.get("unicode")
                     if name:
                         names.append(str(name))
         if names:
-            out["cooler_sockets"] = names
+            return names
+    return None
 
-    # Tipo de interfaz del Storage (bus_unicode -> bus_type para mostrar en tarjeta)
-    # Tambien aplica a GPU (PCIe) pero es inofensivo guardarlo
-    bu = raw.get("bus_unicode")
-    if bu and str(bu) not in ("", "No posee"):
-        out["bus_type"] = str(bu)
+def _extract_storage_interface_type(raw: dict) -> str | None:
+    bus_unicode = raw.get("bus_unicode")
+    if bus_unicode and str(bus_unicode) not in ("", "No posee"):
+        return str(bus_unicode)
+    return None
 
-    # NVMe detection para Storage — necesario para chequear slots M.2 del MB
-    if re.search(r"nvme|m\.2", str(raw.get("bus_unicode") or ""), re.IGNORECASE):
-        out["is_nvme"] = True
+def _extract_is_nvme(raw: dict) -> bool:
+    return bool(re.search(r"nvme|m\.2", str(raw.get("bus_unicode") or ""), re.IGNORECASE))
 
-    # Conteo de slots M.2 de la Motherboard (desde storage_ports array)
-    sp = raw.get("storage_ports")
-    if isinstance(sp, list):
+def _extract_m2_slots_count(raw: dict) -> int | None:
+    storage_ports = raw.get("storage_ports")
+    if isinstance(storage_ports, list):
         m2_count = 0
-        for port in sp:
+        for port in storage_ports:
             if not isinstance(port, dict):
                 continue
-            desc = str(port.get("unicode") or port.get("name") or "").lower()
-            qty = port.get("quantity")
-            if "m.2" in desc or "nvme" in desc:
-                m2_count += int(qty) if isinstance(qty, (int, float)) and qty > 0 else 1
+            description = str(port.get("unicode") or port.get("name") or "").lower()
+            quantity = port.get("quantity")
+            if "m.2" in description or "nvme" in description:
+                m2_count += int(quantity) if isinstance(quantity, (int, float)) and quantity > 0 else 1
         if m2_count > 0:
-            out["m2_slots"] = m2_count
+            return m2_count
+    return None
+
+def _enrich_compat_specs(raw: dict) -> dict:
+    out: dict[str, object] = {}
+
+    if socket := _extract_motherboard_socket(raw):
+        out["socket"] = socket
+
+    if ram_type := _extract_ram_type(raw):
+        out["ram_type"] = ram_type
+
+    if module_count := _extract_ram_module_count(raw):
+        out["module_count"] = module_count
+
+    if form_factor := _extract_motherboard_form_factor(raw):
+        out["form_factor"] = form_factor
+
+    if wattage := _extract_psu_wattage(raw):
+        out["wattage"] = wattage
+
+    if max_motherboard_form_factor := _extract_case_max_motherboard_form_factor(raw):
+        out["max_motherboard_form_factor"] = max_motherboard_form_factor
+
+    if cooler_sockets := _extract_cooler_supported_sockets(raw):
+        out["cooler_sockets"] = cooler_sockets
+
+    if bus_type := _extract_storage_interface_type(raw):
+        out["bus_type"] = bus_type
+
+    if _extract_is_nvme(raw):
+        out["is_nvme"] = True
+
+    if m2_slots := _extract_m2_slots_count(raw):
+        out["m2_slots"] = m2_slots
 
     return out
 
@@ -171,9 +197,9 @@ def _clp_prices(product_entry: dict) -> tuple[float | None, float | None]:
 
 
 def _get(url: str, **params) -> dict:
-    resp = _SESSION.get(url, params=params)
-    resp.raise_for_status()
-    return resp.json()
+    response = _SESSION.get(url, params=params)
+    response.raise_for_status()
+    return response.json()
 
 
 def browse_category(
@@ -189,9 +215,9 @@ def browse_category(
         ("page", page),
         ("page_size", page_size),
     ] + [("stores", s) for s in store_ids]
-    resp = _SESSION.get(url, params=params)
-    resp.raise_for_status()
-    return process_json_response(resp.json())
+    response = _SESSION.get(url, params=params)
+    response.raise_for_status()
+    return process_json_response(response.json())
 
 
 def browse_cpus        (page=1, page_size=200, **kw): return browse_category(CATEGORY_CPU,        page, page_size, **kw)
@@ -273,8 +299,8 @@ def get_product_prices(product_id: int) -> list[dict]:
         return []
 
 def get_stores(limit=100) -> dict:
-    resp = requests.get("https://publicapi.solotodo.com/stores/")
-    resp.raise_for_status()
+    response = requests.get("https://publicapi.solotodo.com/stores/")
+    response.raise_for_status()
     
     priority_ids = {
         int(s) for s in
@@ -282,7 +308,7 @@ def get_stores(limit=100) -> dict:
         .split("|") if s.strip().isdigit()
     }
 
-    all_stores = resp.json()
+    all_stores = response.json()
     
     if limit is None:
         return {s["id"]: s["name"] for s in all_stores}

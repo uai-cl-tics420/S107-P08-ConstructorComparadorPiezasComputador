@@ -40,14 +40,14 @@ export function useBuildManager(componentTypes: ComponentType[], addToast: (msg:
           if (data && data.components) {
             setBuildComponents(data.components);
             setCurrentBuildId(data.id);
-            addToast('Build compartido cargado', 'success');
+            addToast(t('build.sharedBuildLoaded'), 'success');
             // We should ideally set activeTab='build' but this hook shouldn't know about tabs directly.
             // We can dispatch an event or return a flag. For now, returning currentBuildId changes might suffice or we handle it in App.
           } else {
-            addToast('Build compartido no encontrado', 'error');
+            addToast(t('build.sharedBuildNotFound'), 'error');
           }
         })
-        .catch(() => addToast('Error al cargar build compartido', 'error'));
+        .catch(() => addToast(t('build.errorLoadingSharedBuild'), 'error'));
 
       const url = new URL(window.location.href);
       url.searchParams.delete('share');
@@ -106,7 +106,7 @@ export function useBuildManager(componentTypes: ComponentType[], addToast: (msg:
     let action: 'increment' | 'replace' | 'add';
     if (existing) {
       if (type && existing.quantity >= type.max_quantity) {
-        addToast(`Límite máximo alcanzado para ${component.type_name}`, 'warning');
+        addToast(t('build.maxLimitReached', { type: component.type_name }), 'warning');
         return;
       }
       action = 'increment';
@@ -132,21 +132,21 @@ export function useBuildManager(componentTypes: ComponentType[], addToast: (msg:
       (i) => i.type === 'error' && !currentErrors.has(i.message),
     );
     if (newErrors.length > 0) {
-      addToast(`No se puede agregar ${component.name}: ${newErrors[0]!.message}`, 'error');
+      addToast(t('build.cannotAdd', { name: component.name, error: newErrors[0]!.message }), 'error');
       return;
     }
 
     setBuildComponents(prospective);
-    if (action === 'increment') addToast(`${component.name} actualizado`, 'success');
-    else if (action === 'replace') addToast(`${sameType!.component.name} reemplazado por ${component.name}`, 'success');
-    else addToast(`${component.name} agregado al build`, 'success');
+    if (action === 'increment') addToast(t('build.componentUpdated', { name: component.name }), 'success');
+    else if (action === 'replace') addToast(t('build.componentReplaced', { oldName: sameType!.component.name, newName: component.name }), 'success');
+    else addToast(t('build.componentAdded', { name: component.name }), 'success');
     setActiveTab('build');
   };
 
   const handleRemove = (componentId: string) => {
     const found = buildComponents.find((b) => b.component.id === componentId);
     setBuildComponents((prev) => prev.filter((b) => b.component.id !== componentId));
-    if (found) addToast(`${found.component.name} eliminado`, 'warning');
+    if (found) addToast(t('build.componentRemoved', { name: found.component.name }), 'warning');
   };
 
   return {

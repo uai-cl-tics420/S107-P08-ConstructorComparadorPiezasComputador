@@ -1,5 +1,4 @@
 import os
-import sys
 import uuid
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
@@ -23,19 +22,17 @@ from solotodo import (
 
 load_dotenv()
 
-# MongoDB
 MONGO_USER     = os.getenv("MONGO_USER")
 MONGO_PASSWORD = os.getenv("MONGO_PASSWORD")
 MONGO_HOST     = os.getenv("MONGO_HOST")
 MONGO_PORT     = int(os.getenv("MONGO_PORT"))
 MONGO_DB       = os.getenv("MONGO_DB")
 
-# PostgreSQL
-PG_HOST     = os.getenv("POSTGRES_HOST")
-PG_PORT     = int(os.getenv("POSTGRES_PORT"))
-PG_DB       = os.getenv("POSTGRES_DB")
-PG_USER     = os.getenv("POSTGRES_USER")
-PG_PASSWORD = os.getenv("POSTGRES_PASSWORD")
+POSTGRES_HOST     = os.getenv("POSTGRES_HOST")
+POSTGRES_PORT     = int(os.getenv("POSTGRES_PORT"))
+POSTGRES_DB       = os.getenv("POSTGRES_DB")
+POSTGRES_USER     = os.getenv("POSTGRES_USER")
+POSTGRES_PASSWORD = os.getenv("POSTGRES_PASSWORD")
 
 CATEGORIES = [
     ("CPU",         browse_cpus, 200),
@@ -49,43 +46,62 @@ CATEGORIES = [
     ("Storage",     browse_storage, 200),
 ]
 
-# Workers paralelos para fetch de precios. Más workers = más rápido pero más carga al servidor.
-# Si le pones mucho la pagina te va a rate limitear
-PRICE_WORKERS = 5
+MAX_WORKERS_PREVENT_RATE_LIMIT = 5
 
-DISPLAY_SPECS = {
-    # CPU
+CPU_DISPLAY_SPECS = {
     "core_count": "Cores", "thread_count": "Threads", "tdp": "TDP (W)",
     "base_clock": "Base Clock", "boost_clock": "Boost Clock",
     "socket": "Socket", "gpu": "GPU Integrada",
     "cinebench_r20_single_score": "Cinebench R20 (1T)",
     "cinebench_r20_multi_score": "Cinebench R20 (nT)",
-    # GPU
+}
+
+GPU_DISPLAY_SPECS = {
     "gpu_boost_clock": "Boost Clock", "vram_quantity": "VRAM",
     "gpu_tdp": "TDP (W)", "bus_width": "Bus",
-    # RAM
+    "length": "Largo (mm)",
+}
+
+RAM_DISPLAY_SPECS = {
     "capacity": "Capacidad", "bus_speed": "Velocidad",
     "ram_type": "Tipo", "module_count": "Modulos",
-    # Motherboard
+}
+
+MOTHERBOARD_DISPLAY_SPECS = {
     "chipset": "Chipset", "memory_slots_quantity": "Slots RAM",
-    # Storage
+    "m2_slots": "Slots M.2",
+    "form_factor": "Form Factor",
+}
+
+STORAGE_DISPLAY_SPECS = {
     "capacity_value": "Capacidad", "bus_type": "Interface",
     "read_speed": "Lectura", "write_speed": "Escritura",
-    # PSU
+}
+
+PSU_DISPLAY_SPECS = {
     "wattage": "Watts", "certification": "Certificacion", "is_modular": "Modular",
-    # CPU Cooler
+}
+
+CPU_COOLER_DISPLAY_SPECS = {
     "cooler_sockets": "Sockets",
     "height": "Altura (mm)",
-    # Case
+}
+
+PC_CASE_DISPLAY_SPECS = {
     "max_motherboard_form_factor": "Form Factor",
     "max_cpu_cooler_height": "Alt. máx. Cooler",
     "max_video_card_length": "Largo máx. GPU",
-    # GPU
-    "length": "Largo (mm)",
-    # Motherboard (compat extra)
-    "m2_slots": "Slots M.2",
-    # General
-    "form_factor": "Form Factor",
+}
+
+DISPLAY_SPECS = {
+    **CPU_DISPLAY_SPECS,
+    **GPU_DISPLAY_SPECS,
+    **RAM_DISPLAY_SPECS,
+    **MOTHERBOARD_DISPLAY_SPECS,
+    **STORAGE_DISPLAY_SPECS,
+    **PSU_DISPLAY_SPECS,
+    **CPU_COOLER_DISPLAY_SPECS,
+    **PC_CASE_DISPLAY_SPECS,
 }
 
 
@@ -110,7 +126,6 @@ def extract_brand(product_name: str) -> str:
     return product_name.split()[0]
 
 
-
 ZERO_MEANS_MISSING = {"cinebench_r20_single_score", "cinebench_r20_multi_score"}
 
 
@@ -123,22 +138,11 @@ def clean_specs(product: dict) -> dict:
     return specs
 
 
-def clear_database(mongo_db, pg_cursor, pg_conn):
-    pg_cursor.execute("DELETE FROM public.prices;")
-    pg_cursor.execute("DELETE FROM public.;")
-    pg_conn.commit()
-    mongo_db["components"].delete_many({})
-    mongo_db["brands"].delete_many({})
-    mongo_db["component_types"].delete_many({})
-    print("Cleared existing data from both databases.\n")
-
-
 def main():
     sync_start_time = datetime.now()
     
     print("SoloTodo Scraper - Components + Store Prices")
     print("=" * 60)
-
     
     stores = get_stores(limit=None)
 
@@ -158,20 +162,13 @@ def main():
         host=PG_HOST, port=PG_PORT, database=PG_DB,
         user=PG_USER, password=PG_PASSWORD, sslmode=ssl_mode
     )
-    pg_cursor = pg_conn.cursor()
-
+    postgres_cursor = postgres_conn.cursor()
     
     try:
-        pg_cursor.execute("ALTER TABLE public.prices ADD COLUMN IF NOT EXISTS vendor_name TEXT;")
-        pg_conn.commit()
+        postgres_cursor.execute("ALTER TABLE public.prices ADD COLUMN IF NOT EXISTS vendor_name TEXT;")
+        postgres_conn.commit()
     except Exception:
-        pg_conn.rollback()
-
-    
-    if "--clear" in sys.argv:
-        clear_database(mongo_db, pg_cursor, pg_conn)
-    else:
-        print("Appending to existing data (use --clear to flush databases).\n")
+        postgres_conn.rollback()
 
     brands_cache = {}
     types_cache  = {}
@@ -194,12 +191,10 @@ def main():
 
         products = browse_fn(page=1, page_size=count)
         product_ids = list(products.keys())
-        print(f"  {len(product_ids)} productos. Pidiendo precios en paralelo ({PRICE_WORKERS} workers)...")
+        print(f"  {len(product_ids)} productos. Pidiendo precios en paralelo ({MAX_WORKERS_PREVENT_RATE_LIMIT} workers)...")
 
-        
-        with ThreadPoolExecutor(max_workers=PRICE_WORKERS) as pool:
+        with ThreadPoolExecutor(max_workers=MAX_WORKERS_PREVENT_RATE_LIMIT) as pool:
             price_map = dict(zip(product_ids, pool.map(get_product_prices, product_ids)))
-
         
         for solotodo_id, product in products.items():
             name = product.get("name", "")
@@ -218,7 +213,6 @@ def main():
                     mongo_db["brands"].insert_one({"_id": brand_id, "name": brand_name})
 
             brand_id = brands_cache[brand_name]
-
             
             comp_id = deterministic_uuid("component", str(solotodo_id))
             now = datetime.now()
@@ -252,7 +246,7 @@ def main():
                     "updated_at":   now,
                 })
 
-            pg_cursor.execute(
+            postgres_cursor.execute(
                 "INSERT INTO public.components_mirror (component_id, name_model, type_id, brand_id) "
                 "VALUES (%s, %s, %s, %s) "
                 "ON CONFLICT (component_id) DO UPDATE SET name_model = EXCLUDED.name_model",
@@ -274,7 +268,7 @@ def main():
 
                     store_name = stores.get(store_id, f"Store {store_id}")
 
-                    pg_cursor.execute(
+                    postgres_cursor.execute(
                         "INSERT INTO public.prices "
                         "  (id, component_id, vendor_id, price, vendor_name, recorded_at) "
                         "VALUES (%s, %s, %s, %s, %s, %s) "
@@ -297,7 +291,7 @@ def main():
                     product.get("offer_price") or product.get("normal_price") or 0
                 ))
                 if fallback > 0:
-                    pg_cursor.execute(
+                    postgres_cursor.execute(
                         "INSERT INTO public.prices "
                         "  (id, component_id, vendor_id, price, vendor_name, recorded_at) "
                         "VALUES (%s, %s, %s, %s, %s, %s) "
@@ -317,23 +311,21 @@ def main():
                     total_prices += 1
 
             total_components += 1
-
         
-        pg_conn.commit()
+        postgres_conn.commit()
         cat_elapsed = (datetime.now() - cat_start).total_seconds()
         print(f"  {type_name}: {len(product_ids)} componentes en {cat_elapsed:.1f}s")
-
     
     print("\nCleaning up sold-out items...")
-    pg_cursor.execute(
+    postgres_cursor.execute(
         "DELETE FROM public.prices WHERE recorded_at < %s",
         (sync_start_time,)
     )
-    removed_prices = pg_cursor.rowcount
+    removed_prices = postgres_cursor.rowcount
     
-    pg_conn.commit()
-    pg_cursor.close()
-    pg_conn.close()
+    postgres_conn.commit()
+    postgres_cursor.close()
+    postgres_conn.close()
     mongo_client.close()
 
     print(f"\n{'='*60}")

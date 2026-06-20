@@ -283,7 +283,8 @@ const server = serve({
       async POST(req) {
         const body = await req.json();
         logger.info('POST /api/users/set-password: solicitud recibida');
-        return setUserPassword(body.newPassword, req.headers);
+        const { newPassword } = z.object({ newPassword: textSchema }).parse(body);
+        return setUserPassword(newPassword, req.headers);
       },
     },
   },

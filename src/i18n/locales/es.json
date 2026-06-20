@@ -59,7 +59,18 @@
     "outOfStockToast": "{{count}} componente de tu build está agotado",
     "outOfStockToast_other": "{{count}} componentes de tu build están agotados",
     "onlyCompareTwo": "Solo puedes comparar 2 componentes a la vez",
-    "sameTypeOnly": "Solo puedes comparar componentes del mismo tipo"
+    "sameTypeOnly": "Solo puedes comparar componentes del mismo tipo",
+    "sharedBuildLoaded": "Build compartido cargado",
+    "sharedBuildNotFound": "Build compartido no encontrado",
+    "errorLoadingSharedBuild": "Error al cargar build compartido",
+    "maxLimitReached": "Límite máximo alcanzado para {{type}}",
+    "cannotAdd": "No se puede agregar {{name}}: {{error}}",
+    "componentUpdated": "{{name}} actualizado",
+    "componentReplaced": "{{oldName}} reemplazado por {{newName}}",
+    "componentAdded": "{{name}} agregado al build",
+    "componentRemoved": "{{name}} eliminado",
+    "buildLoaded": "Build \"{{name}}\" cargado",
+    "buildCleared": "Build limpiado"
   },
   "card": {
     "bestPrice": "Mejor precio",
@@ -192,7 +203,7 @@
   },
   "appearance": {
     "title": "Apariencia",
-    "theme": "Theme:",
+    "theme": "Tema:",
     "light": "Claro",
     "dark": "Oscuro",
     "language": "Idioma:"
@@ -209,7 +220,8 @@
     "errorRewritePassword": "Reescriba la contraseña",
     "errorPasswordMismatch": "Las contraseñas no coinciden",
     "errorEnterCurrentPassword": "Ingrese su contraseña actual",
-    "errorInvalidCurrentPassword": "La contraseña actual no es válida"
+    "errorInvalidCurrentPassword": "La contraseña actual no es válida",
+    "errorInvalidPassword": "Contraseña no válida"
   },
   "login": {
     "versionBeta": "PC Builder — Versión Beta",
@@ -280,6 +292,8 @@
   },
   "common": {
     "close": "Cerrar",
-    "confirmDiscard": "¿Estás seguro de que deseas descartar los cambios?"
+    "confirmDiscard": "¿Estás seguro de que deseas descartar los cambios?",
+    "error": "Error",
+    "serverConnectionError": "Error de conexión al servidor"
   }
 }

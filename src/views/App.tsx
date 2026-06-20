@@ -134,13 +134,13 @@ export function App() {
 
   const handleLoadBuild = (build: SavedBuild) => {
     buildManager.setBuildComponents(build.components);
-    addToast(`Build "${build.name}" cargado`, 'success');
+    addToast(t('build.buildLoaded', { name: build.name }), 'success');
     setActiveTab('build');
   };
 
   const handleClearBuild = () => {
     buildManager.setBuildComponents([]);
-    addToast('Build limpiado', 'warning');
+    addToast(t('build.buildCleared'), 'warning');
   };
 
   const handleSearchType = (typeName: string) => {

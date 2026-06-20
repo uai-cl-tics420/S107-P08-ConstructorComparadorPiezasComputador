@@ -142,18 +142,21 @@ def main():
     
     stores = get_stores(limit=None)
 
-    
+
+    is_azure_mongo = "cosmos.azure.com" in MONGO_HOST if MONGO_HOST else False
+    mongo_options = "?tls=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000" if is_azure_mongo else "?authSource=admin"
     mongo_url = (
         f"mongodb://{MONGO_USER}:{MONGO_PASSWORD}"
-        f"@{MONGO_HOST}:{MONGO_PORT}/{MONGO_DB}?authSource=admin"
+        f"@{MONGO_HOST}:{MONGO_PORT}/{MONGO_DB}{mongo_options}"
     )
     mongo_client = MongoClient(mongo_url)
     mongo_db = mongo_client[MONGO_DB]
 
     
+    ssl_mode = "require" if os.getenv("POSTGRES_SSL") == "true" else "prefer"
     pg_conn = psycopg2.connect(
         host=PG_HOST, port=PG_PORT, database=PG_DB,
-        user=PG_USER, password=PG_PASSWORD,
+        user=PG_USER, password=PG_PASSWORD, sslmode=ssl_mode
     )
     pg_cursor = pg_conn.cursor()
 

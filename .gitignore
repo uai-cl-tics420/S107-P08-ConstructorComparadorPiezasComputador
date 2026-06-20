@@ -144,3 +144,9 @@ __pycache__/
 .claude/
 
 .venv/
+
+terraform/
+
+docker-compose.azure.yml
+
+terraform/terraform.tfvars

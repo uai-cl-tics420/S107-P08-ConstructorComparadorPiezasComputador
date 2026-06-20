@@ -35,7 +35,6 @@ db.createCollection('components', {
   },
 });
 db.components.createIndex({ name_model: 1 }, { unique: true });
-db.components.createIndex({ name_model: 'text' });
 db.components.createIndex({ type_id: 1, updated_at: -1 });
 db.components.createIndex({ brand_id: 1, updated_at: -1 });
 db.components.createIndex({ updated_at: -1 });

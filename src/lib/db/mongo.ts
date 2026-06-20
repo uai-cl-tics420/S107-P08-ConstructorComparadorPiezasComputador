@@ -12,7 +12,11 @@ import {
 
 const log = createLogger('mongo');
 
-const mongoUrl = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}?authSource=admin`;
+const isAzure = process.env.MONGO_HOST?.includes('cosmos.azure.com');
+const options = isAzure ? '?tls=true&replicaSet=globaldb&retrywrites=false&maxIdleTimeMS=120000' : '?authSource=admin';
+
+// 2. Construir la URL dinámicamente
+const mongoUrl = `mongodb://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB}${options}`;
 
 const client = new MongoClient(mongoUrl);
 await client.connect();

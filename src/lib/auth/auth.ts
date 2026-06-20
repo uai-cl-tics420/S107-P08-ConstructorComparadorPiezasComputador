@@ -1,4 +1,4 @@
-import { db } from 'mongodb';
+import { db } from '@/lib/db/mongo';
 import { betterAuth } from 'better-auth';
 import { mongodbAdapter } from 'better-auth/adapters/mongodb';
 import { emailOTP } from 'better-auth/plugins';

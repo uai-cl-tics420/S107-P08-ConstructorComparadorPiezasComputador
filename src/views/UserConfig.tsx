@@ -91,24 +91,7 @@ export function UserConfig() {
                 },
               );
             } else {
-              try {
-                const response = await fetch('/api/users/set-password', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ newPassword: pendingChanges.password }),
-                });
-                if (response.ok) {
-                  addToast(t('userConfig.saveChanges') + ' ✓', 'success');
-                  setPendingChanges((prev) => {
-                    const { password, confirmPassword, ...rest } = prev;
-                    return rest;
-                  });
-                } else {
-                  addToast(t('common.error'), 'error');
-                }
-              } catch (error) {
-                addToast(t('common.serverConnectionError'), 'error');
-              }
+              addToast(t('common.error'), 'error');
             }
             break;
           default:

@@ -26,6 +26,9 @@ export const numericIdSchema = z.coerce
   .positive('ID no positivo')
   .max(99999999);
 
+// Frontend schemas
+export const loginView = z.enum(['selection', 'login', 'signon', 'otp']).catch('selection');
+
 // Frontent_types schemas
 export const priceSchema = z.object({
   id: numericIdSchema,

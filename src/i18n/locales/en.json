@@ -238,7 +238,7 @@
         "title": "Create account",
         "sub": "Fill out the form"
       },
-      "OTP": {
+      "otp": {
         "title": "Access key",
         "sub": "Passwordless access"
       }

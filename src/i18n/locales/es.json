@@ -238,7 +238,7 @@
         "title": "Crea tu cuenta",
         "sub": "Completa el formulario"
       },
-      "OTP": {
+      "otp": {
         "title": "Clave de acceso",
         "sub": "Acceso sin contraseña"
       }

@@ -33,12 +33,10 @@ function AnimatedRoutes() {
   const location = useLocation();
   const [config, setConfig] = useState<{ theme: string; language: string }>(() => {
     const themeConfig =
-      localStorage.getItem('theme') ||
-      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
     const languageConfig =
-      SUPPORTED_LANGUAGES.find(
-        (l) => l === (localStorage.getItem('language') || navigator.language.split('-')[0]),
-      ) || 'en';
+      SUPPORTED_LANGUAGES.find((l) => l === (localStorage.getItem('language') || navigator.language.split('-')[0])) ||
+      'en';
     return { theme: themeConfig, language: languageConfig };
   });
 
@@ -61,7 +59,7 @@ function AnimatedRoutes() {
       <AnimatePresence mode='wait'>
         <Routes location={location} key={location.pathname}>
           <Route path='/' element={<App />} />
-          <Route path='/login' element={<LogIn />} />
+          <Route path='/login/:view?' element={<LogIn />} />
           <Route path='/account' element={<UserConfig />} />
         </Routes>
       </AnimatePresence>

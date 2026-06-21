@@ -6,7 +6,7 @@ import SignOnForm from './SignOnForm';
 import LoginMethodSelector from './LoginMethodSelector';
 import OTPSignOn from './OTPSignOn';
 
-export type ViewType = 'selection' | 'login' | 'signon' | 'OTP';
+export type ViewType = 'selection' | 'login' | 'signon' | 'otp';
 
 interface LoginContextType {
   setView: (view: ViewType) => void;
@@ -29,11 +29,12 @@ const viewVariant = {
 
 interface Props {
   onAuthSuccess: () => void;
+  startingView: ViewType;
 }
 
-const LogInSignOnContent = ({ onAuthSuccess }: Props) => {
+const LogInSignOnContent = ({ onAuthSuccess, startingView }: Props) => {
   const { t } = useTranslation();
-  const [view, setView] = useState<ViewType>('selection');
+  const [view, setView] = useState<ViewType>(startingView);
 
   const meta = {
     title: t(`login.views.${view}.title`),
@@ -61,7 +62,7 @@ const LogInSignOnContent = ({ onAuthSuccess }: Props) => {
             {view === 'selection' && <LoginMethodSelector />}
             {view === 'login' && <LogInForm />}
             {view === 'signon' && <SignOnForm />}
-            {view === 'OTP' && <OTPSignOn />}
+            {view === 'otp' && <OTPSignOn />}
           </motion.div>
         </AnimatePresence>
 
@@ -85,4 +86,6 @@ const LogInSignOnContent = ({ onAuthSuccess }: Props) => {
   );
 };
 
-export const LogInSignOn = ({ onAuthSuccess }: Props) => <LogInSignOnContent onAuthSuccess={onAuthSuccess} />;
+export const LogInSignOn = ({ onAuthSuccess, startingView }: Props) => (
+  <LogInSignOnContent onAuthSuccess={onAuthSuccess} startingView={startingView} />
+);

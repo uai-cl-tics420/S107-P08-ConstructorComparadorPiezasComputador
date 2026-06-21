@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { LogInSignOn } from '@/components/LogIn/LogIn_SignOn';
 import { Sun, Moon } from 'lucide-react';
@@ -6,11 +6,15 @@ import { useContext } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ConfigContext } from '@/frontend';
 import '../index.css';
+import { loginView } from '@/utils/inputValidations';
 
 export function LogIn() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { config, setConfig } = useContext(ConfigContext);
+  const { view } = useParams<{ view: string }>();
+
+  const startingView = loginView.parse(view);
 
   const toggleTheme = () => {
     if (!document.startViewTransition) {
@@ -63,6 +67,7 @@ export function LogIn() {
                 sessionStorage.setItem('from_login', 'true');
                 navigate('/');
               }}
+              startingView={startingView}
             />
           </div>
         </div>

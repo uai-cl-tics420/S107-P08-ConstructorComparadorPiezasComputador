@@ -278,15 +278,6 @@ const server = serve({
         }
       },
     },
-
-    '/api/users/set-password': {
-      async POST(req) {
-        const body = await req.json();
-        logger.info('POST /api/users/set-password: solicitud recibida');
-        const { newPassword } = z.object({ newPassword: textSchema }).parse(body);
-        return setUserPassword(newPassword, req.headers);
-      },
-    },
   },
 
   development: process.env.NODE_ENV !== 'production' && {

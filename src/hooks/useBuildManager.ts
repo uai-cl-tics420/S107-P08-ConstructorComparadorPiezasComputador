@@ -29,6 +29,7 @@ export function useBuildManager(
 
   const [currentBuildId, setCurrentBuildId] = useState<string | null>(null);
   const [outOfStockIds, setOutOfStockIds] = useState<Set<string>>(new Set());
+  const [typesIds, setTypesIds] = useState<Record<string, string>>({});
   const notifiedOosRef = useRef<Set<string>>(new Set());
 
   // Restore logic and Shared Build URL logic handled by the caller or here?
@@ -56,6 +57,36 @@ export function useBuildManager(
       url.searchParams.delete('share');
       window.history.replaceState({}, document.title, url.pathname + url.search);
     }
+
+    // Obtain type Ids
+
+    const fetchData = async () => {
+      try {
+        const res = await fetch('/api/component-types', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
+        if (!res.ok) {
+          throw new Error(`Request error, ${res.status}`);
+        }
+
+        const body = await res.json();
+        let types: Record<string, string> = {};
+
+        for (const type of body) {
+          types[type.name] = type.id;
+        }
+
+        setTypesIds(types);
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -101,12 +132,49 @@ export function useBuildManager(
   }, [buildComponents]);
 
   const handleAdd = (component: Component, setActiveTab: (tab: 'search' | 'build') => void) => {
-    const type = componentTypes.find((t) => t.id === component.type_id);
+    const type = componentTypes.find((t) => t.id === component.type_id)!;
     const existing = buildComponents.find((b) => b.component.id === component.id);
     const sameType = buildComponents.find((b) => b.component.type_id === component.type_id);
 
     let prospective: BuildComponent[];
     let action: 'increment' | 'replace' | 'add';
+    let max_quantity: number = type.max_quantity;
+    switch (type.name) {
+      case 'RAM':
+        try {
+          if (typesIds['Motherboard']) {
+            const mb = buildComponents.find((b) => b.component.type_id === typesIds['Motherboard']);
+            const slots = mb!.component.specs!.memory_slots_quantity;
+            max_quantity = typeof slots === 'number' && !isNaN(slots) ? slots : type.max_quantity;
+          } else {
+            throw new Error('Unable to find typeId for max_quantity check');
+          }
+        } catch (error) {
+          max_quantity = type.max_quantity;
+        }
+        console.log(max_quantity);
+        break;
+      case 'Storage':
+        try {
+          if (typesIds['Motherboard']) {
+            const mb = buildComponents.find((b) => b.component.type_id === typesIds['Motherboard']);
+            const slots = mb!.component.specs!.m2_slots;
+            max_quantity = typeof slots === 'number' && !isNaN(slots) ? slots : type.max_quantity;
+          } else {
+            throw new Error('Unable to find typeId for max_quantity check');
+          }
+        } catch (error) {
+          max_quantity = type.max_quantity;
+        }
+        console.log(max_quantity);
+        break;
+
+      default:
+        console.log('defaulted quantity');
+
+        max_quantity = type.max_quantity;
+        console.log(max_quantity);
+    }
     if (existing) {
       if (type && existing.quantity >= type.max_quantity) {
         addToast(t('build.maxLimitReached', { type: component.type_name }), 'warning');

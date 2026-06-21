@@ -124,7 +124,17 @@ export async function getBrands() {
   return docs.map((b) => ({ id: b._id, name: b.name }));
 }
 
-const SINGLE_UNIT_TYPES = new Set(['CPU', 'GPU', 'Motherboard', 'PSU', 'CPU Cooler', 'Case']);
+const SINGLE_UNIT_TYPES = {
+  CPU: 1,
+  GPU: 1,
+  RAM: 4,
+  Motherboard: 1,
+  PSU: 1,
+  'CPU Cooler': 1,
+  Case: 1,
+  Fans: 4,
+  Storage: 2,
+};
 
 export async function getComponentTypes() {
   log.debug('Obteniendo tipos de componentes');
@@ -133,7 +143,7 @@ export async function getComponentTypes() {
   return docs.map((t) => ({
     id: t._id,
     name: t.name,
-    max_quantity: SINGLE_UNIT_TYPES.has(t.name) ? 1 : 4,
+    max_quantity: SINGLE_UNIT_TYPES[t.name as keyof typeof SINGLE_UNIT_TYPES] || 1,
   }));
 }
 

@@ -278,6 +278,24 @@ const server = serve({
         }
       },
     },
+
+    '/api/availability': {
+      async GET() {
+        try {
+          logger.info('GET /api/availability');
+          const res = {
+            otp: process.env.RESEND_API_KEY ? true : false,
+            sso: process.env.GOOGLE_CLIENT_ID ? true : false,
+          };
+          return Response.json(res, { status: 200 });
+        } catch (error) {
+          logger.error('Error comprobando la existencia de credenciales para Google SSO y Resend API', {
+            error: (error as Error).message,
+          });
+          return Response.json({ error: 'Failed to check availability' }, { status: 500 });
+        }
+      },
+    },
   },
 
   development: process.env.NODE_ENV !== 'production' && {

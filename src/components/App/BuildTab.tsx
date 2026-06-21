@@ -5,19 +5,20 @@ import { RecommendationsPanel } from '@/components/RecommendationsPanel';
 import { BuildChecklist } from '@/components/BuildChecklist';
 import { SavedBuildsPanel } from '@/components/SavedBuildsPanel';
 import type { BuildComponent, SavedBuild, Component } from '@/types/Frontend_types';
+import type { BuildRecommendations } from '@/utils/recommendations';
 
 interface BuildTabProps {
   compatibilityIssues: { type: 'error' | 'warning'; message: string }[];
   buildComponents: BuildComponent[];
   currentBuildId: string | null;
   setCurrentBuildId: (id: string) => void;
-  addToast: (msg: string, type: 'success' | 'error' | 'warning' | 'info') => void;
+  addToast: (message: string, type?: 'error' | 'success' | 'warning') => void;
   setShowSaveDialog: (show: boolean) => void;
   handleClearBuild: () => void;
   handleRemove: (id: string) => void;
   handleSearchType: (type: string) => void;
   outOfStockIds: Set<string>;
-  recommendations: any[]; // Or import Recommendations type
+  recommendations: BuildRecommendations | null; // Or import Recommendations type
   recsLoading: boolean;
   handleAdd: (c: Component) => void;
   savedBuilds: SavedBuild[];

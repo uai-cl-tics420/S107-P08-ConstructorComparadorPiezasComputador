@@ -7,12 +7,16 @@ import { useTranslation } from 'react-i18next';
 import { ConfigContext } from '@/frontend';
 import '../index.css';
 import { loginView } from '@/utils/inputValidations';
+import { useToast } from '@/hooks/useToast';
+import { ToastContainer } from '@/components/ToastContainer';
 
 export function LogIn() {
   const navigate = useNavigate();
   const { t } = useTranslation();
   const { config, setConfig } = useContext(ConfigContext);
   const { view } = useParams<{ view: string }>();
+
+  const { toasts, addToast, removeToast } = useToast();
 
   const startingView = loginView.parse(view);
 
@@ -68,6 +72,7 @@ export function LogIn() {
                 navigate('/');
               }}
               startingView={startingView}
+              addToast={addToast}
             />
           </div>
         </div>
@@ -78,6 +83,8 @@ export function LogIn() {
           </p>
         </div>
       </div>
+
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
     </motion.div>
   );
 }

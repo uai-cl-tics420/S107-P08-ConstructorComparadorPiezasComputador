@@ -3,7 +3,10 @@ import { useTranslation } from 'react-i18next';
 import { checkCompatibility } from '@/utils/compatibility';
 import type { Component, ComponentType, BuildComponent } from '@/types/Frontend_types';
 
-export function useBuildManager(componentTypes: ComponentType[], addToast: (msg: string, type: 'success' | 'error' | 'warning' | 'info') => void) {
+export function useBuildManager(
+  componentTypes: ComponentType[],
+  addToast: (message: string, type?: 'error' | 'success' | 'warning') => void,
+) {
   const { t } = useTranslation();
 
   const [buildComponents, setBuildComponents] = useState<BuildComponent[]>(() => {
@@ -138,7 +141,8 @@ export function useBuildManager(componentTypes: ComponentType[], addToast: (msg:
 
     setBuildComponents(prospective);
     if (action === 'increment') addToast(t('build.componentUpdated', { name: component.name }), 'success');
-    else if (action === 'replace') addToast(t('build.componentReplaced', { oldName: sameType!.component.name, newName: component.name }), 'success');
+    else if (action === 'replace')
+      addToast(t('build.componentReplaced', { oldName: sameType!.component.name, newName: component.name }), 'success');
     else addToast(t('build.componentAdded', { name: component.name }), 'success');
     setActiveTab('build');
   };

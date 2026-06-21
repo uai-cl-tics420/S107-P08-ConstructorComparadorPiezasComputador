@@ -5,6 +5,7 @@ import LogInForm from './LogInForm';
 import SignOnForm from './SignOnForm';
 import LoginMethodSelector from './LoginMethodSelector';
 import OTPSignOn from './OTPSignOn';
+import type { Toast } from '@/types/Frontend_types';
 
 export type ViewType = 'selection' | 'login' | 'signon' | 'otp';
 
@@ -30,9 +31,10 @@ const viewVariant = {
 interface Props {
   onAuthSuccess: () => void;
   startingView: ViewType;
+  addToast: (message: string, type?: Toast['type']) => void;
 }
 
-const LogInSignOnContent = ({ onAuthSuccess, startingView }: Props) => {
+const LogInSignOnContent = ({ onAuthSuccess, startingView, addToast }: Props) => {
   const { t } = useTranslation();
   const [view, setView] = useState<ViewType>(startingView);
 
@@ -59,7 +61,7 @@ const LogInSignOnContent = ({ onAuthSuccess, startingView }: Props) => {
 
         <AnimatePresence mode='wait'>
           <motion.div key={view} variants={viewVariant} initial='hidden' animate='visible' exit='exit'>
-            {view === 'selection' && <LoginMethodSelector />}
+            {view === 'selection' && <LoginMethodSelector addToast={addToast} />}
             {view === 'login' && <LogInForm />}
             {view === 'signon' && <SignOnForm />}
             {view === 'otp' && <OTPSignOn />}
@@ -86,6 +88,6 @@ const LogInSignOnContent = ({ onAuthSuccess, startingView }: Props) => {
   );
 };
 
-export const LogInSignOn = ({ onAuthSuccess, startingView }: Props) => (
-  <LogInSignOnContent onAuthSuccess={onAuthSuccess} startingView={startingView} />
+export const LogInSignOn = ({ onAuthSuccess, startingView, addToast }: Props) => (
+  <LogInSignOnContent onAuthSuccess={onAuthSuccess} startingView={startingView} addToast={addToast} />
 );

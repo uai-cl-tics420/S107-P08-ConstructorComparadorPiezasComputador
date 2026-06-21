@@ -158,9 +158,9 @@ def main():
 
     
     ssl_mode = "require" if os.getenv("POSTGRES_SSL") == "true" else "prefer"
-    pg_conn = psycopg2.connect(
-        host=PG_HOST, port=PG_PORT, database=PG_DB,
-        user=PG_USER, password=PG_PASSWORD, sslmode=ssl_mode
+    postgres_conn = psycopg2.connect(
+        host=POSTGRES_HOST, port=POSTGRES_PORT, database=POSTGRES_DB,
+        user=POSTGRES_USER, password=POSTGRES_PASSWORD, sslmode=ssl_mode
     )
     postgres_cursor = postgres_conn.cursor()
     

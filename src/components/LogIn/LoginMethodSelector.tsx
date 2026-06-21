@@ -116,7 +116,7 @@ export default function LoginMethodSelector({
             }
             whileTap={ssoAvailable ? { scale: 0.98 } : {}}
             transition={ssoAvailable ? { duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] } : {}}
-            onClick={ssoAvailable ? handleGoogleLogin : async () => addToast('Servicio no disponible', 'error')}
+            onClick={ssoAvailable ? handleGoogleLogin : async () => addToast(t('login.serviceUnavailable'), 'error')}
             className={`w-full flex items-center justify-center gap-2.5  font-bold font-mono text-xs py-3 rounded-lg ${ssoAvailable ? 'bg-tw-primary hover:bg-tw-primary-highlight text-tw-base transition-colors duration-150 cursor-pointer' : 'bg-tw-primary/80 text-tw-base/70'}`}>
             <GoogleIcon muted={!ssoAvailable} />
             {t('login.continueWithGoogle')}
@@ -145,7 +145,7 @@ export default function LoginMethodSelector({
             variants={itemVariant}
             whileHover={{ scale: otpAvailable ? 1.01 : 1 }}
             whileTap={{ scale: otpAvailable ? 0.98 : 1 }}
-            onClick={otpAvailable ? () => setView('otp') : async () => addToast('Servicio no disponible', 'error')}
+            onClick={otpAvailable ? () => setView('otp') : async () => addToast(t('login.serviceUnavailable'), 'error')}
             className={`w-full font-mono text-xs border py-2.5 rounded-lg border-tw-glass/10 ${otpAvailable ? 'transition-all duration-200 cursor-pointer text-tw-primary-deep hover:border-tw-glass/28 hover:bg-tw-glass/4' : 'text-tw-muted-deep bg-tw-bg'}`}>
             {t('login.continueWithOTP')}
           </motion.button>

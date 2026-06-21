@@ -273,7 +273,8 @@
     "errorCreatingAccount": "Error creating account",
     "errorInvalidOTP": "Incorrect code",
     "errorTooManyAttempts": "Too many attempts. Go back and enter your email again",
-    "errorSendingCode": "Error sending code"
+    "errorSendingCode": "Error sending code",
+    "serviceUnavailable": "Service Unavailable"
   },
   "userConfig": {
     "account": "Account",

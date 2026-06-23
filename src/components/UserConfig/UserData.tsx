@@ -109,7 +109,7 @@ export function UserData() {
             {/* Password */}
             {passwordConfigured && (
               <div className='flex flex-col gap-1'>
-                <label className='text-tw-muted uppercase tracking-wider'>t('userData.changePassword')</label>
+                <label className='text-tw-muted uppercase tracking-wider'>{t('userData.changePassword')}</label>
                 <div className='flex flex-row gap-6'>
                   <div className='flex flex-col'>
                     <input

@@ -26,7 +26,6 @@ const TYPE_ACCENT: Record<string, string> = {
   'CPU Cooler': 'tw-cooler',
 };
 
-
 const KNOWN_SPECS = new Set([
   'core_count',
   'thread_count',
@@ -74,7 +73,6 @@ interface Props {
 export function ComponentDetailModal({ component, onClose, onAdd }: Props) {
   const { t } = useTranslation();
 
-
   const [livePrices, setLivePrices] = useState<Price[] | null>(null);
   const [refreshingPrices, setRefreshingPrices] = useState(false);
   const [imgOk, setImgOk] = useState(true);
@@ -97,9 +95,7 @@ export function ComponentDetailModal({ component, onClose, onAdd }: Props) {
         if (cancelled || !fresh || !Array.isArray(fresh.prices)) return;
         setLivePrices(fresh.prices as Price[]);
       })
-      .catch(() => {
-
-      })
+      .catch(() => {})
       .finally(() => {
         if (!cancelled) setRefreshingPrices(false);
       });
@@ -118,15 +114,14 @@ export function ComponentDetailModal({ component, onClose, onAdd }: Props) {
     : '';
   const accent = component ? (TYPE_ACCENT[component.type_name] ?? 'tw-case') : 'tw-case';
 
-
-const CERTIFICATION_MAP: Record<number, string> = {
-  2: '80 Plus',
-  4: '80 Plus Bronze',
-  5: '80 Plus Silver',
-  80: '80 Plus Gold',
-  6: '80 Plus Platinum',
-  7: '80 Plus Titanium',
-};
+  const CERTIFICATION_MAP: Record<number, string> = {
+    2: '80 Plus',
+    4: '80 Plus Bronze',
+    5: '80 Plus Silver',
+    80: '80 Plus Gold',
+    6: '80 Plus Platinum',
+    7: '80 Plus Titanium',
+  };
 
   function formatValue(key: string, value: unknown): string {
     if (value === null || value === undefined) return '—';
@@ -195,7 +190,7 @@ const CERTIFICATION_MAP: Record<number, string> = {
               {/* Scrollable body */}
               <div className='overflow-y-auto flex-1 px-6 py-4 flex flex-col gap-5'>
                 {component.image_url && imgOk && (
-                  <div className='flex items-center justify-center h-48 bg-white rounded-xl overflow-hidden p-3'>
+                  <div className='flex items-center justify-center h-48 bg-white rounded-xl p-3'>
                     <img
                       src={component.image_url}
                       alt={component.name}

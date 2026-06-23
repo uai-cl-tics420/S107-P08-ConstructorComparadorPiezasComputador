@@ -25,6 +25,7 @@ interface ComponentGridProps {
   compareList: Component[];
   buildComponents: BuildComponent[];
   componentCompatibility: Map<string, { isCompatible: boolean; reasons: ReasonText[] }>;
+  componentReplaces: Set<string>;
 }
 
 export function ComponentGrid({
@@ -45,6 +46,7 @@ export function ComponentGrid({
   compareList,
   buildComponents,
   componentCompatibility,
+  componentReplaces,
 }: ComponentGridProps) {
   const { t } = useTranslation();
 
@@ -113,6 +115,7 @@ export function ComponentGrid({
                 onViewSpecs={setDetailComponent}
                 isSelectedForCompare={compareList.some((x) => x.id === c.id)}
                 buildCompatibility={buildComponents.length > 0 ? componentCompatibility.get(c.id) : null}
+                willReplace={componentReplaces.has(c.id)}
               />
             </motion.div>
           ))}

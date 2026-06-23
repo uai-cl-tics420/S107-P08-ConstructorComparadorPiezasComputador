@@ -78,6 +78,7 @@
     "seeMore": "See {{count}} more",
     "save": "Save ${{amount}}",
     "add": "Add",
+    "replace": "Replace",
     "viewSpecs": "View specifications",
     "removeFromCompare": "Remove from comparison",
     "compare": "Compare",

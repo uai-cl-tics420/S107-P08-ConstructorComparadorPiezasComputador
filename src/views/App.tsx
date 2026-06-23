@@ -60,6 +60,20 @@ export function App() {
     return map;
   }, [catalog.components, buildManager.buildComponents]);
 
+  // IDs de componentes cuyo "Agregar" en realidad reemplazaría a otro componente
+  // del mismo tipo de slot único (CPU, GPU, etc.) ya presente en el build.
+  const replaceableIds = useMemo(() => {
+    const set = new Set<string>();
+    if (buildManager.buildComponents.length === 0) return set;
+    for (const c of catalog.components) {
+      const type = catalog.componentTypes.find((tp) => tp.id === c.type_id);
+      if (type?.max_quantity !== 1) continue;
+      const occupant = buildManager.buildComponents.find((b) => b.component.type_id === c.type_id);
+      if (occupant && occupant.component.id !== c.id) set.add(c.id);
+    }
+    return set;
+  }, [catalog.components, catalog.componentTypes, buildManager.buildComponents]);
+
   const sortedComponents = useMemo(() => {
     if (buildManager.buildComponents.length === 0) return catalog.components;
     return [...catalog.components].sort((a, b) => {
@@ -251,6 +265,7 @@ export function App() {
               compareList={compareList}
               buildComponents={buildManager.buildComponents}
               componentCompatibility={componentCompatibility}
+              componentReplaces={replaceableIds}
             />
           </div>
         )}

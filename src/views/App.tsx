@@ -281,6 +281,7 @@ export function App() {
             handleClearBuild={handleClearBuild}
             handleRemove={buildManager.handleRemove}
             handleSearchType={handleSearchType}
+            setDetailComponent={setDetailComponent}
             outOfStockIds={buildManager.outOfStockIds}
             recommendations={recommendations}
             recsLoading={recsLoading}

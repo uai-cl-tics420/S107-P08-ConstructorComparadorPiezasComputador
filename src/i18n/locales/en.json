@@ -65,6 +65,7 @@
     "errorLoadingSharedBuild": "Error loading shared build",
     "maxLimitReached": "Maximum limit reached for {{type}}",
     "cannotAdd": "Cannot add {{name}}: {{error}}",
+    "addedIncompatible": "{{name}} added, but there's an incompatibility: {{error}}",
     "componentUpdated": "{{name}} updated",
     "componentReplaced": "{{oldName}} replaced by {{newName}}",
     "componentAdded": "{{name}} added to build",

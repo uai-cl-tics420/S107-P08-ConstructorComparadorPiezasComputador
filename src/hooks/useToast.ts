@@ -7,9 +7,12 @@ export function useToast() {
   const addToast = useCallback((message: string, type: Toast['type'] = 'success') => {
     const id = Math.random().toString(36).slice(2);
     setToasts((prev) => [...prev, { id, message, type }]);
+    // Los avisos de error/advertencia (p. ej. incompatibilidades) duran más para
+    // que alcancen a leerse; los de éxito se mantienen breves.
+    const duration = type === 'success' ? 3000 : 7000;
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
-    }, 3000);
+    }, duration);
   }, []);
 
   const removeToast = useCallback((id: string) => {

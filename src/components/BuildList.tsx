@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { X, Plus, TrendingDown } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import type { BuildComponent } from '../types/Frontend_types';
+import type { BuildComponent, Component } from '../types/Frontend_types';
 
 const ALL_TYPES = ['CPU', 'Motherboard', 'RAM', 'GPU', 'Storage', 'Fans', 'CPU Cooler', 'PSU', 'Case'];
 
@@ -21,10 +21,11 @@ interface Props {
   buildComponents: BuildComponent[];
   onRemove: (componentId: string) => void;
   onSearchType?: (typeName: string) => void;
+  onViewDetails?: (component: Component) => void;
   outOfStockIds?: Set<string>;
 }
 
-export function BuildList({ buildComponents, onRemove, onSearchType, outOfStockIds }: Props) {
+export function BuildList({ buildComponents, onRemove, onSearchType, onViewDetails, outOfStockIds }: Props) {
   const { t } = useTranslation();
   const byType = new Map<string, BuildComponent>();
   for (const entry of buildComponents) {
@@ -88,7 +89,10 @@ export function BuildList({ buildComponents, onRemove, onSearchType, outOfStockI
                 initial={{ opacity: 0, x: -24 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.04 }}
-                className={`group relative rounded-lg p-4 transition-all duration-300 ${
+                onClick={() => onViewDetails?.(component)}
+                role={onViewDetails ? 'button' : undefined}
+                title={onViewDetails ? t('card.viewSpecs') : undefined}
+                className={`group relative rounded-lg p-4 transition-all duration-300 ${onViewDetails ? 'cursor-pointer' : ''} ${
                   isOutOfStock
                     ? 'bg-tw-alert/5 border border-tw-alert/40 hover:border-tw-alert/60'
                     : 'bg-tw-base border border-tw-border hover:border-tw-success-highlight/40 hover:shadow-md hover:shadow-tw-success-highlight/10'
@@ -120,7 +124,7 @@ export function BuildList({ buildComponents, onRemove, onSearchType, outOfStockI
                       <motion.button
                         whileHover={{ scale: 1.03 }}
                         whileTap={{ scale: 0.97 }}
-                        onClick={() => onSearchType(typeName)}
+                        onClick={(e) => { e.stopPropagation(); onSearchType(typeName); }}
                         className='mt-2 inline-flex items-center gap-1 text-[0.65rem] font-bold text-tw-alert-highlight hover:text-tw-alert transition-colors'>
                         {t('buildList.seeAlternatives')} →
                       </motion.button>
@@ -145,7 +149,7 @@ export function BuildList({ buildComponents, onRemove, onSearchType, outOfStockI
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
-                      onClick={() => onRemove(component.id)}
+                      onClick={(e) => { e.stopPropagation(); onRemove(component.id); }}
                       className='w-full flex items-center justify-center gap-1 px-2.5 py-1.5 bg-tw-base-highlight hover:bg-tw-alert/20 border border-tw-border hover:border-tw-alert/50 rounded-md text- font-bold text-tw-muted hover:text-tw-alert-highlight transition-all'>
                       <X className='w-3 h-3' />
                       {t('buildList.remove')}

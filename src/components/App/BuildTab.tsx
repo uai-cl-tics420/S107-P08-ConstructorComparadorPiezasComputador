@@ -17,6 +17,7 @@ interface BuildTabProps {
   handleClearBuild: () => void;
   handleRemove: (id: string) => void;
   handleSearchType: (type: string) => void;
+  setDetailComponent: (c: Component) => void;
   outOfStockIds: Set<string>;
   recommendations: BuildRecommendations | null; // Or import Recommendations type
   recsLoading: boolean;
@@ -36,6 +37,7 @@ export function BuildTab({
   handleClearBuild,
   handleRemove,
   handleSearchType,
+  setDetailComponent,
   outOfStockIds,
   recommendations,
   recsLoading,
@@ -120,6 +122,7 @@ export function BuildTab({
           buildComponents={buildComponents}
           onRemove={handleRemove}
           onSearchType={handleSearchType}
+          onViewDetails={setDetailComponent}
           outOfStockIds={outOfStockIds}
         />
 

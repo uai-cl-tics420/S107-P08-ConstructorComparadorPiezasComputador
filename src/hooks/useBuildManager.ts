@@ -194,6 +194,9 @@ export function useBuildManager(
       prospective = [...buildComponents, { component, quantity: 1 }];
     }
 
+    // No se bloquea agregar componentes incompatibles: se permiten igual para no
+    // restringir el uso, y la incompatibilidad se avisa con un toast (que dura más)
+    // además de mostrarse de forma persistente en la vista del build.
     const currentErrors = new Set(
       checkCompatibility(buildComponents, t)
         .filter((i) => i.type === 'error')
@@ -202,16 +205,18 @@ export function useBuildManager(
     const newErrors = checkCompatibility(prospective, t).filter(
       (i) => i.type === 'error' && !currentErrors.has(i.message),
     );
-    if (newErrors.length > 0) {
-      addToast(t('build.cannotAdd', { name: component.name, error: newErrors[0]!.message }), 'error');
-      return;
-    }
 
     setBuildComponents(prospective);
-    if (action === 'increment') addToast(t('build.componentUpdated', { name: component.name }), 'success');
-    else if (action === 'replace')
+
+    if (newErrors.length > 0) {
+      addToast(t('build.addedIncompatible', { name: component.name, error: newErrors[0]!.message }), 'warning');
+    } else if (action === 'increment') {
+      addToast(t('build.componentUpdated', { name: component.name }), 'success');
+    } else if (action === 'replace') {
       addToast(t('build.componentReplaced', { oldName: sameType!.component.name, newName: component.name }), 'success');
-    else addToast(t('build.componentAdded', { name: component.name }), 'success');
+    } else {
+      addToast(t('build.componentAdded', { name: component.name }), 'success');
+    }
     setActiveTab('build');
   };
 

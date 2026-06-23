@@ -65,6 +65,7 @@
     "errorLoadingSharedBuild": "Error al cargar build compartido",
     "maxLimitReached": "Límite máximo alcanzado para {{type}}",
     "cannotAdd": "No se puede agregar {{name}}: {{error}}",
+    "addedIncompatible": "{{name}} agregado, pero hay una incompatibilidad: {{error}}",
     "componentUpdated": "{{name}} actualizado",
     "componentReplaced": "{{oldName}} reemplazado por {{newName}}",
     "componentAdded": "{{name}} agregado al build",

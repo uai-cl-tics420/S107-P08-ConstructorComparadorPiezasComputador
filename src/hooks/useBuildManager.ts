@@ -58,35 +58,14 @@ export function useBuildManager(
       window.history.replaceState({}, document.title, url.pathname + url.search);
     }
 
-    // Obtain type Ids
+    // Write type IDs into array
+    let types: Record<string, string> = {};
 
-    const fetchData = async () => {
-      try {
-        const res = await fetch('/api/component-types', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+    for (const type of componentTypes) {
+      types[type.name] = type.id;
+    }
 
-        if (!res.ok) {
-          throw new Error(`Request error, ${res.status}`);
-        }
-
-        const body = await res.json();
-        let types: Record<string, string> = {};
-
-        for (const type of body) {
-          types[type.name] = type.id;
-        }
-
-        setTypesIds(types);
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    fetchData();
+    setTypesIds(types);
   }, []);
 
   useEffect(() => {

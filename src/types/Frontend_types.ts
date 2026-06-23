@@ -45,6 +45,7 @@ export interface Component {
   model: string;
   prices: Price[];
   specs?: ComponentSpecs;
+  image_url?: string | null;
 }
 
 export interface BuildComponent {

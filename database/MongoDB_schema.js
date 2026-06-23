@@ -26,6 +26,7 @@ db.createCollection('components', {
         brand_id: { bsonType: ['string', 'null'], pattern: UUID_PATTERN },
         name_model: { bsonType: 'string', minLength: 1, maxLength: 160 },
         specs: { bsonType: 'object' },
+        image_url: { bsonType: ['string', 'null'], description: 'URL de la foto del componente (desde el scraper)' },
         requirements: { bsonType: 'object' },
         created_at: { bsonType: 'date' },
         updated_at: { bsonType: 'date' },

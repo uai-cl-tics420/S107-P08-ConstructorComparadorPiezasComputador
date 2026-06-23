@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, ArrowLeftRight, ChevronRight, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
@@ -43,6 +44,7 @@ interface Props {
 
 export function ComponentCard({ component, onAdd, onCompare, onViewSpecs, isSelectedForCompare, buildCompatibility, willReplace }: Props) {
   const { t } = useTranslation();
+  const [imgOk, setImgOk] = useState(true);
 
   const minPrice = Math.min(...component.prices.map((p) => p.price));
   const maxPrice = Math.max(...component.prices.map((p) => p.price));
@@ -129,6 +131,19 @@ const CERTIFICATION_MAP: Record<number, string> = {
             </div>
           )}
         </div>
+
+        {/* Product image (si está disponible) */}
+        {component.image_url && imgOk && (
+          <div className='flex items-center justify-center h-28 bg-white rounded-lg overflow-hidden p-2'>
+            <img
+              src={component.image_url}
+              alt={component.name}
+              loading='lazy'
+              onError={() => setImgOk(false)}
+              className='max-h-full max-w-full object-contain'
+            />
+          </div>
+        )}
 
         {/* Name + brand */}
         <div className='space-y-1.5'>

@@ -77,6 +77,11 @@ export function ComponentDetailModal({ component, onClose, onAdd }: Props) {
 
   const [livePrices, setLivePrices] = useState<Price[] | null>(null);
   const [refreshingPrices, setRefreshingPrices] = useState(false);
+  const [imgOk, setImgOk] = useState(true);
+
+  useEffect(() => {
+    setImgOk(true);
+  }, [component?.id]);
 
   useEffect(() => {
     if (!component) {
@@ -189,6 +194,17 @@ const CERTIFICATION_MAP: Record<number, string> = {
 
               {/* Scrollable body */}
               <div className='overflow-y-auto flex-1 px-6 py-4 flex flex-col gap-5'>
+                {component.image_url && imgOk && (
+                  <div className='flex items-center justify-center h-48 bg-white rounded-xl overflow-hidden p-3'>
+                    <img
+                      src={component.image_url}
+                      alt={component.name}
+                      loading='lazy'
+                      onError={() => setImgOk(false)}
+                      className='max-h-full max-w-full object-contain'
+                    />
+                  </div>
+                )}
                 {displayKeys.length > 0 && (
                   <div className='flex flex-col gap-1'>
                     <p className='font-mono text-[0.5rem] uppercase tracking-widest text-tw-muted-deep mb-2'>

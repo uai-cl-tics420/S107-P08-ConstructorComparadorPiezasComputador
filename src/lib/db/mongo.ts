@@ -42,6 +42,7 @@ async function transformComponent(doc: any) {
     name: doc.name_model,
     model: doc.name_model.split(' ').pop() ?? '',
     specs: doc.specs ?? {},
+    image_url: doc.image_url ?? null,
     prices,
   };
 }

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Plus, ChevronDown, ChevronRight, Loader2, Zap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Component } from '../types/Frontend_types';
-import type { BuildRecommendations, ScoredComponent } from '../utils/recommendations';
+import type { BuildRecommendations, ScoredComponent, ReasonText } from '../utils/recommendations';
 import { bestPrice } from '../utils/recommendations';
 
 function ScoreBar({ value, color }: { value: number; color: string }) {
@@ -67,10 +67,10 @@ function RecommendationCard({ scored, onAdd, rank }: RecommendationCardProps) {
 
       {topReasons.length > 0 && (
         <div className='flex flex-col gap-1'>
-          {topReasons.map((r, i) => (
+          {topReasons.map((reason, i) => (
             <div key={i} className='flex items-start gap-1.5'>
               <span className='text-tw-muted-deep mt-px shrink-0 text-[0.6rem]'>›</span>
-              <span className='font-mono text-[0.6rem] text-tw-muted leading-tight'>{r}</span>
+              <span className='font-mono text-[0.6rem] text-tw-muted leading-tight'>{t(reason.key, reason.params)}</span>
             </div>
           ))}
         </div>
@@ -171,7 +171,7 @@ function CollapsibleSection({ title, subtitle, icon, children, defaultOpen = tru
 
 interface TypeGroupProps {
   typeName: string;
-  reason: string;
+  reason: ReasonText;
   suggestions: ScoredComponent[];
   onAdd: (c: Component) => void;
 }
@@ -189,7 +189,7 @@ function TypeGroup({ typeName, reason, suggestions, onAdd }: TypeGroupProps) {
         <span className={`w-1.5 h-1.5 rounded-full bg-${accent} shrink-0`} />
         <div className='flex-1 min-w-0'>
           <span className='font-mono text-[0.6rem] uppercase tracking-widest text-tw-muted-highlight'>{typeName}</span>
-          <span className='font-mono text-[0.5rem] text-tw-muted-deep ml-2'>— {reason}</span>
+          <span className='font-mono text-[0.5rem] text-tw-muted-deep ml-2'>— {t(reason.key, reason.params)}</span>
         </div>
       </div>
       <div className='grid grid-cols-1 gap-2'>

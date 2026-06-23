@@ -4,19 +4,30 @@ import type { Component, BuildComponent, ComponentSpecs } from '../types/Fronten
 // Exported types
 // ─────────────────────────────────────────────────────────────────
 
+// Los motivos (reasons) se generan en el servidor, que no conoce el idioma
+// del usuario. Por eso se devuelven como una clave i18n + parámetros, y el
+// cliente los traduce con t(reason.key, reason.params).
+export interface ReasonText {
+  key: string;
+  params?: Record<string, string | number | undefined>;
+}
+
+// Helper para construir motivos de forma concisa.
+const r = (key: string, params?: Record<string, string | number | undefined>): ReasonText => ({ key, params });
+
 export interface ScoredComponent {
   component: Component;
   totalScore: number;
   compatibilityScore: number;
   performanceScore: number;
   valueScore: number;
-  reasons: string[];
+  reasons: ReasonText[];
   isCompatible: boolean;
 }
 
 export interface MissingTypeRecommendation {
   type_name: string;
-  reason: string;
+  reason: ReasonText;
   suggestions: ScoredComponent[];
 }
 
@@ -154,7 +165,7 @@ export function scoreValue(component: Component): number {
 export function scoreCompatibility(
   candidate: Component,
   build: BuildComponent[],
-): { score: number; reasons: string[]; isCompatible: boolean } {
+): { score: number; reasons: ReasonText[]; isCompatible: boolean } {
   const cpu    = build.find((b) => b.component.type_name === 'CPU')?.component;
   const mb     = build.find((b) => b.component.type_name === 'Motherboard')?.component;
   const psu    = build.find((b) => b.component.type_name === 'PSU')?.component;
@@ -163,14 +174,14 @@ export function scoreCompatibility(
   const pcCase = build.find((b) => b.component.type_name === 'Case')?.component;
   const ram    = build.find((b) => b.component.type_name === 'RAM')?.component;
 
-  const reasons: string[] = [];
+  const reasons: ReasonText[] = [];
   let checks    = 0;
   let matches   = 0;
   let hardFails = 0;
 
-  const pass = (reason: string) => { checks++; matches++;      reasons.push(reason); };
-  const fail = (reason?: string) => { checks++; hardFails++;   if (reason) reasons.push(reason); };
-  const soft = (reason?: string) => { checks++; matches += 0.5; if (reason) reasons.push(reason); };
+  const pass = (reason: ReasonText) => { checks++; matches++;      reasons.push(reason); };
+  const fail = (reason?: ReasonText) => { checks++; hardFails++;   if (reason) reasons.push(reason); };
+  const soft = (reason?: ReasonText) => { checks++; matches += 0.5; if (reason) reasons.push(reason); };
 
   const type = candidate.type_name;
 
@@ -181,21 +192,21 @@ export function scoreCompatibility(
       const ms = str(mb.specs, 'socket');
       if (cs && ms) {
         normSocket(cs) === normSocket(ms)
-          ? pass(`Socket ${cs} compatible con tu Motherboard`)
-          : fail(`Socket ${cs} ≠ ${ms} de tu Motherboard`);
+          ? pass(r('reason.cpuSocketOkMb', { socket: cs }))
+          : fail(r('reason.cpuSocketFailMb', { socket: cs, other: ms }));
       }
     }
     if (ram) {
       const cd = str(candidate.specs, 'ram_type')?.toUpperCase();
       const rd = str(ram.specs, 'ram_type')?.toUpperCase();
-      if (cd && rd) { cd === rd ? pass(`Soporta ${cd} como tu RAM`) : fail(); }
+      if (cd && rd) { cd === rd ? pass(r('reason.supportsRam', { ram: cd })) : fail(); }
     }
     if (cooler) {
       const supported = coolerSupportsSocket(cooler.specs, str(candidate.specs, 'socket'));
       if (supported !== null) {
         supported
-          ? pass(`Tu Cooler es compatible con el socket`)
-          : fail(`Tu Cooler no soporta el socket de este CPU`);
+          ? pass(r('reason.coolerSocketOk'))
+          : fail(r('reason.coolerSocketFail'));
       }
     }
   }
@@ -207,22 +218,22 @@ export function scoreCompatibility(
       const ms = str(candidate.specs, 'socket');
       if (cs && ms) {
         normSocket(cs) === normSocket(ms)
-          ? pass(`Socket ${ms} compatible con tu CPU`)
-          : fail(`Socket ${ms} ≠ ${cs} de tu CPU`);
+          ? pass(r('reason.mbSocketOkCpu', { socket: ms }))
+          : fail(r('reason.mbSocketFailCpu', { socket: ms, other: cs }));
       }
     }
     if (ram) {
       const rd = str(ram.specs, 'ram_type')?.toUpperCase();
       const md = str(candidate.specs, 'ram_type')?.toUpperCase();
-      if (rd && md) { rd === md ? pass(`Soporta ${md} como tu RAM`) : fail(); }
+      if (rd && md) { rd === md ? pass(r('reason.supportsRam', { ram: md })) : fail(); }
     }
     if (pcCase) {
       const cff = str(pcCase.specs, 'max_motherboard_form_factor');
       const mff = str(candidate.specs, 'form_factor');
       if (cff && mff) {
         ffRank(mff) <= ffRank(cff)
-          ? pass(`Form Factor ${mff} cabe en tu Case`)
-          : fail(`Form Factor ${mff} no cabe en tu Case`);
+          ? pass(r('reason.mbFitsCase', { ff: mff }))
+          : fail(r('reason.mbNotFitCase', { ff: mff }));
       }
     }
   }
@@ -234,8 +245,8 @@ export function scoreCompatibility(
       const rd = str(candidate.specs, 'ram_type')?.toUpperCase();
       if (cd && rd) {
         cd === rd
-          ? pass(`${rd} compatible con tu CPU`)
-          : fail(`${rd} incompatible con tu CPU (necesita ${cd})`);
+          ? pass(r('reason.ramOkCpu', { ram: rd }))
+          : fail(r('reason.ramFailCpu', { ram: rd, needs: cd }));
       }
     }
     if (mb) {
@@ -251,8 +262,8 @@ export function scoreCompatibility(
           .filter((b) => b.component.type_name === 'RAM' && b.component.id !== candidate.id)
           .reduce((sum, b) => sum + (num(b.component.specs, 'module_count') ?? 1) * b.quantity, 0);
         otherModules + candModules <= slots
-          ? pass(`Cabe en los ${slots} slots de RAM de tu Motherboard`)
-          : fail(`${otherModules + candModules} módulos exceden los ${slots} slots de tu Motherboard`);
+          ? pass(r('reason.ramFitsSlots', { slots }))
+          : fail(r('reason.ramExceedSlots', { modules: otherModules + candModules, slots }));
       }
     }
   }
@@ -263,16 +274,16 @@ export function scoreCompatibility(
       const ct = num(candidate.specs, 'tdp');
       const pt = num(cpu.specs, 'tdp');
       if (ct && pt) {
-        if (ct >= pt * 1.2)   pass(`${ct} W con margen sobre tu CPU (${pt} W)`);
-        else if (ct >= pt)    soft(`${ct} W — margen justo para tu CPU (${pt} W)`);
-        else                  fail(`${ct} W insuficiente para tu CPU (${pt} W)`);
+        if (ct >= pt * 1.2)   pass(r('reason.coolerMargin', { cooler: ct, cpu: pt }));
+        else if (ct >= pt)    soft(r('reason.coolerTight', { cooler: ct, cpu: pt }));
+        else                  fail(r('reason.coolerInsufficient', { cooler: ct, cpu: pt }));
       }
       const ps = str(cpu.specs, 'socket');
       const supported = coolerSupportsSocket(candidate.specs, ps);
       if (supported !== null) {
         supported
-          ? pass(`Compatible con socket ${ps}`)
-          : fail(`No soporta el socket ${ps} de tu CPU`);
+          ? pass(r('reason.socketCompatible', { socket: ps ?? '' }))
+          : fail(r('reason.notSupportSocketCpu', { socket: ps ?? '' }));
       }
     }
     if (pcCase) {
@@ -280,8 +291,8 @@ export function scoreCompatibility(
       const maxH    = num(pcCase.specs, 'max_cpu_cooler_height');
       if (coolerH !== null && maxH !== null) {
         coolerH <= maxH
-          ? pass(`${coolerH}mm — cabe en tu Case (máx. ${maxH}mm)`)
-          : fail(`${coolerH}mm no cabe en tu Case (máx. ${maxH}mm)`);
+          ? pass(r('reason.coolerFitsCase', { height: coolerH, max: maxH }))
+          : fail(r('reason.coolerNotFitCase', { height: coolerH, max: maxH }));
       }
     }
   }
@@ -294,11 +305,11 @@ export function scoreCompatibility(
     const w      = num(candidate.specs, 'wattage');
     if (w) {
       if (total > 0) {
-        if      (w >= total * 1.3) pass(`${w} W — margen ideal para tu build`);
-        else if (w >= total * 1.1) soft(`${w} W — margen ajustado para tu build`);
-        else                       fail(`${w} W insuficiente (CPU ${cpuTdp} W + GPU ${gpuTdp} W)`);
+        if      (w >= total * 1.3) pass(r('reason.psuIdeal', { w }));
+        else if (w >= total * 1.1) soft(r('reason.psuTight', { w }));
+        else                       fail(r('reason.psuInsufficient', { w, cpuTdp, gpuTdp }));
       } else {
-        reasons.push(`${w} W`);
+        reasons.push(r('reason.watts', { w }));
       }
     }
   }
@@ -311,8 +322,8 @@ export function scoreCompatibility(
       const gTdp   = num(candidate.specs, 'gpu_tdp') ?? 0;
       if (pw > 0 && cpuTdp + gTdp > 0) {
         pw >= (cpuTdp + gTdp) * 1.3
-          ? pass(`Tu PSU de ${pw} W es suficiente`)
-          : fail(`Tu PSU de ${pw} W puede ser insuficiente`);
+          ? pass(r('reason.psuEnough', { w: pw }))
+          : fail(r('reason.psuMaybe', { w: pw }));
       }
     }
     if (pcCase) {
@@ -320,14 +331,14 @@ export function scoreCompatibility(
       const maxLen = num(pcCase.specs, 'max_video_card_length');
       if (gpuLen !== null && maxLen !== null) {
         gpuLen <= maxLen
-          ? pass(`${gpuLen}mm — cabe en tu Case (máx. ${maxLen}mm)`)
-          : fail(`${gpuLen}mm no cabe en tu Case (máx. ${maxLen}mm)`);
+          ? pass(r('reason.gpuFitsCase', { len: gpuLen, max: maxLen }))
+          : fail(r('reason.gpuNotFitCase', { len: gpuLen, max: maxLen }));
       }
     }
     const gTdp = num(candidate.specs, 'gpu_tdp');
     const vram  = num(candidate.specs, 'vram_quantity');
-    if (gTdp) reasons.push(`${gTdp} W TDP`);
-    if (vram)  reasons.push(`${vram} GB VRAM`);
+    if (gTdp) reasons.push(r('reason.gpuTdp', { w: gTdp }));
+    if (vram)  reasons.push(r('reason.vram', { gb: vram }));
   }
 
   // ── Case ─────────────────────────────────────────────────────
@@ -337,8 +348,8 @@ export function scoreCompatibility(
       const cff  = str(candidate.specs, 'max_motherboard_form_factor');
       if (mff && cff) {
         ffRank(mff) <= ffRank(cff)
-          ? pass(`Soporta hasta ${cff} (tu MB es ${mff})`)
-          : fail(`No soporta el Form Factor ${mff} de tu Motherboard`);
+          ? pass(r('reason.caseSupportsMb', { ff: cff, mbFf: mff }))
+          : fail(r('reason.caseNotSupportMb', { ff: mff }));
       }
     }
     if (gpu) {
@@ -346,8 +357,8 @@ export function scoreCompatibility(
       const maxLen = num(candidate.specs, 'max_video_card_length');
       if (gpuLen !== null && maxLen !== null) {
         gpuLen <= maxLen
-          ? pass(`Tu GPU de ${gpuLen}mm cabe (máx. ${maxLen}mm)`)
-          : fail(`Tu GPU de ${gpuLen}mm no cabe (máx. ${maxLen}mm)`);
+          ? pass(r('reason.caseGpuFits', { len: gpuLen, max: maxLen }))
+          : fail(r('reason.caseGpuNotFit', { len: gpuLen, max: maxLen }));
       }
     }
     if (cooler) {
@@ -355,8 +366,8 @@ export function scoreCompatibility(
       const maxH    = num(candidate.specs, 'max_cpu_cooler_height');
       if (coolerH !== null && maxH !== null) {
         coolerH <= maxH
-          ? pass(`Tu Cooler de ${coolerH}mm cabe (máx. ${maxH}mm)`)
-          : fail(`Tu Cooler de ${coolerH}mm no cabe (máx. ${maxH}mm)`);
+          ? pass(r('reason.caseCoolerFits', { height: coolerH, max: maxH }))
+          : fail(r('reason.caseCoolerNotFit', { height: coolerH, max: maxH }));
       }
     }
   }
@@ -372,20 +383,20 @@ export function scoreCompatibility(
                     && b.component.id !== candidate.id)
           .length;
         usedSlots < m2Slots
-          ? pass(`Slot M.2 disponible en tu Motherboard (${usedSlots + 1}/${m2Slots})`)
-          : fail(`Tu Motherboard no tiene más slots M.2 libres (${m2Slots}/${m2Slots})`);
+          ? pass(r('reason.m2Available', { used: usedSlots + 1, total: m2Slots }))
+          : fail(r('reason.m2Full', { total: m2Slots }));
       }
     }
-    const r = num(candidate.specs, 'read_speed');
-    const c = num(candidate.specs, 'capacity_value');
-    if (r) reasons.push(`${r.toLocaleString('es-CL')} MB/s lectura`);
-    if (c) reasons.push(`${c} GB`);
+    const readSpeed = num(candidate.specs, 'read_speed');
+    const capacity = num(candidate.specs, 'capacity_value');
+    if (readSpeed) reasons.push(r('reason.readSpeed', { speed: readSpeed.toLocaleString('es-CL') }));
+    if (capacity) reasons.push(r('reason.capacityGb', { gb: capacity }));
   }
 
   const isCompatible = hardFails === 0;
   const compScore    = checks === 0 ? 0.7 : isCompatible ? Math.min(1, matches / checks) : 0;
 
-  if (reasons.length === 0 && isCompatible) reasons.push('Compatible con tu build');
+  if (reasons.length === 0 && isCompatible) reasons.push(r('reason.compatibleBuild'));
 
   return { score: compScore, reasons, isCompatible };
 }
@@ -445,7 +456,7 @@ export function getMissingTypes(build: BuildComponent[]): string[] {
   return ESSENTIAL_TYPES.filter((t) => !present.has(t));
 }
 
-export function getMissingTypeReason(typeName: string, build: BuildComponent[]): string {
+export function getMissingTypeReason(typeName: string, build: BuildComponent[]): ReasonText {
   const cpu = build.find((b) => b.component.type_name === 'CPU')?.component;
   const mb  = build.find((b) => b.component.type_name === 'Motherboard')?.component;
   const gpu = build.find((b) => b.component.type_name === 'GPU')?.component;
@@ -454,38 +465,40 @@ export function getMissingTypeReason(typeName: string, build: BuildComponent[]):
   const gpuTdp = num(gpu?.specs, 'gpu_tdp') ?? 0;
 
   switch (typeName) {
-    case 'CPU':
-      return mb
-        ? `Compatible con socket ${str(mb.specs, 'socket') ?? 'de tu Motherboard'}`
-        : 'El corazón del build';
-    case 'Motherboard':
-      return cpu
-        ? `Compatible con socket ${str(cpu.specs, 'socket') ?? 'de tu CPU'}`
-        : 'Base del sistema';
+    case 'CPU': {
+      if (!mb) return r('reason.cpuHeart');
+      const socket = str(mb.specs, 'socket');
+      return socket ? r('reason.socketCompatible', { socket }) : r('reason.socketCompatibleMb');
+    }
+    case 'Motherboard': {
+      if (!cpu) return r('reason.systemBase');
+      const socket = str(cpu.specs, 'socket');
+      return socket ? r('reason.socketCompatible', { socket }) : r('reason.socketCompatibleCpu');
+    }
     case 'RAM':
-      if (cpu) return `${str(cpu.specs, 'ram_type') ?? 'RAM'} compatible con tu CPU`;
-      if (mb)  return `${str(mb.specs, 'ram_type') ?? 'RAM'} compatible con tu Motherboard`;
-      return 'Memoria del sistema';
+      if (cpu) return r('reason.ramOkCpu', { ram: str(cpu.specs, 'ram_type') ?? 'RAM' });
+      if (mb)  return r('reason.ramOkMb', { ram: str(mb.specs, 'ram_type') ?? 'RAM' });
+      return r('reason.systemMemory');
     case 'CPU Cooler':
       return cpu
-        ? `Disipación mínima ${Math.ceil(cpuTdp * 1.2)} W para tu CPU`
-        : 'Refrigeración del procesador';
+        ? r('reason.coolerMinDissipation', { w: Math.ceil(cpuTdp * 1.2) })
+        : r('reason.cpuCooling');
     case 'PSU':
       return cpuTdp + gpuTdp > 0
-        ? `Mínimo ${Math.ceil((cpuTdp + gpuTdp) * 1.3)} W recomendado`
-        : 'Fuente de poder del sistema';
+        ? r('reason.psuMinRecommended', { w: Math.ceil((cpuTdp + gpuTdp) * 1.3) })
+        : r('reason.systemPsu');
     case 'GPU':
-      return 'Tarjeta gráfica para tu build';
+      return r('reason.gpuForBuild');
     case 'Storage':
-      return 'Almacenamiento para el sistema operativo y datos';
+      return r('reason.storageForSystem');
     case 'Fans':
-      return 'Ventiladores para refrigeración del gabinete';
+      return r('reason.fansForCooling');
     case 'Case':
       return mb
-        ? `Soporta ${str(mb.specs, 'form_factor') ?? 'el Form Factor de tu Motherboard'}`
-        : 'Gabinete del sistema';
+        ? r('reason.caseSupportsFf', { ff: str(mb.specs, 'form_factor') ?? 'Form Factor' })
+        : r('reason.systemCase');
     default:
-      return `Agregar ${typeName}`;
+      return r('reason.addType', { type: typeName });
   }
 }
 

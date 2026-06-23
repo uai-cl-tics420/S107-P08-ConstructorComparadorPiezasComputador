@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import type { BuildComponent, CompatibilityIssue } from "../types/Frontend_types";
 
 // ─────────────────────────────────────────────────────────────────
@@ -114,7 +115,7 @@ function gpuPerfTier(gpu: { specs?: Record<string, unknown> } | undefined): numb
 // ─────────────────────────────────────────────────────────────────
 // CHECK PRINCIPAL
 // ─────────────────────────────────────────────────────────────────
-export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[] {
+export function checkCompatibility(build: BuildComponent[], t: TFunction): CompatibilityIssue[] {
   const issues: CompatibilityIssue[] = [];
 
   const cpu            = build.find(b => b.component.type_name === "CPU")?.component;
@@ -136,7 +137,7 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
     if (cpuSocket && mbSocket && normSocket(cpuSocket) !== normSocket(mbSocket)) {
       issues.push({
         type: "error",
-        message: `CPU usa socket ${cpuSocket} pero la Motherboard es ${mbSocket} — son incompatibles`,
+        message: t('compat.cpuMbSocket', { cpuSocket, mbSocket }),
       });
     }
   }
@@ -150,7 +151,7 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
     if (cpuDdr && ramDdr && cpuDdr.toUpperCase() !== ramDdr.toUpperCase()) {
       issues.push({
         type: "error",
-        message: `CPU soporta ${ddrLabel(cpuDdr)} pero la RAM es ${ddrLabel(ramDdr)}`,
+        message: t('compat.cpuRamDdr', { cpu: ddrLabel(cpuDdr), ram: ddrLabel(ramDdr) }),
       });
     }
   }
@@ -164,7 +165,7 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
     if (mbDdr && ramDdr && mbDdr.toUpperCase() !== ramDdr.toUpperCase()) {
       issues.push({
         type: "error",
-        message: `Motherboard soporta ${ddrLabel(mbDdr)} pero la RAM es ${ddrLabel(ramDdr)}`,
+        message: t('compat.mbRamDdr', { mb: ddrLabel(mbDdr), ram: ddrLabel(ramDdr) }),
       });
     }
   }
@@ -183,12 +184,12 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
       if (totalModules > slots) {
         issues.push({
           type: "error",
-          message: `Tienes ${totalModules} módulos de RAM pero la Motherboard solo tiene ${slots} slot${slots > 1 ? 's' : ''}`,
+          message: t('compat.ramModulesExceedSlots', { modules: totalModules, count: slots }),
         });
       } else if (totalModules === slots) {
         issues.push({
           type: "warning",
-          message: `Estás usando los ${slots} slots de RAM al máximo — no podrás ampliar memoria sin reemplazar módulos`,
+          message: t('compat.ramSlotsMaxed', { slots }),
         });
       }
     }
@@ -204,12 +205,12 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
       if (coolerTdp < cpuTdp) {
         issues.push({
           type: "error",
-          message: `El CPU Cooler aguanta ${coolerTdp}W pero el CPU consume ${cpuTdp}W — el sistema se sobrecalentará`,
+          message: t('compat.coolerInsufficient', { coolerTdp, cpuTdp }),
         });
       } else if (coolerTdp < cpuTdp * 1.2) {
         issues.push({
           type: "warning",
-          message: `El CPU Cooler (${coolerTdp}W) tiene muy poco margen sobre el CPU (${cpuTdp}W) — bajo carga sostenida puede tener problemas`,
+          message: t('compat.coolerTightMargin', { coolerTdp, cpuTdp }),
         });
       }
     }
@@ -226,7 +227,7 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
       if (!supported.includes(normSocket(cpuSocket))) {
         issues.push({
           type: "error",
-          message: `El CPU Cooler no soporta el socket ${cpuSocket} del CPU (soporta: ${coolerSockets.join(', ')})`,
+          message: t('compat.coolerSocketUnsupported', { socket: cpuSocket, supported: coolerSockets.join(', ') }),
         });
       }
     }
@@ -244,7 +245,7 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
       if (caseRank !== -1 && mbRank !== -1 && mbRank > caseRank) {
         issues.push({
           type: "error",
-          message: `El Case solo soporta hasta ${ffLabel(caseMaxFF)} pero la Motherboard es ${ffLabel(mbFF)} — no cabe`,
+          message: t('compat.caseMbFormFactor', { caseFF: ffLabel(caseMaxFF), mbFF: ffLabel(mbFF) }),
         });
       }
     }
@@ -265,7 +266,7 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
       if (caseIsITX && coolerIsTower) {
         issues.push({
           type: "warning",
-          message: `El Case es tipo ${ffLabel(caseCoolerFF)} y el Cooler es ${ffLabel(coolerFF)} — verifica que el cooler entre en el case`,
+          message: t('compat.caseCoolerFormFactor', { caseFF: ffLabel(caseCoolerFF), coolerFF: ffLabel(coolerFF) }),
         });
       }
     }
@@ -289,12 +290,12 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
         if (psuWatts < minimum) {
           issues.push({
             type: "error",
-            message: `PSU de ${psuWatts}W es insuficiente para CPU (${cpuTdp}W) + GPU (${gpuTdp}W) — necesitas mínimo ${minimum}W`,
+            message: t('compat.psuInsufficient', { psu: psuWatts, cpuTdp, gpuTdp, minimum }),
           });
         } else if (psuWatts < recommended) {
           issues.push({
             type: "warning",
-            message: `PSU de ${psuWatts}W es ajustada — se recomiendan ${recommended}W para CPU+GPU con margen de seguridad`,
+            message: t('compat.psuTight', { psu: psuWatts, recommended }),
           });
         }
       }
@@ -307,7 +308,7 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
   if (mb && !cpu) {
     issues.push({
       type: "warning",
-      message: `Tienes Motherboard pero no tienes CPU — recuerda agregar un procesador`,
+      message: t('compat.noCpu'),
     });
   }
 
@@ -321,7 +322,7 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
     if (!isBoxed) {
       issues.push({
         type: "warning",
-        message: `No tienes CPU Cooler — verifica si el CPU incluye uno o agrega uno por separado`,
+        message: t('compat.noCooler'),
       });
     }
   }
@@ -332,7 +333,7 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
   if (!psu && (cpu || gpu)) {
     issues.push({
       type: "warning",
-      message: `No tienes PSU en el build — agrega una fuente de poder`,
+      message: t('compat.noPsu'),
     });
   }
 
@@ -346,12 +347,12 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
       if (gpuLen > maxLen) {
         issues.push({
           type: "error",
-          message: `GPU de ${gpuLen}mm no cabe en el Case (máx. ${maxLen}mm)`,
+          message: t('compat.gpuTooLong', { len: gpuLen, max: maxLen }),
         });
       } else if (gpuLen > maxLen - 20) {
         issues.push({
           type: "warning",
-          message: `GPU de ${gpuLen}mm — solo ${maxLen - gpuLen}mm de margen en el Case (máx. ${maxLen}mm)`,
+          message: t('compat.gpuTightFit', { len: gpuLen, margin: maxLen - gpuLen, max: maxLen }),
         });
       }
     }
@@ -367,12 +368,12 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
       if (coolerH > maxH) {
         issues.push({
           type: "error",
-          message: `CPU Cooler de ${coolerH}mm no cabe en el Case (máx. ${maxH}mm)`,
+          message: t('compat.coolerTooTall', { height: coolerH, max: maxH }),
         });
       } else if (coolerH > maxH - 10) {
         issues.push({
           type: "warning",
-          message: `CPU Cooler de ${coolerH}mm — solo ${maxH - coolerH}mm de margen en el Case (máx. ${maxH}mm)`,
+          message: t('compat.coolerTightHeight', { height: coolerH, margin: maxH - coolerH, max: maxH }),
         });
       }
     }
@@ -390,7 +391,7 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
       if (nvmeCount > m2Slots) {
         issues.push({
           type: "error",
-          message: `Tienes ${nvmeCount} SSD NVMe pero tu Motherboard solo tiene ${m2Slots} slot${m2Slots > 1 ? 's' : ''} M.2`,
+          message: t('compat.nvmeExceedSlots', { nvme: nvmeCount, count: m2Slots }),
         });
       }
     }
@@ -410,13 +411,13 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
         // GPU bastante más potente que el CPU → el CPU limita a la GPU
         issues.push({
           type: "warning",
-          message: `Posible cuello de botella: la GPU es bastante más potente que el CPU — en juegos el CPU podría limitar el rendimiento de la tarjeta (estimación)`,
+          message: t('compat.bottleneckGpu'),
         });
       } else if (gap <= -2) {
         // CPU bastante más potente que la GPU → la GPU limita al CPU
         issues.push({
           type: "warning",
-          message: `Posible cuello de botella: el CPU es bastante más potente que la GPU — la tarjeta gráfica será el límite en juegos (estimación)`,
+          message: t('compat.bottleneckCpu'),
         });
       }
     }
@@ -434,7 +435,7 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
     if (totalModules === 1) {
       issues.push({
         type: "warning",
-        message: `RAM en single-channel (1 solo módulo) — usar 2 módulos casi duplica el ancho de banda de memoria y mejora el rendimiento, sobre todo en gráficos integrados y CPUs Ryzen`,
+        message: t('compat.ramSingleChannel'),
       });
     }
   }
@@ -453,7 +454,7 @@ export function checkCompatibility(build: BuildComponent[]): CompatibilityIssue[
       if (floor > 0 && speed < floor) {
         issues.push({
           type: "warning",
-          message: `RAM ${ddr} a ${speed} MT/s es lenta para su generación — memoria más rápida (${floor}+ MT/s) reduce el cuello de botella, especialmente en CPUs Ryzen`,
+          message: t('compat.ramSlow', { ddr, speed, floor }),
         });
       }
     }

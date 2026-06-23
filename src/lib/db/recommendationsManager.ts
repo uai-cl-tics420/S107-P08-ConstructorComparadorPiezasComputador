@@ -64,7 +64,10 @@ export async function getRecommendationsForComponent(componentId: string): Promi
       valueScore: scoreValue(c),
       compatibilityScore: 1,
       totalScore: 0.5 * scorePerformance(c) + 0.5 * scoreValue(c),
-      reasons: [`${Math.round(scorePerformance(c) * 100)}% performance`, `$${bestPrice(c).toLocaleString('es-CL')}`],
+      reasons: [
+        { key: 'reason.perfPct', params: { pct: Math.round(scorePerformance(c) * 100) } },
+        { key: 'reason.price', params: { price: bestPrice(c).toLocaleString('es-CL') } },
+      ],
       isCompatible: true,
     }))
     .sort((a, b) => b.totalScore - a.totalScore)

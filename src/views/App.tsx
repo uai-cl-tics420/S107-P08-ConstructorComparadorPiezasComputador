@@ -12,6 +12,7 @@ import { useSavedBuilds } from '@/hooks/useSavedBuilds';
 import { useRecommendations } from '@/hooks/useRecommendations';
 import { checkCompatibility } from '@/utils/compatibility';
 import { scoreCompatibility } from '@/utils/recommendations';
+import type { ReasonText } from '@/utils/recommendations';
 import type { Component, SavedBuild } from '@/types/Frontend_types';
 import { ConfigContext } from '@/frontend';
 import '@/index.css';
@@ -45,10 +46,10 @@ export function App() {
   const buildManager = useBuildManager(catalog.componentTypes, addToast);
   const { recommendations, loading: recsLoading } = useRecommendations(buildManager.buildComponents);
 
-  const compatibilityIssues = checkCompatibility(buildManager.buildComponents);
+  const compatibilityIssues = checkCompatibility(buildManager.buildComponents, t);
 
   const componentCompatibility = useMemo(() => {
-    const map = new Map<string, { isCompatible: boolean; reasons: string[] }>();
+    const map = new Map<string, { isCompatible: boolean; reasons: ReasonText[] }>();
     for (const component of catalog.components) {
       const compatibility = scoreCompatibility(component, buildManager.buildComponents);
       map.set(component.id, {

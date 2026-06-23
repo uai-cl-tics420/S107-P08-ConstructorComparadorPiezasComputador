@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Plus, ArrowLeftRight, ChevronDown, FileText } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import type { Component } from '../types/Frontend_types';
+import type { ReasonText } from '../utils/recommendations';
 
 const PRIORITY_SPECS: Record<string, string[]> = {
   CPU: ['core_count', 'thread_count', 'socket', 'tdp', 'boost_clock'],
@@ -28,7 +29,7 @@ const TYPE_ACCENT: Record<string, string> = {
 
 interface BuildCompatibility {
   isCompatible: boolean;
-  reasons: string[];
+  reasons: ReasonText[];
 }
 
 interface Props {
@@ -116,8 +117,8 @@ const CERTIFICATION_MAP: Record<number, string> = {
               </span>
               {buildCompatibility.reasons.length > 0 && (
                 <div className='absolute right-0 top-full mt-1 z-20 hidden group-hover/badge:flex flex-col gap-1 w-48 bg-tw-surface/98 backdrop-blur-xl border border-tw-border rounded-lg p-2 shadow-xl shadow-black/40'>
-                  {buildCompatibility.reasons.slice(0, 3).map((r, i) => (
-                    <span key={i} className='font-mono text-[0.5rem] text-tw-muted leading-tight'>{r}</span>
+                  {buildCompatibility.reasons.slice(0, 3).map((reason, i) => (
+                    <span key={i} className='font-mono text-[0.5rem] text-tw-muted leading-tight'>{t(reason.key, reason.params)}</span>
                   ))}
                 </div>
               )}

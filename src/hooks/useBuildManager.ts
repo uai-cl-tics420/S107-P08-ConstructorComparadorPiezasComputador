@@ -195,11 +195,11 @@ export function useBuildManager(
     }
 
     const currentErrors = new Set(
-      checkCompatibility(buildComponents)
+      checkCompatibility(buildComponents, t)
         .filter((i) => i.type === 'error')
         .map((i) => i.message),
     );
-    const newErrors = checkCompatibility(prospective).filter(
+    const newErrors = checkCompatibility(prospective, t).filter(
       (i) => i.type === 'error' && !currentErrors.has(i.message),
     );
     if (newErrors.length > 0) {

@@ -5,6 +5,7 @@ import { SkeletonCard } from '@/components/SkeletonCard';
 import { ComponentCard } from '@/components/ComponentCard';
 import { Pagination } from '@/components/Pagination';
 import type { Component, BuildComponent } from '@/types/Frontend_types';
+import type { ReasonText } from '@/utils/recommendations';
 
 interface ComponentGridProps {
   loading: boolean;
@@ -23,7 +24,7 @@ interface ComponentGridProps {
   setDetailComponent: (c: Component) => void;
   compareList: Component[];
   buildComponents: BuildComponent[];
-  componentCompatibility: Map<string, { isCompatible: boolean; reasons: string[] }>;
+  componentCompatibility: Map<string, { isCompatible: boolean; reasons: ReasonText[] }>;
 }
 
 export function ComponentGrid({

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next';
 import type { SavedBuild } from '../types/Frontend_types';
-
+import { Save } from 'lucide-react';
 interface Props {
   savedBuilds: SavedBuild[];
   onLoad: (build: SavedBuild) => void;
@@ -31,7 +31,7 @@ export function SavedBuildsPanel({ savedBuilds, onLoad, onDelete }: Props) {
 
       {savedBuilds.length === 0 ? (
         <div className='flex flex-col items-center justify-center py-8 gap-2'>
-          <span className='text-3xl'>💾</span>
+          <Save className='text-tw-muted text-4xl w-10 h-10' />
           <p className='text-tw-muted text-sm text-center'>{t('savedBuilds.empty')}</p>
           <p className='text-tw-muted-deep text-xs text-center'>{t('savedBuilds.emptyHint')}</p>
         </div>
